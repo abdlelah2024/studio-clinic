@@ -29,7 +29,7 @@ export function DeletePatientDialog({ children, patient, onDelete }: DeletePatie
           <AlertDialogTitle>هل أنت متأكد تمامًا؟</AlertDialogTitle>
           <AlertDialogDescription>
             سيؤدي هذا الإجراء إلى حذف سجل المريض <span className="font-bold">{patient.name}</span> بشكل دائم. لا يمكن التراجع عن هذا الإجراء.
-          </DialogDescription>
+          </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>إلغاء</AlertDialogCancel>
