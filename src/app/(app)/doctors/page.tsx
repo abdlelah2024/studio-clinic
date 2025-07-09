@@ -7,15 +7,17 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuItem } from "@/components/ui/dropdown-menu"
 import { mockDoctors } from "@/lib/data"
 import type { Doctor } from "@/lib/types"
-import { MoreHorizontal, PlusCircle, Edit, Trash2, Calendar } from "lucide-react"
+import { MoreHorizontal, PlusCircle, Edit, Trash2, Calendar, Search } from "lucide-react"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import { AddDoctorDialog } from "@/components/doctors/add-doctor-dialog"
 import { EditDoctorDialog } from "@/components/doctors/edit-doctor-dialog"
 import { DeleteDoctorDialog } from "@/components/doctors/delete-doctor-dialog"
 import { useToast } from "@/hooks/use-toast"
+import { Input } from "@/components/ui/input"
 
 export default function DoctorsPage() {
   const [doctors, setDoctors] = useState<Doctor[]>(mockDoctors);
+  const [searchQuery, setSearchQuery] = useState("");
   const { toast } = useToast();
 
   const handleAddDoctor = (doctor: Omit<Doctor, 'id' | 'avatar'>) => {
@@ -49,6 +51,10 @@ export default function DoctorsPage() {
     });
   };
 
+  const filteredDoctors = doctors.filter(doctor =>
+    doctor.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    doctor.specialty.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
     <Card>
@@ -58,14 +64,26 @@ export default function DoctorsPage() {
             <CardTitle>الأطباء</CardTitle>
             <CardDescription>إدارة ملفات الأطباء وجداولهم.</CardDescription>
           </div>
-          <AddDoctorDialog onDoctorAdded={handleAddDoctor}>
-            <Button size="sm" className="gap-1">
-              <PlusCircle className="h-3.5 w-3.5" />
-              <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-                إضافة طبيب
-              </span>
-            </Button>
-          </AddDoctorDialog>
+          <div className="flex items-center gap-2">
+            <div className="relative">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                type="search"
+                placeholder="البحث بالاسم أو التخصص..."
+                className="w-full rounded-lg bg-background pl-8"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+            <AddDoctorDialog onDoctorAdded={handleAddDoctor}>
+              <Button size="sm" className="gap-1">
+                <PlusCircle className="h-3.5 w-3.5" />
+                <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
+                  إضافة طبيب
+                </span>
+              </Button>
+            </AddDoctorDialog>
+          </div>
         </div>
       </CardHeader>
       <CardContent>
@@ -78,7 +96,7 @@ export default function DoctorsPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {doctors.map((doctor) => (
+            {filteredDoctors.map((doctor) => (
               <TableRow key={doctor.id}>
                 <TableCell>
                   <div className="flex items-center gap-3">

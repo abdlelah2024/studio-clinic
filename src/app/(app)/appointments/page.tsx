@@ -8,13 +8,14 @@ import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLab
 import { mockAppointments, mockPatients, mockDoctors } from "@/lib/data"
 import type { Appointment } from "@/lib/types"
 import { Badge } from "@/components/ui/badge"
-import { MoreHorizontal, PlusCircle, ListFilter, Edit, Trash2, Clock, XCircle, CheckCircle2 } from "lucide-react"
+import { MoreHorizontal, PlusCircle, ListFilter, Edit, Trash2, Clock, XCircle, CheckCircle2, Search } from "lucide-react"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import { RescheduleAppointmentDialog } from "@/components/appointments/reschedule-appointment-dialog"
 import { useToast } from "@/hooks/use-toast"
 import { useAppContext } from "@/context/app-context"
 import { cn } from "@/lib/utils"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { Input } from "@/components/ui/input"
 
 
 type AppointmentStatus = 'Scheduled' | 'Completed' | 'Canceled' | 'Waiting';
@@ -22,6 +23,7 @@ type AppointmentStatus = 'Scheduled' | 'Completed' | 'Canceled' | 'Waiting';
 export default function AppointmentsPage() {
   const [appointments, setAppointments] = useState<Appointment[]>(mockAppointments);
   const [filter, setFilter] = useState<AppointmentStatus | 'All'>('All');
+  const [searchQuery, setSearchQuery] = useState("");
   const [isRescheduleDialogOpen, setIsRescheduleDialogOpen] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | undefined>(undefined);
   const { toast } = useToast();
@@ -90,9 +92,13 @@ export default function AppointmentsPage() {
     }
   }
 
-  const filteredAppointments = appointments.filter(appointment => 
-    filter === 'All' || appointment.status === filter
-  );
+  const filteredAppointments = appointments.filter(appointment => {
+    const statusFilterMatch = filter === 'All' || appointment.status === filter;
+    const searchFilterMatch = 
+        appointment.patient.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        appointment.doctor.name.toLowerCase().includes(searchQuery.toLowerCase());
+    return statusFilterMatch && searchFilterMatch;
+  });
 
   return (
     <>
@@ -104,6 +110,16 @@ export default function AppointmentsPage() {
               <CardDescription>إدارة وعرض جميع مواعيد المرضى.</CardDescription>
             </div>
             <div className="flex items-center gap-2">
+               <div className="relative">
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  type="search"
+                  placeholder="البحث باسم المريض/الطبيب..."
+                  className="w-full rounded-lg bg-background pl-8"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="sm" className="gap-1">
