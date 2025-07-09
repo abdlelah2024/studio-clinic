@@ -90,7 +90,7 @@ export function AppHeader() {
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             type="search"
-            placeholder="بحث سريع عن مريض بالاسم أو الرقم..."
+            placeholder="بحث سريع بالاسم أو الرقم..."
             className="w-full rounded-lg bg-background pl-8 md:w-[280px] lg:w-[320px]"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
