@@ -106,6 +106,8 @@ export function AppHeader() {
                 <CommandGroup heading="إجراءات سريعة">
                   <CommandItem onSelect={() => {
                       // Logic to open new appointment dialog
+                      // This part can be implemented later by lifting state up
+                      alert("Opening new appointment dialog...");
                       setIsSearchFocused(false);
                   }}>
                     <Calendar className="mr-2 h-4 w-4" />
