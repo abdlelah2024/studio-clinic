@@ -18,7 +18,7 @@ export default function PatientDetailPage({ params }: { params: { id: string } }
 
   return (
     <div className="space-y-6">
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-4 rtl:space-x-reverse">
              <Avatar className="h-24 w-24">
                 <AvatarImage src={patient.avatar} alt={patient.name} data-ai-hint="person face" />
                 <AvatarFallback>{patient.name.charAt(0)}</AvatarFallback>
