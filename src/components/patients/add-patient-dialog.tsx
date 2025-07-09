@@ -22,8 +22,7 @@ import { useToast } from "@/hooks/use-toast"
 const patientSchema = z.object({
   name: z.string().min(1, "الاسم مطلوب"),
   phone: z.string().min(1, "رقم الهاتف مطلوب"),
-  email: z.string().email("البريد الإلكتروني غير صالح"),
-  dob: z.string().min(1, "تاريخ الميلاد مطلوب"),
+  age: z.coerce.number().min(0, "العمر يجب أن يكون رقمًا موجبًا"),
 });
 
 type PatientFormData = z.infer<typeof patientSchema>;
@@ -42,8 +41,7 @@ export function AddPatientDialog({ children, onPatientAdded }: AddPatientDialogP
     defaultValues: {
       name: "",
       phone: "",
-      email: "",
-      dob: "",
+      age: 0,
     },
   });
 
@@ -102,25 +100,12 @@ export function AddPatientDialog({ children, onPatientAdded }: AddPatientDialogP
             />
             <FormField
               control={form.control}
-              name="email"
+              name="age"
               render={({ field }) => (
                 <FormItem className="grid grid-cols-4 items-center gap-4">
-                  <FormLabel className="text-right">البريد الإلكتروني</FormLabel>
+                  <FormLabel className="text-right">العمر</FormLabel>
                   <FormControl>
-                    <Input {...field} type="email" placeholder="ahmad@example.com" className="col-span-3" />
-                  </FormControl>
-                  <FormMessage className="col-span-4 text-center" />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="dob"
-              render={({ field }) => (
-                <FormItem className="grid grid-cols-4 items-center gap-4">
-                  <FormLabel className="text-right">تاريخ الميلاد</FormLabel>
-                  <FormControl>
-                    <Input {...field} type="date" className="col-span-3" />
+                    <Input {...field} type="number" className="col-span-3" />
                   </FormControl>
                   <FormMessage className="col-span-4 text-center" />
                 </FormItem>

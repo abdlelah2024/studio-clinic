@@ -86,7 +86,7 @@ export default function PatientsPage() {
             <TableRow>
               <TableHead>الاسم</TableHead>
               <TableHead>الهاتف</TableHead>
-              <TableHead>تاريخ الميلاد</TableHead>
+              <TableHead>العمر</TableHead>
               <TableHead>آخر زيارة</TableHead>
               <TableHead><span className="sr-only">الإجراءات</span></TableHead>
             </TableRow>
@@ -104,7 +104,7 @@ export default function PatientsPage() {
                   </Link>
                 </TableCell>
                 <TableCell>{patient.phone}</TableCell>
-                <TableCell>{patient.dob}</TableCell>
+                <TableCell>{patient.age}</TableCell>
                 <TableCell>{patient.lastVisit}</TableCell>
                 <TableCell className="text-right">
                     <DropdownMenu>

@@ -3,9 +3,8 @@ export type Patient = {
   name: string;
   lastVisit: string;
   avatar: string;
-  email: string;
   phone: string;
-  dob: string;
+  age: number;
 };
 
 export type Doctor = {

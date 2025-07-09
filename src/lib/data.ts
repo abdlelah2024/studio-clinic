@@ -9,11 +9,11 @@ export const mockUser: User = {
 };
 
 export const mockPatients: Patient[] = [
-  { id: 'p1', name: 'أحمد محمود', lastVisit: '2023-10-15', avatar: 'https://placehold.co/100x100', email: 'ahmad.m@example.com', phone: '555-0101', dob: '1985-05-20' },
-  { id: 'p2', name: 'فاطمة علي', lastVisit: '2023-11-02', avatar: 'https://placehold.co/100x100', email: 'fatima.a@example.com', phone: '555-0102', dob: '1992-08-12' },
-  { id: 'p3', name: 'خالد عبد الله', lastVisit: '2023-09-20', avatar: 'https://placehold.co/100x100', email: 'khalid.a@example.com', phone: '555-0103', dob: '1978-11-30' },
-  { id: 'p4', name: 'سارة حسين', lastVisit: '2023-10-28', avatar: 'https://placehold.co/100x100', email: 'sara.h@example.com', phone: '555-0104', dob: '2001-02-14' },
-  { id: 'p5', name: 'يوسف محمد', lastVisit: '2023-11-05', avatar: 'https://placehold.co/100x100', email: 'youssef.m@example.com', phone: '555-0105', dob: '1989-07-22' },
+  { id: 'p1', name: 'أحمد محمود', lastVisit: '2023-10-15', avatar: 'https://placehold.co/100x100', phone: '555-0101', age: 39 },
+  { id: 'p2', name: 'فاطمة علي', lastVisit: '2023-11-02', avatar: 'https://placehold.co/100x100', phone: '555-0102', age: 32 },
+  { id: 'p3', name: 'خالد عبد الله', lastVisit: '2023-09-20', avatar: 'https://placehold.co/100x100', phone: '555-0103', age: 45 },
+  { id: 'p4', name: 'سارة حسين', lastVisit: '2023-10-28', avatar: 'https://placehold.co/100x100', phone: '555-0104', age: 23 },
+  { id: 'p5', name: 'يوسف محمد', lastVisit: '2023-11-05', avatar: 'https://placehold.co/100x100', phone: '555-0105', age: 35 },
 ];
 
 export const mockDoctors: Doctor[] = [

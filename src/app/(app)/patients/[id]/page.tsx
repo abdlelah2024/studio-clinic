@@ -26,11 +26,9 @@ export default function PatientDetailPage({ params }: { params: { id: string } }
             <div>
                 <h1 className="text-3xl font-bold">{patient.name}</h1>
                 <div className="text-muted-foreground space-x-4 rtl:space-x-reverse">
-                    <span>{patient.email}</span>
-                    <span>|</span>
                     <span>{patient.phone}</span>
                     <span>|</span>
-                    <span>تاريخ الميلاد: {patient.dob}</span>
+                    <span>العمر: {patient.age}</span>
                 </div>
             </div>
         </div>
