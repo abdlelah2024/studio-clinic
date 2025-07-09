@@ -1,6 +1,19 @@
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { PlusCircle, Users } from "lucide-react"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { mockUser } from "@/lib/data"
+import type { User } from "@/lib/types"
+import { MoreHorizontal, PlusCircle } from "lucide-react"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Badge } from "@/components/ui/badge"
+
+// For demonstration, we'll create a small list of users.
+const mockUsers: User[] = [
+  mockUser,
+  { name: "د. بن هانسون", email: "ben.h@clinicflow.demo", avatar: "https://placehold.co/100x100", role: "Doctor" },
+  { name: "علياء منصور", email: "alia.m@clinicflow.demo", avatar: "https://placehold.co/100x100", role: "Receptionist" },
+]
 
 export default function UsersPage() {
   return (
@@ -20,18 +33,56 @@ export default function UsersPage() {
         </div>
       </CardHeader>
       <CardContent>
-        <div className="flex flex-1 items-center justify-center rounded-lg border border-dashed shadow-sm py-20">
-          <div className="flex flex-col items-center gap-1 text-center">
-            <Users className="h-12 w-12 text-muted-foreground" />
-            <h3 className="text-2xl font-bold tracking-tight">
-              لم يتم العثور على مستخدمين
-            </h3>
-            <p className="text-sm text-muted-foreground">
-              يمكنك البدء في إدارة المستخدمين بمجرد إضافة واحد.
-            </p>
-            <Button className="mt-4">إضافة مستخدم</Button>
-          </div>
-        </div>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>الاسم</TableHead>
+              <TableHead>البريد الإلكتروني</TableHead>
+              <TableHead>الدور</TableHead>
+              <TableHead>
+                <span className="sr-only">الإجراءات</span>
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {mockUsers.map((user) => (
+              <TableRow key={user.email}>
+                <TableCell>
+                  <div className="flex items-center gap-3">
+                    <Avatar>
+                      <AvatarImage src={user.avatar} alt={user.name} data-ai-hint="person face" />
+                      <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+                    </Avatar>
+                    <div className="font-medium">{user.name}</div>
+                  </div>
+                </TableCell>
+                <TableCell>{user.email}</TableCell>
+                <TableCell>
+                    <Badge variant={user.role === 'Admin' ? 'destructive' : 'secondary'}>
+                        {user.role === 'Admin' ? 'مدير' : user.role === 'Doctor' ? 'طبيب' : 'موظف استقبال'}
+                    </Badge>
+                </TableCell>
+                <TableCell>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button aria-haspopup="true" size="icon" variant="ghost">
+                        <MoreHorizontal className="h-4 w-4" />
+                        <span className="sr-only">Toggle menu</span>
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuLabel>الإجراءات</DropdownMenuLabel>
+                      <DropdownMenuItem>تعديل</DropdownMenuItem>
+                      <DropdownMenuItem>إدارة الصلاحيات</DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem className="text-destructive">حذف</DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
       </CardContent>
     </Card>
   )
