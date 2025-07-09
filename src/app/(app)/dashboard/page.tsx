@@ -85,7 +85,7 @@ export default function DashboardPage() {
         return isToday(appointmentDate);
       }
       if (!startDate) return true;
-      return appointmentDate >= startDate; // Allow appointments up to the current day
+      return appointmentDate >= startDate && appointmentDate <= now;
     });
 
     const upcomingAppointments = enrichedAppointments

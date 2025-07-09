@@ -46,7 +46,7 @@ export default function ReportsPage() {
       const isDateInRange = dateRange?.from && dateRange?.to ? 
           appointmentDate >= startOfDay(dateRange.from) && appointmentDate <= startOfDay(dateRange.to) : true;
 
-      const isDoctorMatch = doctorFilter === 'all' || appointment.doctor.name === doctorFilter;
+      const isDoctorMatch = doctorFilter === 'all' || appointment.doctor.id === doctorFilter;
       const isStatusMatch = statusFilter === 'all' || appointment.status === statusFilter;
       
       return isDateInRange && isDoctorMatch && isStatusMatch;
@@ -143,7 +143,7 @@ export default function ReportsPage() {
                     <SelectContent>
                         <SelectItem value="all">كل الأطباء</SelectItem>
                         {mockDoctors.map(doctor => (
-                            <SelectItem key={doctor.id} value={doctor.name}>{doctor.name}</SelectItem>
+                            <SelectItem key={doctor.id} value={doctor.id}>{doctor.name}</SelectItem>
                         ))}
                     </SelectContent>
                 </Select>
