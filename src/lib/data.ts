@@ -73,6 +73,7 @@ export const mockMessages: Message[] = [
     { id: 'm4', senderEmail: 'alia.m@clinicflow.demo', receiverEmail: 'asd19082@gmail.com', text: 'صباح الخير، تم تأكيد جميع مواعيد اليوم.', timestamp: '09:30 ص' },
 ];
 
+const now = new Date();
 export const mockAuditLogs: AuditLog[] = [
   {
     id: 'log1',
@@ -80,23 +81,23 @@ export const mockAuditLogs: AuditLog[] = [
     category: 'Patient',
     user: mockUser,
     details: 'أضاف مريضًا جديدًا: أحمد محمود',
-    timestamp: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(), // 1 hour ago
+    timestamp: new Date(now.getTime() - 1 * 60 * 60 * 1000).toISOString(),
   },
   {
     id: 'log2',
     action: 'Update',
     category: 'Appointment',
-    user: otherUsers[1], // Alia Mansour
+    user: otherUsers[1],
     details: 'تحديث موعد فاطمة علي',
-    timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), // 2 hours ago
+    timestamp: new Date(now.getTime() - 2 * 60 * 60 * 1000).toISOString(),
   },
   {
     id: 'log3',
     action: 'Login',
     category: 'System',
-    user: otherUsers[0], // Dr. Ben Hanson
+    user: otherUsers[0],
     details: 'تسجيل الدخول إلى النظام',
-    timestamp: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString(), // 3 hours ago
+    timestamp: new Date(now.getTime() - 3 * 60 * 60 * 1000).toISOString(),
   },
   {
     id: 'log4',
@@ -104,7 +105,7 @@ export const mockAuditLogs: AuditLog[] = [
     category: 'Doctor',
     user: mockUser,
     details: 'إزالة الطبيب: د. ماركوس لي',
-    timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(), // 1 day ago
+    timestamp: new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString(),
   },
    {
     id: 'log5',
@@ -112,6 +113,8 @@ export const mockAuditLogs: AuditLog[] = [
     category: 'Report',
     user: otherUsers[0],
     details: 'إنشاء مسودة تقرير للمريض: خالد عبد الله',
-    timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), // 2 days ago
+    timestamp: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000).toISOString(),
   },
 ];
+
+    

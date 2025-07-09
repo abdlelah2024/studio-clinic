@@ -13,7 +13,7 @@ import { format, formatDistanceToNow } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import { Search, ListFilter, ArrowUpDown, History, User, Stethoscope, Calendar, FileText, Bot, Pencil, Trash2, XCircle, LogIn } from "lucide-react";
 import { cn } from '@/lib/utils';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuCheckboxItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 
 type SortKey = 'date-asc' | 'date-desc';
@@ -145,8 +145,8 @@ export default function AuditLogPage() {
                                 </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                                <SelectItem onSelect={() => setSortKey('date-desc')}>الأحدث أولاً</SelectItem>
-                                <SelectItem onSelect={() => setSortKey('date-asc')}>الأقدم أولاً</SelectItem>
+                                <DropdownMenuCheckboxItem checked={sortKey === 'date-desc'} onSelect={() => setSortKey('date-desc')}>الأحدث أولاً</DropdownMenuCheckboxItem>
+                                <DropdownMenuCheckboxItem checked={sortKey === 'date-asc'} onSelect={() => setSortKey('date-asc')}>الأقدم أولاً</DropdownMenuCheckboxItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
                     </div>
@@ -211,4 +211,5 @@ export default function AuditLogPage() {
         </Card>
     );
 }
+    
     
