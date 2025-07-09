@@ -1,14 +1,20 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Users, Calendar, DollarSign, Activity } from "lucide-react"
-
-const stats = [
-  { title: "إجمالي المواعيد", value: "1,234", icon: Calendar, change: "+12.5% من الشهر الماضي" },
-  { title: "مرضى جدد", value: "89", icon: Users, change: "+5.2% من الشهر الماضي" },
-  { title: "الإيرادات", value: "$45,231.89", icon: DollarSign, change: "+20.1% من الشهر الماضي" },
-  { title: "إشغال العيادة", value: "72%", icon: Activity, change: "-1.8% من الشهر الماضي" },
-]
+import { mockAppointments, mockPatients } from "@/lib/data"
 
 export function StatsCards() {
+  const totalAppointments = mockAppointments.length;
+  // Let's define "new" as anyone who was added in the last 30 days for this example.
+  // In a real app, this would likely be based on a `createdAt` date.
+  const newPatientsCount = mockPatients.length > 3 ? 2 : mockPatients.length; // Simplified logic for demo
+
+  const stats = [
+    { title: "إجمالي المواعيد", value: totalAppointments.toString(), icon: Calendar, change: "+12.5% من الشهر الماضي" },
+    { title: "مرضى جدد", value: newPatientsCount.toString(), icon: Users, change: "+5.2% من الشهر الماضي" },
+    { title: "الإيرادات", value: "$45,231.89", icon: DollarSign, change: "+20.1% من الشهر الماضي" },
+    { title: "إشغال العيادة", value: "72%", icon: Activity, change: "-1.8% من الشهر الماضي" },
+  ]
+
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
       {stats.map((stat) => (
