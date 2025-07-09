@@ -5,6 +5,18 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { MoreVertical, PlusCircle, Trash2, Edit } from "lucide-react"
+import { Checkbox } from "@/components/ui/checkbox"
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu"
+
+const dataFields = [
+    { id: "patient-name", label: "Patient Name", type: "System", required: true },
+    { id: "dob", label: "Date of Birth", type: "System", required: true },
+    { id: "phone", label: "Phone Number", type: "System", required: true },
+    { id: "email", label: "Email Address", type: "System", required: false },
+    { id: "blood-type", label: "Blood Type", type: "Custom", required: false },
+]
 
 export default function SettingsPage() {
   return (
@@ -93,16 +105,56 @@ export default function SettingsPage() {
         <TabsContent value="data">
            <Card>
             <CardHeader>
-              <CardTitle>Data Fields</CardTitle>
-              <CardDescription>Customize data fields for appointments and patient records.</CardDescription>
+                <div className="flex items-center justify-between">
+                    <div>
+                        <CardTitle>Data Fields</CardTitle>
+                        <CardDescription>Customize data fields for appointments and patient records.</CardDescription>
+                    </div>
+                    <Button size="sm" className="gap-1">
+                        <PlusCircle className="h-3.5 w-3.5" />
+                        <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
+                            Add Field
+                        </span>
+                    </Button>
+                </div>
             </CardHeader>
             <CardContent>
-                <div className="flex flex-1 items-center justify-center rounded-lg border border-dashed shadow-sm py-20">
-                    <div className="flex flex-col items-center gap-1 text-center">
-                        <h3 className="text-2xl font-bold tracking-tight">Coming Soon</h3>
-                        <p className="text-sm text-muted-foreground">Custom fields will be available in a future update.</p>
-                    </div>
-                </div>
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>Field Label</TableHead>
+                            <TableHead>Type</TableHead>
+                            <TableHead>Required</TableHead>
+                            <TableHead><span className="sr-only">Actions</span></TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {dataFields.map((field) => (
+                            <TableRow key={field.id}>
+                                <TableCell className="font-medium">{field.label}</TableCell>
+                                <TableCell>{field.type}</TableCell>
+                                <TableCell>
+                                    <Checkbox checked={field.required} disabled={field.type === 'System'} />
+                                </TableCell>
+                                <TableCell className="text-right">
+                                     {field.type !== 'System' && (
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <Button size="icon" variant="ghost">
+                                                    <MoreVertical className="h-4 w-4" />
+                                                </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="end">
+                                                <DropdownMenuItem><Edit className="mr-2 h-4 w-4" />Edit</DropdownMenuItem>
+                                                <DropdownMenuItem className="text-destructive"><Trash2 className="mr-2 h-4 w-4" />Delete</DropdownMenuItem>
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
+                                     )}
+                                </TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
             </CardContent>
           </Card>
         </TabsContent>
