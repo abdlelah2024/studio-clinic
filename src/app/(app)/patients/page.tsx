@@ -13,22 +13,22 @@ export default function PatientsPage() {
       <CardHeader>
         <div className="flex items-center justify-between gap-4">
           <div>
-            <CardTitle>Patients</CardTitle>
-            <CardDescription>Manage your patient records.</CardDescription>
+            <CardTitle>المرضى</CardTitle>
+            <CardDescription>إدارة سجلات المرضى الخاصة بك.</CardDescription>
           </div>
            <div className="flex items-center gap-2 w-full max-w-sm">
              <div className="relative w-full">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
                 type="search"
-                placeholder="Search by name or number..."
+                placeholder="البحث بالاسم أو الرقم..."
                 className="w-full rounded-lg bg-background pl-8"
               />
             </div>
             <Button size="sm" className="gap-1 whitespace-nowrap">
               <PlusCircle className="h-3.5 w-3.5" />
               <span className="sr-only sm:not-sr-only">
-                Add Patient
+                إضافة مريض
               </span>
             </Button>
           </div>
@@ -38,13 +38,13 @@ export default function PatientsPage() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Phone</TableHead>
-              <TableHead>Date of Birth</TableHead>
-              <TableHead>Last Visit</TableHead>
+              <TableHead>الاسم</TableHead>
+              <TableHead>البريد الإلكتروني</TableHead>
+              <TableHead>الهاتف</TableHead>
+              <TableHead>تاريخ الميلاد</TableHead>
+              <TableHead>آخر زيارة</TableHead>
               <TableHead>
-                <span className="sr-only">Actions</span>
+                <span className="sr-only">الإجراءات</span>
               </TableHead>
             </TableRow>
           </TableHeader>
@@ -73,12 +73,12 @@ export default function PatientsPage() {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                      <DropdownMenuItem>View Details</DropdownMenuItem>
-                      <DropdownMenuItem>Edit</DropdownMenuItem>
-                      <DropdownMenuItem>Book Appointment</DropdownMenuItem>
+                      <DropdownMenuLabel>الإجراءات</DropdownMenuLabel>
+                      <DropdownMenuItem>عرض التفاصيل</DropdownMenuItem>
+                      <DropdownMenuItem>تعديل</DropdownMenuItem>
+                      <DropdownMenuItem>حجز موعد</DropdownMenuItem>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem className="text-destructive">Delete</DropdownMenuItem>
+                      <DropdownMenuItem className="text-destructive">حذف</DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </TableCell>

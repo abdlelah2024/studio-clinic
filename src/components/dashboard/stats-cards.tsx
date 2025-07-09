@@ -2,10 +2,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Users, Calendar, DollarSign, Activity } from "lucide-react"
 
 const stats = [
-  { title: "Total Appointments", value: "1,234", icon: Calendar, change: "+12.5%" },
-  { title: "New Patients", value: "89", icon: Users, change: "+5.2%" },
-  { title: "Revenue", value: "$45,231.89", icon: DollarSign, change: "+20.1%" },
-  { title: "Clinic Occupancy", value: "72%", icon: Activity, change: "-1.8%" },
+  { title: "إجمالي المواعيد", value: "1,234", icon: Calendar, change: "+12.5% من الشهر الماضي" },
+  { title: "مرضى جدد", value: "89", icon: Users, change: "+5.2% من الشهر الماضي" },
+  { title: "الإيرادات", value: "$45,231.89", icon: DollarSign, change: "+20.1% من الشهر الماضي" },
+  { title: "إشغال العيادة", value: "72%", icon: Activity, change: "-1.8% من الشهر الماضي" },
 ]
 
 export function StatsCards() {
@@ -19,7 +19,7 @@ export function StatsCards() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stat.value}</div>
-            <p className="text-xs text-muted-foreground">{stat.change} from last month</p>
+            <p className="text-xs text-muted-foreground">{stat.change}</p>
           </CardContent>
         </Card>
       ))}

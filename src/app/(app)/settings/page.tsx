@@ -11,41 +11,41 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu"
 
 const dataFields = [
-    { id: "patient-name", label: "Patient Name", type: "System", required: true },
-    { id: "dob", label: "Date of Birth", type: "System", required: true },
-    { id: "phone", label: "Phone Number", type: "System", required: true },
-    { id: "email", label: "Email Address", type: "System", required: false },
-    { id: "blood-type", label: "Blood Type", type: "Custom", required: false },
+    { id: "patient-name", label: "اسم المريض", type: "نظام", required: true },
+    { id: "dob", label: "تاريخ الميلاد", type: "نظام", required: true },
+    { id: "phone", label: "رقم الهاتف", type: "نظام", required: true },
+    { id: "email", label: "البريد الإلكتروني", type: "نظام", required: false },
+    { id: "blood-type", label: "فصيلة الدم", type: "مخصص", required: false },
 ]
 
 export default function SettingsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold font-headline">Settings</h1>
-        <p className="text-muted-foreground">Manage your clinic's settings and preferences.</p>
+        <h1 className="text-2xl font-bold font-headline">الإعدادات</h1>
+        <p className="text-muted-foreground">إدارة إعدادات وتفضيلات عيادتك.</p>
       </div>
 
       <Tabs defaultValue="profile">
         <TabsList>
-          <TabsTrigger value="profile">Profile</TabsTrigger>
-          <TabsTrigger value="appearance">Appearance</TabsTrigger>
-          <TabsTrigger value="notifications">Notifications</TabsTrigger>
-          <TabsTrigger value="data">Data Fields</TabsTrigger>
+          <TabsTrigger value="profile">الملف الشخصي</TabsTrigger>
+          <TabsTrigger value="appearance">المظهر</TabsTrigger>
+          <TabsTrigger value="notifications">الإشعارات</TabsTrigger>
+          <TabsTrigger value="data">حقول البيانات</TabsTrigger>
         </TabsList>
         <TabsContent value="profile">
           <Card>
             <CardHeader>
-              <CardTitle>Clinic Profile</CardTitle>
-              <CardDescription>Update your clinic's public information.</CardDescription>
+              <CardTitle>ملف العيادة الشخصي</CardTitle>
+              <CardDescription>تحديث المعلومات العامة لعيادتك.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="clinic-name">Clinic Name</Label>
-                <Input id="clinic-name" defaultValue="ClinicFlow Demo" />
+                <Label htmlFor="clinic-name">اسم العيادة</Label>
+                <Input id="clinic-name" defaultValue="عيادة فلو التجريبية" />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="clinic-contact">Contact Email</Label>
+                <Label htmlFor="clinic-contact">البريد الإلكتروني للاتصال</Label>
                 <Input id="clinic-contact" type="email" defaultValue="contact@clinicflow.demo" />
               </div>
             </CardContent>
@@ -54,19 +54,19 @@ export default function SettingsPage() {
         <TabsContent value="appearance">
           <Card>
             <CardHeader>
-              <CardTitle>Appearance</CardTitle>
-              <CardDescription>Customize the look and feel of the application.</CardDescription>
+              <CardTitle>المظهر</CardTitle>
+              <CardDescription>تخصيص شكل ومظهر التطبيق.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label>Theme</Label>
-                <p className="text-sm text-muted-foreground">Select a theme for the application. Dark mode is handled automatically by your system preference.</p>
+                <Label>السمة</Label>
+                <p className="text-sm text-muted-foreground">اختر سمة للتطبيق. يتم التعامل مع الوضع الداكن تلقائيًا بواسطة تفضيلات نظامك.</p>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="language">Language</Label>
-                 <Select defaultValue="en">
+                <Label htmlFor="language">اللغة</Label>
+                 <Select defaultValue="ar">
                   <SelectTrigger id="language" className="w-[280px]">
-                    <SelectValue placeholder="Select language" />
+                    <SelectValue placeholder="اختر اللغة" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="en">English</SelectItem>
@@ -81,21 +81,21 @@ export default function SettingsPage() {
         <TabsContent value="notifications">
           <Card>
             <CardHeader>
-              <CardTitle>Notifications</CardTitle>
-              <CardDescription>Manage how you receive notifications.</CardDescription>
+              <CardTitle>الإشعارات</CardTitle>
+              <CardDescription>إدارة كيفية تلقي الإشعارات.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
                 <div className="flex items-center justify-between space-x-4 rounded-md border p-4">
                     <div className="flex-1 space-y-1">
-                        <p className="text-sm font-medium leading-none">Appointment Reminders</p>
-                        <p className="text-sm text-muted-foreground">Send email reminders to patients 24 hours before their appointment.</p>
+                        <p className="text-sm font-medium leading-none">تذكيرات المواعيد</p>
+                        <p className="text-sm text-muted-foreground">إرسال تذكيرات عبر البريد الإلكتروني للمرضى قبل 24 ساعة من موعدهم.</p>
                     </div>
                     <Switch defaultChecked />
                 </div>
                 <div className="flex items-center justify-between space-x-4 rounded-md border p-4">
                     <div className="flex-1 space-y-1">
-                        <p className="text-sm font-medium leading-none">Daily Digest</p>
-                        <p className="text-sm text-muted-foreground">Receive a daily email summary of appointments and tasks.</p>
+                        <p className="text-sm font-medium leading-none">ملخص يومي</p>
+                        <p className="text-sm text-muted-foreground">تلقي ملخص يومي عبر البريد الإلكتروني للمواعيد والمهام.</p>
                     </div>
                     <Switch />
                 </div>
@@ -107,13 +107,13 @@ export default function SettingsPage() {
             <CardHeader>
                 <div className="flex items-center justify-between">
                     <div>
-                        <CardTitle>Data Fields</CardTitle>
-                        <CardDescription>Customize data fields for appointments and patient records.</CardDescription>
+                        <CardTitle>حقول البيانات</CardTitle>
+                        <CardDescription>تخصيص حقول البيانات للمواعيد وسجلات المرضى.</CardDescription>
                     </div>
                     <Button size="sm" className="gap-1">
                         <PlusCircle className="h-3.5 w-3.5" />
                         <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-                            Add Field
+                            إضافة حقل
                         </span>
                     </Button>
                 </div>
@@ -122,10 +122,10 @@ export default function SettingsPage() {
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            <TableHead>Field Label</TableHead>
-                            <TableHead>Type</TableHead>
-                            <TableHead>Required</TableHead>
-                            <TableHead><span className="sr-only">Actions</span></TableHead>
+                            <TableHead>اسم الحقل</TableHead>
+                            <TableHead>النوع</TableHead>
+                            <TableHead>مطلوب</TableHead>
+                            <TableHead><span className="sr-only">الإجراءات</span></TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -145,8 +145,8 @@ export default function SettingsPage() {
                                                 </Button>
                                             </DropdownMenuTrigger>
                                             <DropdownMenuContent align="end">
-                                                <DropdownMenuItem><Edit className="mr-2 h-4 w-4" />Edit</DropdownMenuItem>
-                                                <DropdownMenuItem className="text-destructive"><Trash2 className="mr-2 h-4 w-4" />Delete</DropdownMenuItem>
+                                                <DropdownMenuItem><Edit className="ml-2 h-4 w-4" />تعديل</DropdownMenuItem>
+                                                <DropdownMenuItem className="text-destructive"><Trash2 className="ml-2 h-4 w-4" />حذف</DropdownMenuItem>
                                             </DropdownMenuContent>
                                         </DropdownMenu>
                                      )}

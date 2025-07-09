@@ -8,13 +8,13 @@ export default function UsersPage() {
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle>Users</CardTitle>
-            <CardDescription>Manage user accounts and permissions.</CardDescription>
+            <CardTitle>المستخدمون</CardTitle>
+            <CardDescription>إدارة حسابات المستخدمين والأذونات.</CardDescription>
           </div>
           <Button size="sm" className="gap-1">
             <PlusCircle className="h-3.5 w-3.5" />
             <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-              Add User
+              إضافة مستخدم
             </span>
           </Button>
         </div>
@@ -24,12 +24,12 @@ export default function UsersPage() {
           <div className="flex flex-col items-center gap-1 text-center">
             <Users className="h-12 w-12 text-muted-foreground" />
             <h3 className="text-2xl font-bold tracking-tight">
-              No users found
+              لم يتم العثور على مستخدمين
             </h3>
             <p className="text-sm text-muted-foreground">
-              You can start managing users as soon as you add one.
+              يمكنك البدء في إدارة المستخدمين بمجرد إضافة واحد.
             </p>
-            <Button className="mt-4">Add User</Button>
+            <Button className="mt-4">إضافة مستخدم</Button>
           </div>
         </div>
       </CardContent>

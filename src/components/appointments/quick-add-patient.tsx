@@ -20,39 +20,39 @@ export function QuickAddPatientDialog() {
         <Button variant="outline" size="sm" className="gap-1">
           <UserPlus className="h-3.5 w-3.5" />
           <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-            Quick Add Patient
+            إضافة سريعة لمريض
           </span>
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Quick Add Patient</DialogTitle>
+          <DialogTitle>إضافة سريعة لمريض</DialogTitle>
           <DialogDescription>
-            Create a new patient record. You can add more details later.
+            إنشاء سجل مريض جديد. يمكنك إضافة المزيد من التفاصيل لاحقًا.
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="name" className="text-right">
-              Name
+              الاسم
             </Label>
-            <Input id="name" placeholder="John Doe" className="col-span-3" />
+            <Input id="name" placeholder="جون دو" className="col-span-3" />
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="phone" className="text-right">
-              Phone
+              الهاتف
             </Label>
             <Input id="phone" placeholder="555-123-4567" className="col-span-3" />
           </div>
            <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="email" className="text-right">
-              Email
+              البريد الإلكتروني
             </Label>
             <Input id="email" type="email" placeholder="john.doe@example.com" className="col-span-3" />
           </div>
         </div>
         <DialogFooter>
-          <Button type="submit">Save Patient</Button>
+          <Button type="submit">حفظ المريض</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

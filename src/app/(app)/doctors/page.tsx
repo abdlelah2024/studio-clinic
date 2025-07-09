@@ -8,13 +8,13 @@ export default function DoctorsPage() {
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle>Doctors</CardTitle>
-            <CardDescription>Manage doctor profiles and schedules.</CardDescription>
+            <CardTitle>الأطباء</CardTitle>
+            <CardDescription>إدارة ملفات الأطباء وجداولهم.</CardDescription>
           </div>
           <Button size="sm" className="gap-1">
             <PlusCircle className="h-3.5 w-3.5" />
             <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-              Add Doctor
+              إضافة طبيب
             </span>
           </Button>
         </div>
@@ -24,12 +24,12 @@ export default function DoctorsPage() {
             <div className="flex flex-col items-center gap-1 text-center">
               <Stethoscope className="h-12 w-12 text-muted-foreground" />
               <h3 className="text-2xl font-bold tracking-tight">
-                No doctors found
+                لم يتم العثور على أطباء
               </h3>
               <p className="text-sm text-muted-foreground">
-                You can start managing doctors as soon as you add one.
+                يمكنك البدء في إدارة الأطباء بمجرد إضافة واحد.
               </p>
-              <Button className="mt-4">Add Doctor</Button>
+              <Button className="mt-4">إضافة طبيب</Button>
             </div>
           </div>
       </CardContent>

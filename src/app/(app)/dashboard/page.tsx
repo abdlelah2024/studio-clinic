@@ -19,15 +19,15 @@ export default function DashboardPage() {
         <div className="lg:col-span-1">
           <Card>
             <CardHeader>
-              <CardTitle>Upcoming Appointments</CardTitle>
+              <CardTitle>المواعيد القادمة</CardTitle>
             </CardHeader>
             <CardContent>
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Patient</TableHead>
-                    <TableHead>Time</TableHead>
-                    <TableHead>Status</TableHead>
+                    <TableHead>المريض</TableHead>
+                    <TableHead>الوقت</TableHead>
+                    <TableHead>الحالة</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>

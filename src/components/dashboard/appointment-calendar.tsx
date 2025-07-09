@@ -43,7 +43,7 @@ export function AppointmentCalendar() {
     <Card className="h-full flex flex-col">
       <CardHeader>
         <div className="flex items-center justify-between">
-          <CardTitle>Appointment Calendar</CardTitle>
+          <CardTitle>تقويم المواعيد</CardTitle>
           <div className="flex items-center gap-2">
             <Button variant="outline" size="icon" onClick={prevWeek}>
               <ChevronLeft className="h-4 w-4" />

@@ -19,8 +19,8 @@ export function ExplainTermForm() {
     e.preventDefault()
     if (!term) {
       toast({
-        title: "Error",
-        description: "Medical term cannot be empty.",
+        title: "خطأ",
+        description: "لا يمكن أن يكون المصطلح الطبي فارغًا.",
         variant: "destructive",
       })
       return
@@ -37,8 +37,8 @@ export function ExplainTermForm() {
       } catch (error) {
         console.error(error);
         toast({
-          title: "Error",
-          description: "Failed to get explanation. Please try again.",
+          title: "خطأ",
+          description: "فشل في الحصول على الشرح. يرجى المحاولة مرة أخرى.",
           variant: "destructive",
         })
       }
@@ -48,8 +48,8 @@ export function ExplainTermForm() {
   const handleCopy = () => {
     navigator.clipboard.writeText(explanation)
     toast({
-      title: "Copied!",
-      description: "Explanation copied to clipboard.",
+      title: "تم النسخ!",
+      description: "تم نسخ الشرح إلى الحافظة.",
     })
   }
 
@@ -57,15 +57,15 @@ export function ExplainTermForm() {
     <form onSubmit={handleSubmit}>
       <Card>
         <CardHeader>
-          <CardTitle>Explain Medical Term</CardTitle>
-          <CardDescription>Enter a term to get a simple explanation.</CardDescription>
+          <CardTitle>شرح مصطلح طبي</CardTitle>
+          <CardDescription>أدخل مصطلحًا للحصول على شرح بسيط.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid w-full gap-1.5">
-            <Label htmlFor="term">Medical Term</Label>
+            <Label htmlFor="term">المصطلح الطبي</Label>
             <Input
               id="term"
-              placeholder="e.g., 'Otolaryngology'"
+              placeholder="على سبيل المثال، 'طب الأنف والأذن والحنجرة'"
               value={term}
               onChange={(e) => setTerm(e.target.value)}
             />
@@ -74,15 +74,15 @@ export function ExplainTermForm() {
             <div className="flex items-center justify-center pt-4">
               <div className="flex flex-col items-center gap-2 text-muted-foreground">
                 <Loader2 className="h-8 w-8 animate-spin" />
-                <p>Getting explanation...</p>
+                <p>جارٍ الحصول على الشرح...</p>
               </div>
             </div>
           ) : explanation && (
             <div className="relative pt-4">
-                <Label htmlFor="explanation">Explanation</Label>
+                <Label htmlFor="explanation">الشرح</Label>
                  <Textarea
                     id="explanation"
-                    placeholder="Explanation will appear here..."
+                    placeholder="سيظهر الشرح هنا..."
                     value={explanation}
                     readOnly
                     rows={4}
@@ -105,12 +105,12 @@ export function ExplainTermForm() {
             {isPending ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Explaining...
+                جارٍ الشرح...
               </>
             ) : (
               <>
                 <BookOpen className="mr-2 h-4 w-4" />
-                Explain Term
+                اشرح المصطلح
               </>
             )}
           </Button>

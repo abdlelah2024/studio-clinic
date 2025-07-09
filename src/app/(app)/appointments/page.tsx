@@ -15,8 +15,8 @@ export default function AppointmentsPage() {
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle>Appointments</CardTitle>
-            <CardDescription>Manage and view all patient appointments.</CardDescription>
+            <CardTitle>المواعيد</CardTitle>
+            <CardDescription>إدارة وعرض جميع مواعيد المرضى.</CardDescription>
           </div>
           <div className="flex items-center gap-2">
             <DropdownMenu>
@@ -24,23 +24,23 @@ export default function AppointmentsPage() {
                 <Button variant="outline" size="sm" className="gap-1">
                   <ListFilter className="h-3.5 w-3.5" />
                   <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-                    Filter
+                    فلترة
                   </span>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuLabel>Filter by Status</DropdownMenuLabel>
+                <DropdownMenuLabel>فلترة حسب الحالة</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>Scheduled</DropdownMenuItem>
-                <DropdownMenuItem>Completed</DropdownMenuItem>
-                <DropdownMenuItem>Canceled</DropdownMenuItem>
+                <DropdownMenuItem>مجدول</DropdownMenuItem>
+                <DropdownMenuItem>مكتمل</DropdownMenuItem>
+                <DropdownMenuItem>ملغى</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
             <QuickAddPatientDialog />
             <Button size="sm" className="gap-1">
               <PlusCircle className="h-3.5 w-3.5" />
               <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-                New Appointment
+                موعد جديد
               </span>
             </Button>
           </div>
@@ -50,15 +50,15 @@ export default function AppointmentsPage() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Patient</TableHead>
-              <TableHead>Doctor</TableHead>
-              <TableHead>Reason</TableHead>
-              <TableHead>Date</TableHead>
-              <TableHead>Time</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Free Return (7 days)</TableHead>
+              <TableHead>المريض</TableHead>
+              <TableHead>الطبيب</TableHead>
+              <TableHead>السبب</TableHead>
+              <TableHead>التاريخ</TableHead>
+              <TableHead>الوقت</TableHead>
+              <TableHead>الحالة</TableHead>
+              <TableHead>عودة مجانية (7 أيام)</TableHead>
               <TableHead>
-                <span className="sr-only">Actions</span>
+                <span className="sr-only">الإجراءات</span>
               </TableHead>
             </TableRow>
           </TableHeader>
@@ -93,14 +93,14 @@ export default function AppointmentsPage() {
                   <TableCell>{appointment.startTime}</TableCell>
                   <TableCell>
                     <Badge variant={appointment.status === 'Completed' ? 'default' : appointment.status === 'Canceled' ? 'destructive' : 'secondary'}>
-                      {appointment.status}
+                      {appointment.status === 'Completed' ? 'مكتمل' : appointment.status === 'Canceled' ? 'ملغى' : 'مجدول'}
                     </Badge>
                   </TableCell>
                   <TableCell>
                     {isFreeReturn ? (
-                        <Badge variant="secondary">Eligible</Badge>
+                        <Badge variant="secondary">مؤهل</Badge>
                     ) : (
-                        <Badge variant="outline">Not Eligible</Badge>
+                        <Badge variant="outline">غير مؤهل</Badge>
                     )}
                    </TableCell>
                   <TableCell>
@@ -112,12 +112,12 @@ export default function AppointmentsPage() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem>Edit</DropdownMenuItem>
-                        <DropdownMenuItem>Reschedule</DropdownMenuItem>
-                        <DropdownMenuItem>Cancel</DropdownMenuItem>
+                        <DropdownMenuLabel>الإجراءات</DropdownMenuLabel>
+                        <DropdownMenuItem>تعديل</DropdownMenuItem>
+                        <DropdownMenuItem>إعادة جدولة</DropdownMenuItem>
+                        <DropdownMenuItem>إلغاء</DropdownMenuItem>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem className="text-destructive">Delete</DropdownMenuItem>
+                        <DropdownMenuItem className="text-destructive">حذف</DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>

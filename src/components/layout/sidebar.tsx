@@ -26,13 +26,13 @@ export function AppSidebar() {
   const pathname = usePathname()
 
   const menuItems = [
-    { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-    { href: "/appointments", label: "Appointments", icon: CalendarDays },
-    { href: "/patients", label: "Patients", icon: Users },
-    { href: "/doctors", label: "Doctors", icon: Stethoscope },
-    { href: "/reports", label: "Reports", icon: FileText },
-    { href: "/users", label: "Users", icon: Users },
-    { href: "/settings", label: "Settings", icon: Settings },
+    { href: "/dashboard", label: "لوحة التحكم", icon: LayoutDashboard },
+    { href: "/appointments", label: "المواعيد", icon: CalendarDays },
+    { href: "/patients", label: "المرضى", icon: Users },
+    { href: "/doctors", label: "الأطباء", icon: Stethoscope },
+    { href: "/reports", label: "التقارير", icon: FileText },
+    { href: "/users", label: "المستخدمون", icon: Users },
+    { href: "/settings", label: "الإعدادات", icon: Settings },
   ]
 
   return (
@@ -66,7 +66,7 @@ export function AppSidebar() {
             <SidebarMenuItem>
               <SidebarMenuButton>
                 <BadgeHelp />
-                <span>Help & Support</span>
+                <span>المساعدة والدعم</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>

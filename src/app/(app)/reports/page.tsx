@@ -9,14 +9,14 @@ export default function ReportsPage() {
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle>Reports</CardTitle>
-            <CardDescription>View and manage patient reports.</CardDescription>
+            <CardTitle>التقارير</CardTitle>
+            <CardDescription>عرض وإدارة تقارير المرضى.</CardDescription>
           </div>
           <Button size="sm" className="gap-1" asChild>
             <Link href="/reports/new">
               <PlusCircle className="h-3.5 w-3.5" />
               <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-                New AI Draft
+                مسودة جديدة بالذكاء الاصطناعي
               </span>
             </Link>
           </Button>
@@ -27,13 +27,13 @@ export default function ReportsPage() {
           <div className="flex flex-col items-center gap-1 text-center">
             <FileText className="h-12 w-12 text-muted-foreground" />
             <h3 className="text-2xl font-bold tracking-tight">
-              No reports found
+              لم يتم العثور على تقارير
             </h3>
             <p className="text-sm text-muted-foreground">
-              You can start generating reports using the AI Draft tool.
+              يمكنك البدء في إنشاء التقارير باستخدام أداة المسودة بالذكاء الاصطناعي.
             </p>
             <Button className="mt-4" asChild>
-              <Link href="/reports/new">New AI Draft</Link>
+              <Link href="/reports/new">مسودة جديدة بالذكاء الاصطناعي</Link>
             </Button>
           </div>
         </div>

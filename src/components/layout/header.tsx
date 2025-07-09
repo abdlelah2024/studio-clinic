@@ -24,7 +24,7 @@ export function AppHeader() {
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             type="search"
-            placeholder="Search patients, appointments..."
+            placeholder="بحث عن المرضى، المواعيد..."
             className="w-full rounded-lg bg-background pl-8 md:w-[280px] lg:w-[320px]"
           />
         </div>
@@ -51,11 +51,11 @@ export function AppHeader() {
               <div className="text-xs text-muted-foreground">{mockUser.email}</div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>Profile</DropdownMenuItem>
-            <DropdownMenuItem>Billing</DropdownMenuItem>
-            <DropdownMenuItem>Settings</DropdownMenuItem>
+            <DropdownMenuItem>الملف الشخصي</DropdownMenuItem>
+            <DropdownMenuItem>الفواتير</DropdownMenuItem>
+            <DropdownMenuItem>الإعدادات</DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>Logout</DropdownMenuItem>
+            <DropdownMenuItem>تسجيل الخروج</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
