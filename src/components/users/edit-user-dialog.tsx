@@ -1,6 +1,6 @@
 
 "use client"
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import {
   Dialog,
   DialogContent,
@@ -19,17 +19,23 @@ import type { User } from "@/lib/types"
 interface EditUserDialogProps {
   children: React.ReactNode;
   user: User;
+  onUserUpdated: (user: User) => void;
 }
 
-export function EditUserDialog({ children, user }: EditUserDialogProps) {
+export function EditUserDialog({ children, user, onUserUpdated }: EditUserDialogProps) {
   const [open, setOpen] = useState(false)
   const [name, setName] = useState(user.name)
-  const [email, setEmail] = useState(user.email)
   const [role, setRole] = useState(user.role)
+
+  useEffect(() => {
+    if (open) {
+        setName(user.name);
+        setRole(user.role);
+    }
+  }, [open, user]);
   
   const handleSubmit = () => {
-    // TODO: Implement actual update logic
-    console.log("Updating user:", { name, email, role });
+    onUserUpdated({ ...user, name, role });
     setOpen(false);
   }
 
@@ -54,7 +60,7 @@ export function EditUserDialog({ children, user }: EditUserDialogProps) {
             <Label htmlFor="email" className="text-right">
               البريد الإلكتروني
             </Label>
-            <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="col-span-3" readOnly />
+            <Input id="email" type="email" value={user.email} className="col-span-3" readOnly />
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="role" className="text-right">

@@ -32,6 +32,10 @@ export default function UsersPage() {
     setUsers(prev => [...prev, userWithAvatar]);
   };
 
+  const handleUpdateUser = (updatedUser: User) => {
+    setUsers(prev => prev.map(user => user.email === updatedUser.email ? updatedUser : user));
+  }
+
   const handleDeleteUser = (email: string) => {
     setUsers(prev => prev.filter(user => user.email !== email));
   };
@@ -94,7 +98,7 @@ export default function UsersPage() {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuLabel>الإجراءات</DropdownMenuLabel>
-                       <EditUserDialog user={user}>
+                       <EditUserDialog user={user} onUserUpdated={handleUpdateUser}>
                         <DropdownMenuItem onSelect={(e) => e.preventDefault()}>تعديل</DropdownMenuItem>
                        </EditUserDialog>
                       <DropdownMenuItem>إدارة الصلاحيات</DropdownMenuItem>
