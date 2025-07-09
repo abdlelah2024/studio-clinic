@@ -5,26 +5,58 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuItem } from "@/components/ui/dropdown-menu"
-import { mockAppointments } from "@/lib/data"
+import { mockAppointments, mockDoctors, mockPatients } from "@/lib/data"
 import { Badge } from "@/components/ui/badge"
 import { MoreHorizontal, PlusCircle, ListFilter, UserPlus } from "lucide-react"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import { AddPatientDialog } from "@/components/patients/add-patient-dialog"
-import { differenceInDays, parseISO } from "date-fns"
+import { differenceInDays, parseISO, format } from "date-fns"
 import type { Patient, Appointment } from "@/lib/types"
+import { NewAppointmentDialog } from "@/components/appointments/new-appointment-dialog"
 
 type StatusFilter = Appointment['status'] | 'All';
 
 export default function AppointmentsPage() {
+  const [appointments, setAppointments] = useState<Appointment[]>(mockAppointments);
+  const [patients, setPatients] = useState<Patient[]>(mockPatients);
   const [filter, setFilter] = useState<StatusFilter>('All');
 
   const handleAddPatient = (newPatient: Omit<Patient, 'id' | 'avatar' | 'lastVisit'>) => {
-    // In a real app, you'd save this to a database and maybe refresh the appointments list
-    // or select the new patient in a "New Appointment" form.
+    const patientWithDefaults: Patient = {
+      id: `p${patients.length + 1}`,
+      ...newPatient,
+      avatar: `https://placehold.co/100x100/E0E0E0/000000.png?text=${newPatient.name.charAt(0)}`,
+      lastVisit: format(new Date(), 'yyyy-MM-dd')
+    };
+    setPatients(prev => [patientWithDefaults, ...prev]);
     console.log("New patient added:", newPatient);
   };
+  
+  const handleAddAppointment = (newAppointmentData: Omit<Appointment, 'id' | 'patient' | 'doctor' | 'status'> & { patientName: string; doctorName: string; }) => {
+    const patient = mockPatients.find(p => p.name === newAppointmentData.patientName);
+    const doctor = mockDoctors.find(d => d.name === newAppointmentData.doctorName);
 
-  const filteredAppointments = mockAppointments.filter(appointment => {
+    if (!patient || !doctor) {
+      // In a real app, you'd show an error toast
+      console.error("Patient or Doctor not found");
+      return;
+    }
+
+    const newAppointment: Appointment = {
+      id: `a${appointments.length + 1}`,
+      patient: { name: patient.name, avatar: patient.avatar },
+      doctor: { name: doctor.name, avatar: doctor.avatar },
+      date: newAppointmentData.date,
+      startTime: newAppointmentData.startTime,
+      endTime: newAppointmentData.endTime,
+      reason: newAppointmentData.reason,
+      status: 'Scheduled'
+    };
+    setAppointments(prev => [newAppointment, ...prev]);
+  };
+
+
+  const filteredAppointments = appointments.filter(appointment => {
     if (filter === 'All') return true;
     return appointment.status === filter;
   });
@@ -73,12 +105,14 @@ export default function AppointmentsPage() {
                 </span>
               </Button>
             </AddPatientDialog>
-            <Button size="sm" className="gap-1">
-              <PlusCircle className="h-3.5 w-3.5" />
-              <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-                موعد جديد
-              </span>
-            </Button>
+            <NewAppointmentDialog onAppointmentAdded={handleAddAppointment}>
+              <Button size="sm" className="gap-1">
+                <PlusCircle className="h-3.5 w-3.5" />
+                <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
+                  موعد جديد
+                </span>
+              </Button>
+            </NewAppointmentDialog>
           </div>
         </div>
       </CardHeader>
