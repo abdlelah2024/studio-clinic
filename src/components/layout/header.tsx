@@ -2,7 +2,7 @@
 "use client"
 import React, { useState, useEffect, useRef } from "react"
 import Link from "next/link"
-import { Bell, Search, Calendar, UserPlus } from "lucide-react"
+import { Bell, Search, Calendar, UserPlus, CircleUser, CalendarCheck, CalendarX2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -26,6 +26,28 @@ import {
 } from "@/components/ui/command"
 import { useAppContext } from "@/context/app-context"
 import { useRouter } from "next/navigation"
+
+const mockNotifications = [
+    {
+        icon: <CalendarCheck className="h-4 w-4 text-green-500" />,
+        title: "تم تأكيد الموعد",
+        description: "تم تأكيد موعد أحمد محمود.",
+        time: "قبل 5 دقائق",
+    },
+    {
+        icon: <CalendarX2 className="h-4 w-4 text-red-500" />,
+        title: "تم إلغاء الموعد",
+        description: "تم إلغاء موعد فاطمة علي.",
+        time: "قبل ساعة",
+    },
+    {
+        icon: <CircleUser className="h-4 w-4 text-blue-500" />,
+        title: "مريض جديد مسجل",
+        description: "تم تسجيل خالد عبد الله كمريض جديد.",
+        time: "أمس",
+    },
+];
+
 
 export function AppHeader() {
   const [searchQuery, setSearchQuery] = useState("")
@@ -90,7 +112,7 @@ export function AppHeader() {
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             type="search"
-            placeholder="بحث سريع بالاسم أو الرقم..."
+            placeholder="بحث سريع عن مريض بالاسم أو الرقم..."
             className="w-full rounded-lg bg-background pl-8 md:w-[280px] lg:w-[320px]"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -143,10 +165,33 @@ export function AppHeader() {
         </div>
       </div>
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" className="rounded-full">
-          <Bell className="h-5 w-5" />
-          <span className="sr-only">Toggle notifications</span>
-        </Button>
+        <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="rounded-full">
+                <Bell className="h-5 w-5" />
+                <span className="sr-only">Toggle notifications</span>
+                </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-[350px]">
+                <DropdownMenuLabel>الإشعارات</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                {mockNotifications.map((notification, index) => (
+                    <DropdownMenuItem key={index} className="flex items-start gap-3">
+                        <div className="mt-1">{notification.icon}</div>
+                        <div className="flex-1">
+                            <p className="font-semibold">{notification.title}</p>
+                            <p className="text-xs text-muted-foreground">{notification.description}</p>
+                             <p className="text-xs text-muted-foreground mt-1">{notification.time}</p>
+                        </div>
+                    </DropdownMenuItem>
+                ))}
+                 <DropdownMenuSeparator />
+                 <DropdownMenuItem className="justify-center text-primary">
+                    عرض جميع الإشعارات
+                 </DropdownMenuItem>
+            </DropdownMenuContent>
+        </DropdownMenu>
+
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="rounded-full">
