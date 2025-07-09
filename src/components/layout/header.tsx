@@ -2,7 +2,7 @@
 "use client"
 import React, { useState, useEffect, useRef } from "react"
 import Link from "next/link"
-import { Bell, Search, PlusCircle, Calendar, UserPlus } from "lucide-react"
+import { Bell, Search, Calendar, UserPlus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -59,6 +59,27 @@ export function AppHeader() {
     setSearchQuery("")
   }
 
+  const handlePatientSelect = (patientId: string) => {
+    router.push(`/patients/${patientId}`);
+    resetSearch();
+  }
+
+  const handleNewAppointment = () => {
+    openNewAppointmentDialog({onAppointmentAdded: () => {}});
+    resetSearch();
+  }
+  
+  const handleNewPatient = () => {
+    openNewPatientDialog(()=>{});
+    resetSearch();
+  }
+
+  const handleViewAllAppointments = () => {
+    router.push('/appointments');
+    resetSearch();
+  }
+
+
   return (
     <header className="sticky top-0 z-40 flex h-16 items-center gap-4 border-b bg-card px-4 md:px-6">
       <div className="md:hidden">
@@ -69,7 +90,7 @@ export function AppHeader() {
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             type="search"
-            placeholder="بحث سريع عن مريض بالاسم أو الرقم..."
+            placeholder="بحث سريع بالاسم أو الرقم..."
             className="w-full rounded-lg bg-background pl-8 md:w-[280px] lg:w-[320px]"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -83,10 +104,7 @@ export function AppHeader() {
                     {filteredPatients.map((patient) => (
                       <CommandItem
                         key={patient.id}
-                        onSelect={() => {
-                           router.push(`/patients/${patient.id}`);
-                           resetSearch();
-                        }}
+                        onSelect={() => handlePatientSelect(patient.id)}
                       >
                          <Avatar className="mr-2 h-6 w-6">
                             <AvatarImage src={patient.avatar} data-ai-hint="person face" />
@@ -102,12 +120,7 @@ export function AppHeader() {
                     <CommandEmpty>
                         <div className="p-4 text-center text-sm">
                             <p>لم يتم العثور على مريض بهذا الاسم/الرقم.</p>
-                             <Button variant="link" className="mt-2" onMouseDown={(e) => e.preventDefault()} onClick={() => {
-                                // In a real app, you'd probably pass a function from the page
-                                // to update the state. Here we are just opening the dialog.
-                                openNewPatientDialog(()=>{});
-                                resetSearch();
-                             }}>
+                             <Button variant="link" className="mt-2" onMouseDown={(e) => e.preventDefault()} onClick={handleNewPatient}>
                                 <UserPlus className="mr-2 h-4 w-4" /> إضافة مريض جديد
                             </Button>
                         </div>
@@ -115,19 +128,11 @@ export function AppHeader() {
                  )}
 
                 <CommandGroup heading="إجراءات سريعة">
-                  <CommandItem onSelect={() => {
-                      // In a real app, you'd probably pass a function from the page
-                      // to update the state. Here we are just opening the dialog.
-                      openNewAppointmentDialog({onAppointmentAdded: () => {}});
-                      resetSearch();
-                  }}>
+                  <CommandItem onSelect={handleNewAppointment}>
                     <Calendar className="mr-2 h-4 w-4" />
                     <span>حجز موعد جديد</span>
                   </CommandItem>
-                   <CommandItem onSelect={() => {
-                        router.push('/appointments');
-                        resetSearch();
-                   }}>
+                   <CommandItem onSelect={handleViewAllAppointments}>
                     <Calendar className="mr-2 h-4 w-4" />
                     <span>عرض كل المواعيد</span>
                   </CommandItem>
