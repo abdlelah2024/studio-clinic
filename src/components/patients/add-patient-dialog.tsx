@@ -14,6 +14,20 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import type { Patient } from "@/lib/types"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { z } from "zod"
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
+import { useToast } from "@/hooks/use-toast"
+
+const patientSchema = z.object({
+  name: z.string().min(1, "الاسم مطلوب"),
+  phone: z.string().min(1, "رقم الهاتف مطلوب"),
+  email: z.string().email("البريد الإلكتروني غير صالح"),
+  dob: z.string().min(1, "تاريخ الميلاد مطلوب"),
+});
+
+type PatientFormData = z.infer<typeof patientSchema>;
 
 interface AddPatientDialogProps {
   children: React.ReactNode;
@@ -22,24 +36,35 @@ interface AddPatientDialogProps {
 
 export function AddPatientDialog({ children, onPatientAdded }: AddPatientDialogProps) {
   const [open, setOpen] = useState(false);
-  const [name, setName] = useState("");
-  const [phone, setPhone] = useState("");
-  const [email, setEmail] = useState("");
-  const [dob, setDob] = useState("");
+  const { toast } = useToast();
 
-  const handleSubmit = () => {
-    if (name && phone && email && dob) {
-      onPatientAdded({ name, phone, email, dob });
-      setOpen(false);
-      setName("");
-      setPhone("");
-      setEmail("");
-      setDob("");
-    }
+  const form = useForm<PatientFormData>({
+    resolver: zodResolver(patientSchema),
+    defaultValues: {
+      name: "",
+      phone: "",
+      email: "",
+      dob: "",
+    },
+  });
+
+  const onSubmit = (data: PatientFormData) => {
+    onPatientAdded(data);
+    toast({
+        title: "تمت الإضافة بنجاح",
+        description: `تمت إضافة المريض ${data.name} إلى السجلات.`,
+    });
+    setOpen(false);
+    form.reset();
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={(isOpen) => {
+      setOpen(isOpen);
+      if (!isOpen) {
+        form.reset();
+      }
+    }}>
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
@@ -48,36 +73,66 @@ export function AddPatientDialog({ children, onPatientAdded }: AddPatientDialogP
             إنشاء سجل مريض جديد. يمكنك إضافة المزيد من التفاصيل لاحقًا.
           </DialogDescription>
         </DialogHeader>
-        <div className="grid gap-4 py-4">
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="name" className="text-right">
-              الاسم
-            </Label>
-            <Input id="name" placeholder="أحمد محمود" className="col-span-3" value={name} onChange={(e) => setName(e.target.value)} />
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="phone" className="text-right">
-              الهاتف
-            </Label>
-            <Input id="phone" placeholder="555-123-4567" className="col-span-3" value={phone} onChange={(e) => setPhone(e.target.value)} />
-          </div>
-           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="email" className="text-right">
-              البريد الإلكتروني
-            </Label>
-            <Input id="email" type="email" placeholder="ahmad@example.com" className="col-span-3" value={email} onChange={(e) => setEmail(e.target.value)} />
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="dob" className="text-right">
-              تاريخ الميلاد
-            </Label>
-            <Input id="dob" type="date" className="col-span-3" value={dob} onChange={(e) => setDob(e.target.value)} />
-          </div>
-        </div>
-        <DialogFooter>
-          <Button type="button" onClick={handleSubmit}>حفظ المريض</Button>
-          <Button variant="outline" onClick={() => setOpen(false)}>إلغاء</Button>
-        </DialogFooter>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-4 py-4">
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem className="grid grid-cols-4 items-center gap-4">
+                  <FormLabel className="text-right">الاسم</FormLabel>
+                  <FormControl>
+                    <Input {...field} placeholder="أحمد محمود" className="col-span-3" />
+                  </FormControl>
+                  <FormMessage className="col-span-4 text-center" />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="phone"
+              render={({ field }) => (
+                <FormItem className="grid grid-cols-4 items-center gap-4">
+                  <FormLabel className="text-right">الهاتف</FormLabel>
+                  <FormControl>
+                    <Input {...field} placeholder="555-123-4567" className="col-span-3" />
+                  </FormControl>
+                  <FormMessage className="col-span-4 text-center" />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem className="grid grid-cols-4 items-center gap-4">
+                  <FormLabel className="text-right">البريد الإلكتروني</FormLabel>
+                  <FormControl>
+                    <Input {...field} type="email" placeholder="ahmad@example.com" className="col-span-3" />
+                  </FormControl>
+                  <FormMessage className="col-span-4 text-center" />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="dob"
+              render={({ field }) => (
+                <FormItem className="grid grid-cols-4 items-center gap-4">
+                  <FormLabel className="text-right">تاريخ الميلاد</FormLabel>
+                  <FormControl>
+                    <Input {...field} type="date" className="col-span-3" />
+                  </FormControl>
+                  <FormMessage className="col-span-4 text-center" />
+                </FormItem>
+              )}
+            />
+            <DialogFooter>
+                <Button type="submit">حفظ المريض</Button>
+                <Button variant="outline" type="button" onClick={() => setOpen(false)}>إلغاء</Button>
+            </DialogFooter>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   )
