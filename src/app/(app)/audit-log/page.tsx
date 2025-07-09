@@ -13,6 +13,8 @@ import { format, formatDistanceToNow } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import { Search, ListFilter, ArrowUpDown, History, User, Stethoscope, Calendar, FileText, Bot, Pencil, Trash2, XCircle, LogIn } from "lucide-react";
 import { cn } from '@/lib/utils';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Button } from '@/components/ui/button';
 
 type SortKey = 'date-asc' | 'date-desc';
 
@@ -209,3 +211,4 @@ export default function AuditLogPage() {
         </Card>
     );
 }
+    
