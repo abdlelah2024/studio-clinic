@@ -8,14 +8,16 @@ import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLab
 import { mockAppointments, mockPatients, mockDoctors } from "@/lib/data"
 import type { Appointment } from "@/lib/types"
 import { Badge } from "@/components/ui/badge"
-import { MoreHorizontal, PlusCircle, ListFilter, Edit, Trash2, Clock, XCircle } from "lucide-react"
+import { MoreHorizontal, PlusCircle, ListFilter, Edit, Trash2, Clock, XCircle, CheckCircle2 } from "lucide-react"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import { RescheduleAppointmentDialog } from "@/components/appointments/reschedule-appointment-dialog"
 import { useToast } from "@/hooks/use-toast"
 import { useAppContext } from "@/context/app-context"
+import { cn } from "@/lib/utils"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 
 
-type AppointmentStatus = 'Scheduled' | 'Completed' | 'Canceled';
+type AppointmentStatus = 'Scheduled' | 'Completed' | 'Canceled' | 'Waiting';
 
 export default function AppointmentsPage() {
   const [appointments, setAppointments] = useState<Appointment[]>(mockAppointments);
@@ -83,6 +85,7 @@ export default function AppointmentsPage() {
       case 'Completed': return 'مكتمل';
       case 'Canceled': return 'ملغى';
       case 'Scheduled': return 'مجدول';
+      case 'Waiting': return 'منتظر';
       default: return status;
     }
   }
@@ -115,6 +118,7 @@ export default function AppointmentsPage() {
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onSelect={() => setFilter('All')}>الكل</DropdownMenuItem>
                   <DropdownMenuItem onSelect={() => setFilter('Scheduled')}>مجدول</DropdownMenuItem>
+                  <DropdownMenuItem onSelect={() => setFilter('Waiting')}>منتظر</DropdownMenuItem>
                   <DropdownMenuItem onSelect={() => setFilter('Completed')}>مكتمل</DropdownMenuItem>
                   <DropdownMenuItem onSelect={() => setFilter('Canceled')}>ملغى</DropdownMenuItem>
                 </DropdownMenuContent>
@@ -150,7 +154,21 @@ export default function AppointmentsPage() {
                         <AvatarImage src={appointment.patient.avatar} data-ai-hint="person face" />
                         <AvatarFallback>{appointment.patient.name.charAt(0)}</AvatarFallback>
                       </Avatar>
-                      <span className="font-medium">{appointment.patient.name}</span>
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-medium">{appointment.patient.name}</span>
+                         {appointment.freeReturn && (
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger>
+                                <CheckCircle2 className="h-4 w-4 text-green-600" />
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>عودة مجانية مفعلة</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        )}
+                      </div>
                     </div>
                   </TableCell>
                   <TableCell>
@@ -166,7 +184,11 @@ export default function AppointmentsPage() {
                   <TableCell>{appointment.date}</TableCell>
                   <TableCell>{appointment.startTime}</TableCell>
                   <TableCell>
-                    <Badge variant={appointment.status === 'Completed' ? 'default' : appointment.status === 'Canceled' ? 'destructive' : 'secondary'}>
+                    <Badge variant={appointment.status === 'Completed' ? 'default' : appointment.status === 'Canceled' ? 'destructive' : 'secondary'}
+                      className={cn({
+                        "bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300 border-blue-300 hover:bg-blue-200": appointment.status === 'Waiting',
+                      })}
+                    >
                       {getStatusTranslation(appointment.status)}
                     </Badge>
                   </TableCell>

@@ -15,6 +15,16 @@ export default function PatientDetailPage({ params }: { params: { id: string } }
         </div>
     )
   }
+  
+  const getStatusTranslation = (status: 'Scheduled' | 'Completed' | 'Canceled' | 'Waiting') => {
+    switch (status) {
+      case 'Completed': return 'مكتمل';
+      case 'Canceled': return 'ملغى';
+      case 'Scheduled': return 'مجدول';
+      case 'Waiting': return 'منتظر';
+      default: return status;
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -57,7 +67,7 @@ export default function PatientDetailPage({ params }: { params: { id: string } }
                                     <TableCell>{appointment.reason}</TableCell>
                                     <TableCell>
                                         <Badge variant={appointment.status === 'Completed' ? 'default' : appointment.status === 'Canceled' ? 'destructive' : 'secondary'}>
-                                        {appointment.status === 'Completed' ? 'مكتمل' : appointment.status === 'Canceled' ? 'ملغى' : 'مجدول'}
+                                        {getStatusTranslation(appointment.status)}
                                         </Badge>
                                     </TableCell>
                                 </TableRow>

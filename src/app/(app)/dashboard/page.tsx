@@ -7,7 +7,17 @@ import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
 export default function DashboardPage() {
-  const upcomingAppointments = mockAppointments.filter(a => a.status === 'Scheduled').slice(0, 5);
+  const upcomingAppointments = mockAppointments.filter(a => a.status === 'Scheduled' || a.status === 'Waiting').slice(0, 5);
+
+  const getStatusTranslation = (status: 'Scheduled' | 'Completed' | 'Canceled' | 'Waiting') => {
+    switch (status) {
+      case 'Completed': return 'مكتمل';
+      case 'Canceled': return 'ملغى';
+      case 'Scheduled': return 'مجدول';
+      case 'Waiting': return 'منتظر';
+      default: return status;
+    }
+  }
 
   return (
     <div className="flex flex-col gap-6">
@@ -44,7 +54,7 @@ export default function DashboardPage() {
                       </TableCell>
                       <TableCell>{appointment.startTime}</TableCell>
                       <TableCell>
-                        <Badge variant="secondary">{appointment.status === 'Completed' ? 'مكتمل' : appointment.status === 'Canceled' ? 'ملغى' : 'مجدول'}</Badge>
+                        <Badge variant="secondary">{getStatusTranslation(appointment.status)}</Badge>
                       </TableCell>
                     </TableRow>
                   ))}

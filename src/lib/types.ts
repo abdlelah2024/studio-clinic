@@ -12,6 +12,7 @@ export type Doctor = {
   name: string;
   specialty: string;
   avatar: string;
+  freeReturnPeriod?: number; // in days
 };
 
 export type Appointment = {
@@ -21,7 +22,7 @@ export type Appointment = {
   date: string;
   startTime: string;
   endTime: string;
-  status: 'Scheduled' | 'Completed' | 'Canceled';
+  status: 'Scheduled' | 'Completed' | 'Canceled' | 'Waiting';
   reason: string;
   freeReturn?: boolean;
 };

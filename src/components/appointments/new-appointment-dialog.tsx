@@ -1,6 +1,6 @@
 
 "use client"
-import React, { useState, useEffect } from "react"
+import React, { useState, useEffect, useCallback } from "react"
 import {
   Dialog,
   DialogContent,
@@ -14,9 +14,10 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import type { Appointment, Patient } from "@/lib/types"
+import type { Appointment, Patient, Doctor } from "@/lib/types"
 import { mockDoctors } from "@/lib/data"
 import { Combobox } from "../ui/combobox"
+import { Checkbox } from "../ui/checkbox"
 
 type AddAppointmentFunction = (appointment: Omit<Appointment, 'id' | 'patient' | 'doctor' | 'status'> & { patientName: string, doctorName: string }) => void;
 
@@ -36,6 +37,8 @@ export function NewAppointmentDialog({ children, onAppointmentAdded, patients, o
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
   const [reason, setReason] = useState("");
+  const [freeReturn, setFreeReturn] = useState(false);
+  const [selectedDoctor, setSelectedDoctor] = useState<Doctor | null>(null);
 
   const resetForm = useCallback(() => {
     setPatientName(initialPatientName || "");
@@ -44,6 +47,8 @@ export function NewAppointmentDialog({ children, onAppointmentAdded, patients, o
     setStartTime("");
     setEndTime("");
     setReason("");
+    setFreeReturn(false);
+    setSelectedDoctor(null);
   },[initialPatientName]);
 
 
@@ -53,9 +58,14 @@ export function NewAppointmentDialog({ children, onAppointmentAdded, patients, o
     }
   }, [initialPatientName, open, resetForm]);
 
+  useEffect(() => {
+    const doctor = mockDoctors.find(d => d.name === doctorName) || null;
+    setSelectedDoctor(doctor);
+  }, [doctorName]);
+
   const handleSubmit = () => {
     if (patientName && doctorName && date && startTime && endTime && reason) {
-      onAppointmentAdded({ patientName, doctorName, date, startTime, endTime, reason });
+      onAppointmentAdded({ patientName, doctorName, date, startTime, endTime, reason, freeReturn });
       onOpenChange(false);
     }
   };
@@ -124,6 +134,17 @@ export function NewAppointmentDialog({ children, onAppointmentAdded, patients, o
             </Label>
             <Textarea id="reason" placeholder="سبب الزيارة..." className="col-span-3" value={reason} onChange={(e) => setReason(e.target.value)} />
           </div>
+           {selectedDoctor?.freeReturnPeriod && (
+            <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="free-return" className="text-right col-span-1">العودة</Label>
+                <div className="col-span-3 flex items-center space-x-2 space-x-reverse">
+                    <Checkbox id="free-return" checked={freeReturn} onCheckedChange={(checked) => setFreeReturn(!!checked)} />
+                    <Label htmlFor="free-return" className="text-sm font-normal text-muted-foreground">
+                        تضمين عودة مجانية (خلال {selectedDoctor.freeReturnPeriod} يوم)
+                    </Label>
+                </div>
+            </div>
+           )}
         </div>
         <DialogFooter>
           <Button type="button" onClick={handleSubmit}>جدولة الموعد</Button>
