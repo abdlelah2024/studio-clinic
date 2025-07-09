@@ -46,7 +46,6 @@ export default function PatientsPage() {
             <TableRow>
               <TableHead>الاسم</TableHead>
               <TableHead>الهاتف</TableHead>
-              <TableHead>تاريخ الميلاد</TableHead>
               <TableHead>آخر زيارة</TableHead>
               <TableHead className="text-right">الإجراءات</TableHead>
             </TableRow>
@@ -64,7 +63,6 @@ export default function PatientsPage() {
                   </div>
                 </TableCell>
                 <TableCell>{patient.phone}</TableCell>
-                <TableCell>{patient.dob}</TableCell>
                 <TableCell>{patient.lastVisit}</TableCell>
                 <TableCell className="text-right">
                     <Button asChild variant="outline" size="sm">
