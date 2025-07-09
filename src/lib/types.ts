@@ -24,6 +24,7 @@ export type Appointment = {
   endTime: string;
   status: 'Scheduled' | 'Completed' | 'Canceled';
   reason: string;
+  freeReturn?: boolean;
 };
 
 export type User = {

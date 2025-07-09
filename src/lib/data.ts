@@ -1,4 +1,5 @@
 import type { User, Patient, Doctor, Appointment } from './types';
+import { subDays, formatISO } from 'date-fns';
 
 export const mockUser: User = {
   name: 'Dr. Emily Carter',
@@ -31,8 +32,8 @@ const getISODate = (dayOffset = 0) => {
 export const mockAppointments: Appointment[] = [
   { id: 'a1', patient: { name: 'John Doe', avatar: 'https://placehold.co/100x100' }, doctor: mockDoctors[0], date: getISODate(), startTime: '09:00', endTime: '09:30', status: 'Scheduled', reason: 'Annual Checkup' },
   { id: 'a2', patient: { name: 'Jane Smith', avatar: 'https://placehold.co/100x100' }, doctor: mockDoctors[1], date: getISODate(), startTime: '10:00', endTime: '10:45', status: 'Scheduled', reason: 'Vaccination' },
-  { id: 'a3', patient: { name: 'Michael Johnson', avatar: 'https://placehold.co/100x100' }, doctor: mockDoctors[0], date: getISODate(), startTime: '11:00', endTime: '11:30', status: 'Completed', reason: 'Follow-up' },
+  { id: 'a3', patient: { name: 'Michael Johnson', avatar: 'https://placehold.co/100x100' }, doctor: mockDoctors[0], date: formatISO(subDays(new Date(), 3), { representation: 'date'}), startTime: '11:00', endTime: '11:30', status: 'Completed', reason: 'Follow-up' },
   { id: 'a4', patient: { name: 'Sarah Williams', avatar: 'https://placehold.co/100x100' }, doctor: mockDoctors[2], date: getISODate(1), startTime: '14:00', endTime: '14:30', status: 'Scheduled', reason: 'Skin rash consultation' },
   { id: 'a5', patient: { name: 'David Brown', avatar: 'https://placehold.co/100x100' }, doctor: mockDoctors[1], date: getISODate(1), startTime: '09:30', endTime: '10:00', status: 'Canceled', reason: 'Childhood Illness' },
-  { id: 'a6', patient: { name: 'Laura Wilson', avatar: 'https://placehold.co/100x100' }, doctor: mockDoctors[0], date: getISODate(), startTime: '13:00', endTime: '13:30', status: 'Scheduled', reason: 'Chest Pain' },
+  { id: 'a6', patient: { name: 'Laura Wilson', avatar: 'https://placehold.co/100x100' }, doctor: mockDoctors[0], date: formatISO(subDays(new Date(), 10), { representation: 'date'}), startTime: '13:00', endTime: '13:30', status: 'Completed', reason: 'Chest Pain' },
 ];
