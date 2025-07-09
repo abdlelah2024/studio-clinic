@@ -14,17 +14,18 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import type { Appointment } from "@/lib/types"
-import { mockPatients, mockDoctors } from "@/lib/data"
+import type { Appointment, Patient } from "@/lib/types"
+import { mockDoctors } from "@/lib/data"
 import { Combobox } from "../ui/combobox"
 
 
 interface NewAppointmentDialogProps {
   children: React.ReactNode;
   onAppointmentAdded: (appointment: Omit<Appointment, 'id' | 'patient' | 'doctor' | 'status'> & { patientName: string, doctorName: string }) => void;
+  patients: Patient[];
 }
 
-export function NewAppointmentDialog({ children, onAppointmentAdded }: NewAppointmentDialogProps) {
+export function NewAppointmentDialog({ children, onAppointmentAdded, patients }: NewAppointmentDialogProps) {
   const [open, setOpen] = useState(false);
   const [patientName, setPatientName] = useState("");
   const [doctorName, setDoctorName] = useState("");
@@ -47,7 +48,7 @@ export function NewAppointmentDialog({ children, onAppointmentAdded }: NewAppoin
     }
   };
   
-  const patientOptions = mockPatients.map(p => ({ value: p.name, label: p.name }));
+  const patientOptions = patients.map(p => ({ value: p.name, label: p.name }));
   const doctorOptions = mockDoctors.map(d => ({ value: d.name, label: d.name }));
 
 

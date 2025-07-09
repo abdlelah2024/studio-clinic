@@ -29,11 +29,13 @@ export default function AppointmentsPage() {
       lastVisit: format(new Date(), 'yyyy-MM-dd')
     };
     setPatients(prev => [patientWithDefaults, ...prev]);
-    console.log("New patient added:", newPatient);
+    // In a real app, you might want to update a global state or a shared context
+    // For now, we update local state which will be reflected in the new appointment dialog
+    // if it's re-rendered with the updated patients list.
   };
   
   const handleAddAppointment = (newAppointmentData: Omit<Appointment, 'id' | 'patient' | 'doctor' | 'status'> & { patientName: string; doctorName: string; }) => {
-    const patient = mockPatients.find(p => p.name === newAppointmentData.patientName);
+    const patient = patients.find(p => p.name === newAppointmentData.patientName);
     const doctor = mockDoctors.find(d => d.name === newAppointmentData.doctorName);
 
     if (!patient || !doctor) {
@@ -105,7 +107,7 @@ export default function AppointmentsPage() {
                 </span>
               </Button>
             </AddPatientDialog>
-            <NewAppointmentDialog onAppointmentAdded={handleAddAppointment}>
+            <NewAppointmentDialog onAppointmentAdded={handleAddAppointment} patients={patients}>
               <Button size="sm" className="gap-1">
                 <PlusCircle className="h-3.5 w-3.5" />
                 <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
