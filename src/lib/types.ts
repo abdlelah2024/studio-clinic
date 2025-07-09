@@ -53,3 +53,18 @@ export type Message = {
     text: string;
     timestamp: string;
 };
+
+export type AuditLogAction = 'Create' | 'Update' | 'Delete' | 'Cancel' | 'Login';
+export type AuditLogCategory = 'Patient' | 'Doctor' | 'Appointment' | 'User' | 'System' | 'Report';
+
+export type AuditLog = {
+  id: string;
+  action: AuditLogAction;
+  category: AuditLogCategory;
+  user: {
+    name: string;
+    avatar: string;
+  };
+  details: string;
+  timestamp: string; // ISO string for sorting
+};

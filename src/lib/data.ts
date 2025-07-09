@@ -1,4 +1,4 @@
-import type { User, Patient, Doctor, Appointment, UserRole, Permissions, Message } from './types';
+import type { User, Patient, Doctor, Appointment, UserRole, Permissions, Message, AuditLog } from './types';
 
 export const mockUser: User = {
   name: 'المسؤول',
@@ -71,4 +71,47 @@ export const mockMessages: Message[] = [
     { id: 'm2', senderEmail: 'asd19082@gmail.com', receiverEmail: 'ben.h@clinicflow.demo', text: 'بالتأكيد د. بن، سألقي نظرة عليه الآن.', timestamp: '10:01 ص' },
     { id: 'm3', senderEmail: 'ben.h@clinicflow.demo', receiverEmail: 'asd19082@gmail.com', text: 'شكرًا لك!', timestamp: '10:02 ص' },
     { id: 'm4', senderEmail: 'alia.m@clinicflow.demo', receiverEmail: 'asd19082@gmail.com', text: 'صباح الخير، تم تأكيد جميع مواعيد اليوم.', timestamp: '09:30 ص' },
+];
+
+export const mockAuditLogs: AuditLog[] = [
+  {
+    id: 'log1',
+    action: 'Create',
+    category: 'Patient',
+    user: mockUser,
+    details: 'أضاف مريضًا جديدًا: أحمد محمود',
+    timestamp: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(), // 1 hour ago
+  },
+  {
+    id: 'log2',
+    action: 'Update',
+    category: 'Appointment',
+    user: otherUsers[1], // Alia Mansour
+    details: 'تحديث موعد فاطمة علي',
+    timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), // 2 hours ago
+  },
+  {
+    id: 'log3',
+    action: 'Login',
+    category: 'System',
+    user: otherUsers[0], // Dr. Ben Hanson
+    details: 'تسجيل الدخول إلى النظام',
+    timestamp: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString(), // 3 hours ago
+  },
+  {
+    id: 'log4',
+    action: 'Delete',
+    category: 'Doctor',
+    user: mockUser,
+    details: 'إزالة الطبيب: د. ماركوس لي',
+    timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(), // 1 day ago
+  },
+   {
+    id: 'log5',
+    action: 'Create',
+    category: 'Report',
+    user: otherUsers[0],
+    details: 'إنشاء مسودة تقرير للمريض: خالد عبد الله',
+    timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), // 2 days ago
+  },
 ];
