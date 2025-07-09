@@ -1,3 +1,4 @@
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -74,11 +75,13 @@ export default function PatientsPage() {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuLabel>الإجراءات</DropdownMenuLabel>
-                      <DropdownMenuItem>عرض التفاصيل</DropdownMenuItem>
-                      <DropdownMenuItem>تعديل</DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link href={`/patients/${patient.id}`}>عرض التاريخ الطبي</Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem>تعديل الملف الشخصي</DropdownMenuItem>
                       <DropdownMenuItem>حجز موعد</DropdownMenuItem>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem className="text-destructive">حذف</DropdownMenuItem>
+                      <DropdownMenuItem className="text-destructive">حذف المريض</DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </TableCell>
