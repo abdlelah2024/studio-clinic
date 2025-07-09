@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -32,7 +33,7 @@ type SidebarContext = {
   setOpen: (open: boolean) => void
   openMobile: boolean
   setOpenMobile: (open: boolean) => void
-  isMobile: boolean
+  isMobile: boolean | undefined
   toggleSidebar: () => void
 }
 
@@ -177,6 +178,14 @@ const Sidebar = React.forwardRef<
   ) => {
     const { isMobile, state, openMobile, setOpenMobile } = useSidebar()
 
+    if (isMobile === undefined) {
+      return (
+        <div className="hidden h-svh w-[--sidebar-width] flex-col bg-sidebar text-sidebar-foreground md:flex">
+            <Skeleton className="h-full w-full" />
+        </div>
+      );
+    }
+    
     if (collapsible === "none") {
       return (
         <div
