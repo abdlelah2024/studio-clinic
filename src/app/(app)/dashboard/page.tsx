@@ -1,3 +1,6 @@
+
+"use client"
+import React, { useState, useMemo } from "react"
 import { StatsCards } from "@/components/dashboard/stats-cards"
 import { AppointmentCalendar } from "@/components/dashboard/appointment-calendar"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
@@ -5,9 +8,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { mockAppointments } from "@/lib/data"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { addDays, startOfDay } from 'date-fns';
+
+type TimeRange = 'all' | '7d' | '30d';
 
 export default function DashboardPage() {
-  const upcomingAppointments = mockAppointments.filter(a => a.status === 'Scheduled' || a.status === 'Waiting').slice(0, 5);
+  const [timeRange, setTimeRange] = useState<TimeRange>('30d');
 
   const getStatusTranslation = (status: 'Scheduled' | 'Completed' | 'Canceled' | 'Waiting') => {
     switch (status) {
@@ -19,9 +26,47 @@ export default function DashboardPage() {
     }
   }
 
+  const filteredData = useMemo(() => {
+    const now = startOfDay(new Date());
+    let startDate: Date | null = null;
+
+    if (timeRange === '7d') {
+      startDate = addDays(now, -7);
+    } else if (timeRange === '30d') {
+      startDate = addDays(now, -30);
+    }
+
+    const appointments = mockAppointments.filter(appointment => {
+      if (!startDate) return true;
+      const appointmentDate = startOfDay(new Date(appointment.date));
+      return appointmentDate >= startDate && appointmentDate <= now;
+    });
+
+    const upcomingAppointments = mockAppointments
+      .filter(a => (a.status === 'Scheduled' || a.status === 'Waiting') && new Date(a.date) >= now)
+      .sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+      .slice(0, 5);
+
+    return { appointments, upcomingAppointments };
+  }, [timeRange]);
+
   return (
     <div className="flex flex-col gap-6">
-      <StatsCards />
+       <div className="flex justify-end">
+          <Select value={timeRange} onValueChange={(value) => setTimeRange(value as TimeRange)}>
+              <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="اختر نطاقًا زمنيًا" />
+              </SelectTrigger>
+              <SelectContent>
+                  <SelectItem value="all">كل الأوقات</SelectItem>
+                  <SelectItem value="30d">آخر 30 يومًا</SelectItem>
+                  <SelectItem value="7d">آخر 7 أيام</SelectItem>
+              </SelectContent>
+          </Select>
+       </div>
+
+      <StatsCards appointments={filteredData.appointments} />
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
             <AppointmentCalendar />
@@ -41,7 +86,7 @@ export default function DashboardPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {upcomingAppointments.map((appointment) => (
+                  {filteredData.upcomingAppointments.length > 0 ? filteredData.upcomingAppointments.map((appointment) => (
                     <TableRow key={appointment.id}>
                       <TableCell>
                         <div className="flex items-center gap-2">
@@ -57,7 +102,13 @@ export default function DashboardPage() {
                         <Badge variant="secondary">{getStatusTranslation(appointment.status)}</Badge>
                       </TableCell>
                     </TableRow>
-                  ))}
+                  )) : (
+                     <TableRow>
+                        <TableCell colSpan={3} className="h-24 text-center">
+                            لا توجد مواعيد قادمة.
+                        </TableCell>
+                    </TableRow>
+                  )}
                 </TableBody>
               </Table>
             </CardContent>
