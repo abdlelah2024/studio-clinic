@@ -1,3 +1,6 @@
+
+"use client"
+import React, { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
@@ -7,15 +10,32 @@ import type { User } from "@/lib/types"
 import { MoreHorizontal, PlusCircle } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
+import { AddUserDialog } from "@/components/users/add-user-dialog"
+import { EditUserDialog } from "@/components/users/edit-user-dialog"
+import { DeleteUserDialog } from "@/components/users/delete-user-dialog"
 
 // For demonstration, we'll create a small list of users.
-const mockUsers: User[] = [
+const initialUsers: User[] = [
   mockUser,
-  { name: "د. بن هانسون", email: "ben.h@clinicflow.demo", avatar: "https://placehold.co/100x100", role: "Doctor" },
-  { name: "علياء منصور", email: "alia.m@clinicflow.demo", avatar: "https://placehold.co/100x100", role: "Receptionist" },
+  { name: "د. بن هانسون", email: "ben.h@clinicflow.demo", avatar: "https://placehold.co/100x100/A5D8FF/000000.png?text=B", role: "Doctor" },
+  { name: "علياء منصور", email: "alia.m@clinicflow.demo", avatar: "https://placehold.co/100x100/FFC0CB/000000.png?text=A", role: "Receptionist" },
 ]
 
 export default function UsersPage() {
+  const [users, setUsers] = useState(initialUsers);
+
+  const handleAddUser = (newUser: Omit<User, 'avatar'>) => {
+    const userWithAvatar: User = {
+      ...newUser,
+      avatar: `https://placehold.co/100x100/E0E0E0/000000.png?text=${newUser.name.charAt(0)}`
+    }
+    setUsers(prev => [...prev, userWithAvatar]);
+  };
+
+  const handleDeleteUser = (email: string) => {
+    setUsers(prev => prev.filter(user => user.email !== email));
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -24,12 +44,14 @@ export default function UsersPage() {
             <CardTitle>المستخدمون</CardTitle>
             <CardDescription>إدارة حسابات المستخدمين والأذونات.</CardDescription>
           </div>
-          <Button size="sm" className="gap-1">
-            <PlusCircle className="h-3.5 w-3.5" />
-            <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-              إضافة مستخدم
-            </span>
-          </Button>
+          <AddUserDialog onUserAdded={handleAddUser}>
+            <Button size="sm" className="gap-1">
+              <PlusCircle className="h-3.5 w-3.5" />
+              <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
+                إضافة مستخدم
+              </span>
+            </Button>
+          </AddUserDialog>
         </div>
       </CardHeader>
       <CardContent>
@@ -45,7 +67,7 @@ export default function UsersPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {mockUsers.map((user) => (
+            {users.map((user) => (
               <TableRow key={user.email}>
                 <TableCell>
                   <div className="flex items-center gap-3">
@@ -72,10 +94,14 @@ export default function UsersPage() {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuLabel>الإجراءات</DropdownMenuLabel>
-                      <DropdownMenuItem>تعديل</DropdownMenuItem>
+                       <EditUserDialog user={user}>
+                        <DropdownMenuItem onSelect={(e) => e.preventDefault()}>تعديل</DropdownMenuItem>
+                       </EditUserDialog>
                       <DropdownMenuItem>إدارة الصلاحيات</DropdownMenuItem>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem className="text-destructive">حذف</DropdownMenuItem>
+                       <DeleteUserDialog user={user} onDelete={() => handleDeleteUser(user.email)}>
+                        <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive">حذف</DropdownMenuItem>
+                      </DeleteUserDialog>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </TableCell>
