@@ -70,7 +70,7 @@ export default function PatientsPage() {
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
-            <Button size="sm" className="gap-1 whitespace-nowrap" onClick={openNewPatientDialog}>
+            <Button size="sm" className="gap-1 whitespace-nowrap" onClick={() => openNewPatientDialog(handleAddPatient)}>
               <PlusCircle className="h-3.5 w-3.5" />
               <span className="sr-only sm:not-sr-only">
                 إضافة مريض

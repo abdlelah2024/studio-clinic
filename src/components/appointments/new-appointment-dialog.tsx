@@ -18,10 +18,11 @@ import type { Appointment, Patient } from "@/lib/types"
 import { mockDoctors } from "@/lib/data"
 import { Combobox } from "../ui/combobox"
 
+type AddAppointmentFunction = (appointment: Omit<Appointment, 'id' | 'patient' | 'doctor' | 'status'> & { patientName: string, doctorName: string }) => void;
 
 interface NewAppointmentDialogProps {
   children?: React.ReactNode;
-  onAppointmentAdded: (appointment: Omit<Appointment, 'id' | 'patient' | 'doctor' | 'status'> & { patientName: string, doctorName: string }) => void;
+  onAppointmentAdded: AddAppointmentFunction;
   patients: Patient[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -36,27 +37,26 @@ export function NewAppointmentDialog({ children, onAppointmentAdded, patients, o
   const [endTime, setEndTime] = useState("");
   const [reason, setReason] = useState("");
 
-  useEffect(() => {
-    if (initialPatientName) {
-      setPatientName(initialPatientName);
-    }
-  }, [initialPatientName, open]);
-
-  const resetForm = () => {
+  const resetForm = useCallback(() => {
     setPatientName(initialPatientName || "");
     setDoctorName("");
     setDate("");
     setStartTime("");
     setEndTime("");
     setReason("");
-  };
+  },[initialPatientName]);
 
+
+  useEffect(() => {
+    if (open) {
+       resetForm();
+    }
+  }, [initialPatientName, open, resetForm]);
 
   const handleSubmit = () => {
     if (patientName && doctorName && date && startTime && endTime && reason) {
       onAppointmentAdded({ patientName, doctorName, date, startTime, endTime, reason });
       onOpenChange(false);
-      resetForm();
     }
   };
   
@@ -65,12 +65,7 @@ export function NewAppointmentDialog({ children, onAppointmentAdded, patients, o
 
 
   return (
-    <Dialog open={open} onOpenChange={(isOpen) => {
-        onOpenChange(isOpen);
-        if (!isOpen) {
-            resetForm();
-        }
-    }}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       {children && <DialogTrigger asChild>{children}</DialogTrigger>}
       <DialogContent className="sm:max-w-[480px]">
         <DialogHeader>

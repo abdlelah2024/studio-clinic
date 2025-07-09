@@ -103,7 +103,9 @@ export function AppHeader() {
                         <div className="p-4 text-center text-sm">
                             <p>لم يتم العثور على مريض بهذا الاسم/الرقم.</p>
                              <Button variant="link" className="mt-2" onMouseDown={(e) => e.preventDefault()} onClick={() => {
-                                openNewPatientDialog();
+                                // In a real app, you'd probably pass a function from the page
+                                // to update the state. Here we are just opening the dialog.
+                                openNewPatientDialog(()=>{});
                                 resetSearch();
                              }}>
                                 <UserPlus className="mr-2 h-4 w-4" /> إضافة مريض جديد
@@ -114,7 +116,9 @@ export function AppHeader() {
 
                 <CommandGroup heading="إجراءات سريعة">
                   <CommandItem onSelect={() => {
-                      openNewAppointmentDialog({});
+                      // In a real app, you'd probably pass a function from the page
+                      // to update the state. Here we are just opening the dialog.
+                      openNewAppointmentDialog({onAppointmentAdded: () => {}});
                       resetSearch();
                   }}>
                     <Calendar className="mr-2 h-4 w-4" />

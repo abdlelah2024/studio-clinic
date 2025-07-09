@@ -7,22 +7,28 @@ import type { Appointment, Patient } from "@/lib/types"
 import { mockPatients } from "@/lib/data"
 import { useToast } from "@/hooks/use-toast"
 
+type AddAppointmentFunction = (appointment: Omit<Appointment, 'id' | 'patient' | 'doctor' | 'status'> & { patientName: string, doctorName: string }) => void;
+type AddPatientFunction = (patient: Omit<Patient, 'id' | 'avatar' | 'lastVisit'>) => void;
 
 interface AppointmentDialogOptions {
     initialPatientName?: string;
+    onAppointmentAdded: AddAppointmentFunction;
 }
 
 interface AppContextType {
   openNewAppointmentDialog: (options: AppointmentDialogOptions) => void;
-  openNewPatientDialog: () => void;
+  openNewPatientDialog: (onPatientAdded: AddPatientFunction) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export function AppProvider({ children }: { children: ReactNode }) {
     const [isAppointmentDialogOpen, setAppointmentDialogOpen] = useState(false);
-    const [appointmentDialogOptions, setAppointmentDialogOptions] = useState<AppointmentDialogOptions>({});
+    const [appointmentDialogOptions, setAppointmentDialogOptions] = useState<AppointmentDialogOptions | null>(null);
+    
     const [isPatientDialogOpen, setPatientDialogOpen] = useState(false);
+    const [onPatientAddedCallback, setOnPatientAddedCallback] = useState<AddPatientFunction | null>(null);
+
     const { toast } = useToast();
 
     const openNewAppointmentDialog = useCallback((options: AppointmentDialogOptions) => {
@@ -30,38 +36,49 @@ export function AppProvider({ children }: { children: ReactNode }) {
         setAppointmentDialogOpen(true);
     }, []);
     
-    const openNewPatientDialog = useCallback(() => {
+    const openNewPatientDialog = useCallback((onPatientAdded: AddPatientFunction) => {
+        setOnPatientAddedCallback(() => onPatientAdded);
         setPatientDialogOpen(true);
     }, []);
 
-    const handleAppointmentAdded = (appointment: Omit<Appointment, 'id' | 'patient' | 'doctor' | 'status'> & { patientName: string, doctorName: string }) => {
-        // In a real app, this would likely trigger a mutation/refetch.
-        console.log("Appointment Added:", appointment);
-        toast({
-            title: "تمت جدولة الموعد بنجاح",
-            description: `تم حجز موعد لـ ${appointment.patientName}.`,
-        });
+    const handleAppointmentAdded: AddAppointmentFunction = (appointment) => {
+        if(appointmentDialogOptions?.onAppointmentAdded) {
+            appointmentDialogOptions.onAppointmentAdded(appointment);
+        } else {
+             // Fallback if no callback provided
+            console.log("Appointment Added (Context Fallback):", appointment);
+            toast({
+                title: "تمت جدولة الموعد بنجاح",
+                description: `تم حجز موعد لـ ${appointment.patientName}.`,
+            });
+        }
     };
     
-    const handlePatientAdded = (patient: Omit<Patient, 'id' | 'avatar' | 'lastVisit'>) => {
-        // In a real app, this would likely trigger a mutation/refetch.
-        console.log("Patient Added:", patient);
-        toast({
-            title: "تمت الإضافة بنجاح",
-            description: `تمت إضافة المريض ${patient.name} إلى السجلات.`,
-        });
+    const handlePatientAdded: AddPatientFunction = (patient) => {
+        if(onPatientAddedCallback) {
+            onPatientAddedCallback(patient);
+        } else {
+            // Fallback if no callback provided
+            console.log("Patient Added (Context Fallback):", patient);
+            toast({
+                title: "تمت الإضافة بنجاح",
+                description: `تمت إضافة المريض ${patient.name} إلى السجلات.`,
+            });
+        }
     }
 
     return (
         <AppContext.Provider value={{ openNewAppointmentDialog, openNewPatientDialog }}>
             {children}
-            <NewAppointmentDialog
-                open={isAppointmentDialogOpen}
-                onOpenChange={setAppointmentDialogOpen}
-                patients={mockPatients}
-                onAppointmentAdded={handleAppointmentAdded}
-                initialPatientName={appointmentDialogOptions.initialPatientName}
-            />
+            {appointmentDialogOptions && (
+                <NewAppointmentDialog
+                    open={isAppointmentDialogOpen}
+                    onOpenChange={setAppointmentDialogOpen}
+                    patients={mockPatients}
+                    onAppointmentAdded={handleAppointmentAdded}
+                    initialPatientName={appointmentDialogOptions.initialPatientName}
+                />
+            )}
             <AddPatientDialog
                 open={isPatientDialogOpen}
                 onOpenChange={setPatientDialogOpen}

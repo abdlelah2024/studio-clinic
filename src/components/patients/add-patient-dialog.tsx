@@ -1,6 +1,6 @@
 
 "use client"
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import {
   Dialog,
   DialogContent,
@@ -25,9 +25,10 @@ const patientSchema = z.object({
 });
 
 type PatientFormData = z.infer<typeof patientSchema>;
+type AddPatientFunction = (patient: Omit<Patient, 'id' | 'avatar' | 'lastVisit'>) => void;
 
 interface AddPatientDialogProps {
-  onPatientAdded: (patient: Omit<Patient, 'id' | 'avatar' | 'lastVisit'>) => void;
+  onPatientAdded?: AddPatientFunction;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
@@ -43,24 +44,27 @@ export function AddPatientDialog({ onPatientAdded, open, onOpenChange }: AddPati
       age: 0,
     },
   });
+  
+  // Reset form when dialog opens/closes
+  useEffect(() => {
+    if (!open) {
+      form.reset();
+    }
+  }, [open, form]);
 
   const onSubmit = (data: PatientFormData) => {
-    onPatientAdded(data);
-    toast({
-        title: "تمت الإضافة بنجاح",
-        description: `تمت إضافة المريض ${data.name} إلى السجلات.`,
-    });
-    onOpenChange(false);
-    form.reset();
+    if (onPatientAdded) {
+        onPatientAdded(data);
+        toast({
+            title: "تمت الإضافة بنجاح",
+            description: `تمت إضافة المريض ${data.name} إلى السجلات.`,
+        });
+        onOpenChange(false);
+    }
   };
 
   return (
-    <Dialog open={open} onOpenChange={(isOpen) => {
-      onOpenChange(isOpen);
-      if (!isOpen) {
-        form.reset();
-      }
-    }}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>إضافة مريض جديد</DialogTitle>
