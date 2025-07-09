@@ -27,7 +27,7 @@ body {
     --border: 240 6% 90%;
     --input: 240 6% 90%;
     --ring: 197 71% 73%;
-    --radius: 0.5rem;
+    --radius: 0.8rem;
     --chart-1: 12 76% 61%;
     --chart-2: 173 58% 39%;
     --chart-3: 197 37% 24%;
@@ -64,6 +64,7 @@ body {
     --border: 240 4% 16%;
     --input: 240 4% 16%;
     --ring: 197 71% 73%;
+    --radius: 0.8rem;
     --chart-1: 220 70% 50%;
     --chart-2: 160 60% 45%;
     --chart-3: 30 80% 55%;
@@ -88,4 +89,13 @@ body {
   body {
     @apply bg-background text-foreground;
   }
+}
+
+@layer components {
+    .card {
+        @apply shadow-lg transition-all duration-300 hover:shadow-xl;
+    }
+    .btn {
+         @apply shadow-md hover:shadow-lg active:shadow-sm transition-all duration-200;
+    }
 }

@@ -13,6 +13,7 @@ import { AddPatientDialog } from "@/components/patients/add-patient-dialog"
 import { differenceInDays, parseISO, format } from "date-fns"
 import type { Patient, Appointment } from "@/lib/types"
 import { NewAppointmentDialog } from "@/components/appointments/new-appointment-dialog"
+import { RescheduleAppointmentDialog } from "@/components/appointments/reschedule-appointment-dialog"
 
 type StatusFilter = Appointment['status'] | 'All';
 
@@ -20,6 +21,10 @@ export default function AppointmentsPage() {
   const [appointments, setAppointments] = useState<Appointment[]>(mockAppointments);
   const [patients, setPatients] = useState<Patient[]>(mockPatients);
   const [filter, setFilter] = useState<StatusFilter>('All');
+  const [isNewAppointmentDialogOpen, setIsNewAppointmentDialogOpen] = useState(false);
+  const [isRescheduleDialogOpen, setIsRescheduleDialogOpen] = useState(false);
+  const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
+
 
   const handleAddPatient = (newPatient: Omit<Patient, 'id' | 'avatar' | 'lastVisit'>) => {
     const patientWithDefaults: Patient = {
@@ -29,9 +34,6 @@ export default function AppointmentsPage() {
       lastVisit: format(new Date(), 'yyyy-MM-dd')
     };
     setPatients(prev => [patientWithDefaults, ...prev]);
-    // In a real app, you might want to update a global state or a shared context
-    // For now, we update local state which will be reflected in the new appointment dialog
-    // if it's re-rendered with the updated patients list.
   };
   
   const handleAddAppointment = (newAppointmentData: Omit<Appointment, 'id' | 'patient' | 'doctor' | 'status'> & { patientName: string; doctorName: string; }) => {
@@ -39,7 +41,6 @@ export default function AppointmentsPage() {
     const doctor = mockDoctors.find(d => d.name === newAppointmentData.doctorName);
 
     if (!patient || !doctor) {
-      // In a real app, you'd show an error toast
       console.error("Patient or Doctor not found");
       return;
     }
@@ -55,6 +56,20 @@ export default function AppointmentsPage() {
       status: 'Scheduled'
     };
     setAppointments(prev => [newAppointment, ...prev]);
+  };
+
+  const handleRescheduleAppointment = (appointmentId: string, newDate: string, newStartTime: string, newEndTime: string) => {
+    setAppointments(prev => prev.map(app => 
+      app.id === appointmentId 
+        ? { ...app, date: newDate, startTime: newStartTime, endTime: newEndTime, status: 'Scheduled' }
+        : app
+    ));
+    setSelectedAppointment(null);
+  }
+
+  const handleOpenRescheduleDialog = (appointment: Appointment) => {
+    setSelectedAppointment(appointment);
+    setIsRescheduleDialogOpen(true);
   };
 
 
@@ -73,6 +88,7 @@ export default function AppointmentsPage() {
   }
 
   return (
+    <>
     <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
@@ -107,8 +123,8 @@ export default function AppointmentsPage() {
                 </span>
               </Button>
             </AddPatientDialog>
-            <NewAppointmentDialog onAppointmentAdded={handleAddAppointment} patients={patients}>
-              <Button size="sm" className="gap-1">
+            <NewAppointmentDialog open={isNewAppointmentDialogOpen} onOpenChange={setIsNewAppointmentDialogOpen} onAppointmentAdded={handleAddAppointment} patients={patients}>
+              <Button size="sm" className="gap-1" onClick={() => setIsNewAppointmentDialogOpen(true)}>
                 <PlusCircle className="h-3.5 w-3.5" />
                 <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
                   موعد جديد
@@ -186,7 +202,7 @@ export default function AppointmentsPage() {
                       <DropdownMenuContent align="end">
                         <DropdownMenuLabel>الإجراءات</DropdownMenuLabel>
                         <DropdownMenuItem>تعديل</DropdownMenuItem>
-                        <DropdownMenuItem>إعادة جدولة</DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => handleOpenRescheduleDialog(appointment)}>إعادة جدولة</DropdownMenuItem>
                         <DropdownMenuItem>إلغاء</DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem className="text-destructive">حذف</DropdownMenuItem>
@@ -200,5 +216,14 @@ export default function AppointmentsPage() {
         </Table>
       </CardContent>
     </Card>
+     {selectedAppointment && (
+      <RescheduleAppointmentDialog
+        open={isRescheduleDialogOpen}
+        onOpenChange={setIsRescheduleDialogOpen}
+        appointment={selectedAppointment}
+        onAppointmentRescheduled={handleRescheduleAppointment}
+      />
+    )}
+    </>
   )
 }

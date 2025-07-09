@@ -1,6 +1,6 @@
 
 "use client"
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import {
   Dialog,
   DialogContent,
@@ -20,13 +20,15 @@ import { Combobox } from "../ui/combobox"
 
 
 interface NewAppointmentDialogProps {
-  children: React.ReactNode;
+  children?: React.ReactNode;
   onAppointmentAdded: (appointment: Omit<Appointment, 'id' | 'patient' | 'doctor' | 'status'> & { patientName: string, doctorName: string }) => void;
   patients: Patient[];
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  initialPatientName?: string;
 }
 
-export function NewAppointmentDialog({ children, onAppointmentAdded, patients }: NewAppointmentDialogProps) {
-  const [open, setOpen] = useState(false);
+export function NewAppointmentDialog({ children, onAppointmentAdded, patients, open, onOpenChange, initialPatientName }: NewAppointmentDialogProps) {
   const [patientName, setPatientName] = useState("");
   const [doctorName, setDoctorName] = useState("");
   const [date, setDate] = useState("");
@@ -34,17 +36,27 @@ export function NewAppointmentDialog({ children, onAppointmentAdded, patients }:
   const [endTime, setEndTime] = useState("");
   const [reason, setReason] = useState("");
 
+  useEffect(() => {
+    if (initialPatientName) {
+      setPatientName(initialPatientName);
+    }
+  }, [initialPatientName, open]);
+
+  const resetForm = () => {
+    setPatientName(initialPatientName || "");
+    setDoctorName("");
+    setDate("");
+    setStartTime("");
+    setEndTime("");
+    setReason("");
+  };
+
+
   const handleSubmit = () => {
     if (patientName && doctorName && date && startTime && endTime && reason) {
       onAppointmentAdded({ patientName, doctorName, date, startTime, endTime, reason });
-      setOpen(false);
-      // Reset form
-      setPatientName("");
-      setDoctorName("");
-      setDate("");
-      setStartTime("");
-      setEndTime("");
-      setReason("");
+      onOpenChange(false);
+      resetForm();
     }
   };
   
@@ -53,8 +65,13 @@ export function NewAppointmentDialog({ children, onAppointmentAdded, patients }:
 
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>{children}</DialogTrigger>
+    <Dialog open={open} onOpenChange={(isOpen) => {
+        onOpenChange(isOpen);
+        if (!isOpen) {
+            resetForm();
+        }
+    }}>
+      {children && <DialogTrigger asChild>{children}</DialogTrigger>}
       <DialogContent className="sm:max-w-[480px]">
         <DialogHeader>
           <DialogTitle>حجز موعد جديد</DialogTitle>
@@ -115,7 +132,7 @@ export function NewAppointmentDialog({ children, onAppointmentAdded, patients }:
         </div>
         <DialogFooter>
           <Button type="button" onClick={handleSubmit}>جدولة الموعد</Button>
-          <Button variant="outline" onClick={() => setOpen(false)}>إلغاء</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>إلغاء</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
