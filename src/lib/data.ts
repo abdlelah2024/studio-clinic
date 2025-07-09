@@ -37,6 +37,7 @@ export const mockAppointments: Appointment[] = [
   { id: 'a6', patient: { name: 'ليلى إبراهيم', avatar: 'https://placehold.co/100x100' }, doctor: mockDoctors[0], date: getISODate(2025, 6, 30), startTime: '13:00', endTime: '13:30', status: 'Completed', reason: 'ألم في الصدر' },
 ];
 
+
 export const initialPermissions: Record<UserRole, Permissions> = {
   Admin: {
     patients: { add: true, edit: true, delete: true },
