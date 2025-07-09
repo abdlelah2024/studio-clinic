@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import type { User } from "@/lib/types"
+import type { User, UserRole } from "@/lib/types"
 
 interface EditUserDialogProps {
   children: React.ReactNode;
@@ -26,16 +26,18 @@ export function EditUserDialog({ children, user, onUserUpdated }: EditUserDialog
   const [open, setOpen] = useState(false)
   const [name, setName] = useState(user.name)
   const [role, setRole] = useState(user.role)
+  const [password, setPassword] = useState("")
 
   useEffect(() => {
     if (open) {
         setName(user.name);
         setRole(user.role);
+        setPassword("");
     }
   }, [open, user]);
   
   const handleSubmit = () => {
-    onUserUpdated({ ...user, name, role });
+    onUserUpdated({ ...user, name, role, password: password || user.password });
     setOpen(false);
   }
 
@@ -62,12 +64,18 @@ export function EditUserDialog({ children, user, onUserUpdated }: EditUserDialog
             </Label>
             <Input id="email" type="email" value={user.email} className="col-span-3" readOnly />
           </div>
+           <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="password" className="text-right">
+              كلمة المرور
+            </Label>
+            <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="col-span-3" placeholder="اتركه فارغًا لعدم التغيير" />
+          </div>
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="role" className="text-right">
               الدور
             </Label>
-            <Select onValueChange={(value) => setRole(value as User['role'])} value={role}>
-              <SelectTrigger className="col-span-3">
+            <Select onValueChange={(value) => setRole(value as UserRole)} value={role}>
+              <SelectTrigger className="col-span-3" disabled={user.role === 'Admin'}>
                 <SelectValue placeholder="اختر دورًا" />
               </SelectTrigger>
               <SelectContent>

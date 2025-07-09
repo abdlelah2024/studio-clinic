@@ -26,9 +26,19 @@ export type Appointment = {
   freeReturn?: boolean;
 };
 
+export type UserRole = 'Admin' | 'Doctor' | 'Receptionist';
+
 export type User = {
     name: string;
     email: string;
     avatar: string;
-    role: 'Admin' | 'Doctor' | 'Receptionist';
+    role: UserRole;
+    password?: string;
+};
+
+export type Permissions = {
+  patients: { add: boolean; edit: boolean; delete: boolean };
+  doctors: { add: boolean; edit: boolean; delete: boolean };
+  appointments: { add: boolean; edit: boolean; delete: boolean; cancel: boolean };
+  users: { add: boolean; edit: boolean; delete: boolean };
 };

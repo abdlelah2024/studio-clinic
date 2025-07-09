@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import type { User } from "@/lib/types"
+import type { User, UserRole } from "@/lib/types"
 
 interface AddUserDialogProps {
   children: React.ReactNode;
@@ -25,14 +25,16 @@ export function AddUserDialog({ children, onUserAdded }: AddUserDialogProps) {
   const [open, setOpen] = useState(false)
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
-  const [role, setRole] = useState<User['role'] | ''>('')
+  const [password, setPassword] = useState("")
+  const [role, setRole] = useState<UserRole | ''>('')
 
   const handleSubmit = () => {
-    if (name && email && role) {
-      onUserAdded({ name, email, role });
+    if (name && email && role && password) {
+      onUserAdded({ name, email, role, password });
       setOpen(false);
       setName('');
       setEmail('');
+      setPassword('');
       setRole('');
     }
   }
@@ -61,10 +63,16 @@ export function AddUserDialog({ children, onUserAdded }: AddUserDialogProps) {
             <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="col-span-3" />
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="password" className="text-right">
+              كلمة المرور
+            </Label>
+            <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="col-span-3" />
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="role" className="text-right">
               الدور
             </Label>
-            <Select onValueChange={(value) => setRole(value as User['role'])} value={role}>
+            <Select onValueChange={(value) => setRole(value as UserRole)} value={role}>
               <SelectTrigger className="col-span-3">
                 <SelectValue placeholder="اختر دورًا" />
               </SelectTrigger>
