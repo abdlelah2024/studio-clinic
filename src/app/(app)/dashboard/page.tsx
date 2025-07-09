@@ -1,0 +1,59 @@
+import { StatsCards } from "@/components/dashboard/stats-cards"
+import { AppointmentCalendar } from "@/components/dashboard/appointment-calendar"
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { mockAppointments } from "@/lib/data"
+import { Badge } from "@/components/ui/badge"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+
+export default function DashboardPage() {
+  const upcomingAppointments = mockAppointments.filter(a => a.status === 'Scheduled').slice(0, 5);
+
+  return (
+    <div className="flex flex-col gap-6">
+      <StatsCards />
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2">
+            <AppointmentCalendar />
+        </div>
+        <div className="lg:col-span-1">
+          <Card>
+            <CardHeader>
+              <CardTitle>Upcoming Appointments</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Patient</TableHead>
+                    <TableHead>Time</TableHead>
+                    <TableHead>Status</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {upcomingAppointments.map((appointment) => (
+                    <TableRow key={appointment.id}>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Avatar className="h-8 w-8">
+                            <AvatarImage src={appointment.patient.avatar} data-ai-hint="person face" />
+                            <AvatarFallback>{appointment.patient.name.charAt(0)}</AvatarFallback>
+                          </Avatar>
+                          <span className="font-medium">{appointment.patient.name}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>{appointment.startTime}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline">{appointment.status}</Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </div>
+  )
+}
