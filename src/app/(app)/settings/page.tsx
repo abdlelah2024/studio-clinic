@@ -1,6 +1,6 @@
 
 "use client"
-import React from "react"
+import React, { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -11,8 +11,20 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { MoreVertical, PlusCircle, Trash2, Edit } from "lucide-react"
 import { Checkbox } from "@/components/ui/checkbox"
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu"
+import { AddFieldDialog } from "@/components/settings/add-field-dialog"
+import { EditFieldDialog } from "@/components/settings/edit-field-dialog"
+import { DeleteFieldDialog } from "@/components/settings/delete-field-dialog"
+import { useToast } from "@/hooks/use-toast"
 
-const dataFields = [
+type DataField = {
+  id: string;
+  label: string;
+  type: 'نظام' | 'مخصص';
+  required: boolean;
+};
+
+const initialDataFields: DataField[] = [
     { id: "patient-name", label: "اسم المريض", type: "نظام", required: true },
     { id: "dob", label: "تاريخ الميلاد", type: "نظام", required: true },
     { id: "phone", label: "رقم الهاتف", type: "نظام", required: true },
@@ -21,6 +33,40 @@ const dataFields = [
 ]
 
 export default function SettingsPage() {
+  const [dataFields, setDataFields] = useState<DataField[]>(initialDataFields);
+  const { toast } = useToast();
+
+  const handleAddField = (field: { label: string, required: boolean }) => {
+    const newField: DataField = {
+      ...field,
+      id: `custom-${dataFields.length + 1}`,
+      type: 'مخصص',
+    };
+    setDataFields(prev => [...prev, newField]);
+    toast({
+      title: "تمت إضافة الحقل بنجاح",
+      description: `تمت إضافة حقل "${field.label}".`,
+    });
+  };
+
+  const handleUpdateField = (updatedField: DataField) => {
+    setDataFields(prev => prev.map(f => f.id === updatedField.id ? updatedField : f));
+     toast({
+      title: "تم تحديث الحقل بنجاح",
+      description: `تم تحديث حقل "${updatedField.label}".`,
+    });
+  };
+
+  const handleDeleteField = (fieldId: string) => {
+    const fieldLabel = dataFields.find(f => f.id === fieldId)?.label;
+    setDataFields(prev => prev.filter(f => f.id !== fieldId));
+    toast({
+      title: "تم حذف الحقل بنجاح",
+      description: `تم حذف حقل "${fieldLabel}".`,
+      variant: "destructive"
+    });
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -112,12 +158,14 @@ export default function SettingsPage() {
                         <CardTitle>حقول البيانات</CardTitle>
                         <CardDescription>تخصيص حقول البيانات للمواعيد وسجلات المرضى.</CardDescription>
                     </div>
-                    <Button size="sm" className="gap-1">
-                        <PlusCircle className="h-3.5 w-3.5" />
-                        <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-                            إضافة حقل
-                        </span>
-                    </Button>
+                    <AddFieldDialog onFieldAdded={handleAddField}>
+                      <Button size="sm" className="gap-1">
+                          <PlusCircle className="h-3.5 w-3.5" />
+                          <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
+                              إضافة حقل
+                          </span>
+                      </Button>
+                    </AddFieldDialog>
                 </div>
             </CardHeader>
             <CardContent>
@@ -127,7 +175,7 @@ export default function SettingsPage() {
                             <TableHead>اسم الحقل</TableHead>
                             <TableHead>النوع</TableHead>
                             <TableHead>مطلوب</TableHead>
-                            <TableHead><span className="sr-only">الإجراءات</span></TableHead>
+                            <TableHead className="text-right"><span className="sr-only">الإجراءات</span></TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -140,9 +188,27 @@ export default function SettingsPage() {
                                 </TableCell>
                                 <TableCell className="text-right">
                                      {field.type !== 'نظام' && (
-                                        <Button size="icon" variant="ghost">
-                                            <MoreVertical className="h-4 w-4" />
-                                        </Button>
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <Button size="icon" variant="ghost">
+                                                    <MoreVertical className="h-4 w-4" />
+                                                </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent>
+                                                <EditFieldDialog field={field} onFieldUpdated={handleUpdateField}>
+                                                    <DropdownMenuItem onSelect={e => e.preventDefault()}>
+                                                        <Edit className="mr-2 h-4 w-4" />
+                                                        تعديل
+                                                    </DropdownMenuItem>
+                                                </EditFieldDialog>
+                                                <DeleteFieldDialog field={field} onDelete={() => handleDeleteField(field.id)}>
+                                                    <DropdownMenuItem onSelect={e => e.preventDefault()} className="text-destructive">
+                                                        <Trash2 className="mr-2 h-4 w-4" />
+                                                        حذف
+                                                    </DropdownMenuItem>
+                                                </DeleteFieldDialog>
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
                                      )}
                                 </TableCell>
                             </TableRow>
