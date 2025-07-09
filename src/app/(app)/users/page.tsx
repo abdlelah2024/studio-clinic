@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { mockUser, initialPermissions } from "@/lib/data"
+import { mockUser, initialPermissions, otherUsers } from "@/lib/data"
 import type { User, UserRole, Permissions } from "@/lib/types"
 import { MoreHorizontal, PlusCircle, Edit, Trash2, ShieldCheck } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -18,21 +18,18 @@ import { Separator } from "@/components/ui/separator"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
 
-const initialUsers: User[] = [
-  mockUser,
-  { name: "د. بن هانسون", email: "ben.h@clinicflow.demo", avatar: "https://placehold.co/100x100/A5D8FF/000000.png?text=B", role: "Doctor", password: "password123" },
-  { name: "علياء منصور", email: "alia.m@clinicflow.demo", avatar: "https://placehold.co/100x100/FFC0CB/000000.png?text=A", role: "Receptionist", password: "password123" },
-]
+const initialUsers: User[] = [mockUser, ...otherUsers];
 
 export default function UsersPage() {
   const [users, setUsers] = useState<User[]>(initialUsers);
   const [permissions, setPermissions] = useState<Record<UserRole, Permissions>>(initialPermissions);
   const { toast } = useToast();
 
-  const handleAddUser = (user: Omit<User, 'avatar'>) => {
+  const handleAddUser = (user: Omit<User, 'avatar' | 'status'>) => {
     const newUser: User = {
       ...user,
       avatar: `https://placehold.co/100x100?text=${user.name.charAt(0)}`,
+      status: 'offline',
     };
     setUsers(prev => [newUser, ...prev]);
     toast({

@@ -34,6 +34,7 @@ export type User = {
     avatar: string;
     role: UserRole;
     password?: string;
+    status: 'online' | 'offline';
 };
 
 export type Permissions = {
@@ -41,4 +42,12 @@ export type Permissions = {
   doctors: { add: boolean; edit: boolean; delete: boolean };
   appointments: { add: boolean; edit: boolean; delete: boolean; cancel: boolean };
   users: { add: boolean; edit: boolean; delete: boolean };
+};
+
+export type Message = {
+    id: string;
+    senderEmail: string;
+    receiverEmail: string;
+    text: string;
+    timestamp: string;
 };

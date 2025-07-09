@@ -1,27 +1,159 @@
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { MessageSquare } from "lucide-react";
+"use client"
+import React, { useState, useEffect, useRef } from 'react';
+import { Card, CardContent } from "@/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Send } from "lucide-react";
+import { allUsers, mockUser, mockMessages } from "@/lib/data";
+import type { User, Message } from "@/lib/types";
+import { cn } from '@/lib/utils';
 
 export default function MessagingPage() {
+    const [selectedUser, setSelectedUser] = useState<User | null>(allUsers.find(u => u.email !== mockUser.email) || null);
+    const [messages, setMessages] = useState<Message[]>(mockMessages);
+    const [newMessage, setNewMessage] = useState("");
+    const messagesEndRef = useRef<HTMLDivElement>(null);
+
+    const scrollToBottom = () => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    };
+
+    useEffect(scrollToBottom, [messages, selectedUser]);
+
+    const handleSendMessage = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (newMessage.trim() && selectedUser) {
+            const message: Message = {
+                id: `m${messages.length + 1}`,
+                senderEmail: mockUser.email,
+                receiverEmail: selectedUser.email,
+                text: newMessage,
+                timestamp: new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }),
+            };
+            setMessages(prev => [...prev, message]);
+            setNewMessage("");
+        }
+    };
+
+    const conversation = selectedUser ? messages.filter(
+        m => (m.senderEmail === mockUser.email && m.receiverEmail === selectedUser.email) ||
+             (m.senderEmail === selectedUser.email && m.receiverEmail === mockUser.email)
+    ).sort((a,b) => a.timestamp.localeCompare(b.timestamp)) : [];
+
     return (
-        <Card>
-            <CardHeader>
-                <CardTitle>المراسلات</CardTitle>
-                <CardDescription>التواصل مع أعضاء الفريق الآخرين داخل العيادة.</CardDescription>
-            </CardHeader>
-            <CardContent>
-                <div className="flex flex-1 items-center justify-center rounded-lg border border-dashed shadow-sm py-20">
-                    <div className="flex flex-col items-center gap-1 text-center">
-                        <MessageSquare className="h-12 w-12 text-muted-foreground" />
-                        <h3 className="text-2xl font-bold tracking-tight">
-                            لا توجد رسائل
-                        </h3>
-                        <p className="text-sm text-muted-foreground">
-                            لم يتم تنفيذ قسم المراسلات بعد.
-                        </p>
-                    </div>
+        <Card className="h-[calc(100vh-10rem)] flex">
+            <div className="w-1/3 border-r flex flex-col">
+                <div className="p-4 border-b">
+                    <h2 className="text-xl font-bold">المحادثات</h2>
                 </div>
-            </CardContent>
+                <div className="flex-1 overflow-y-auto">
+                    {allUsers.map(user => (
+                        <div
+                            key={user.email}
+                            className={cn(
+                                "flex items-center gap-3 p-4 cursor-pointer hover:bg-muted/50",
+                                selectedUser?.email === user.email && "bg-muted"
+                            )}
+                            onClick={() => user.email !== mockUser.email && setSelectedUser(user)}
+                        >
+                            <div className="relative">
+                                <Avatar>
+                                    <AvatarImage src={user.avatar} alt={user.name} data-ai-hint="person face" />
+                                    <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+                                </Avatar>
+                                <span className={cn(
+                                    "absolute bottom-0 right-0 block h-3 w-3 rounded-full border-2 border-background",
+                                    user.status === 'online' ? 'bg-green-500' : 'bg-gray-400'
+                                )} />
+                            </div>
+                            <div className="flex-1">
+                                <p className="font-semibold">{user.name}</p>
+                                {user.email === mockUser.email && <span className="text-xs text-primary">(أنت)</span>}
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+
+            <div className="w-2/3 flex flex-col">
+                {selectedUser ? (
+                    <>
+                        <div className="p-4 border-b flex items-center gap-3">
+                             <div className="relative">
+                                <Avatar>
+                                    <AvatarImage src={selectedUser.avatar} alt={selectedUser.name} data-ai-hint="person face" />
+                                    <AvatarFallback>{selectedUser.name.charAt(0)}</AvatarFallback>
+                                </Avatar>
+                                 <span className={cn(
+                                    "absolute bottom-0 right-0 block h-3 w-3 rounded-full border-2 border-card",
+                                    selectedUser.status === 'online' ? 'bg-green-500' : 'bg-gray-400'
+                                )} />
+                            </div>
+                            <div>
+                                <h3 className="text-lg font-bold">{selectedUser.name}</h3>
+                                <p className="text-sm text-muted-foreground">{selectedUser.status === 'online' ? 'متصل' : 'غير متصل'}</p>
+                            </div>
+                        </div>
+                        <div className="flex-1 overflow-y-auto p-6 space-y-4">
+                            {conversation.map(message => (
+                                <div
+                                    key={message.id}
+                                    className={cn(
+                                        "flex items-end gap-2",
+                                        message.senderEmail === mockUser.email ? "justify-end" : "justify-start"
+                                    )}
+                                >
+                                    {message.senderEmail !== mockUser.email && (
+                                        <Avatar className="h-8 w-8">
+                                            <AvatarImage src={selectedUser.avatar} data-ai-hint="person face" />
+                                            <AvatarFallback>{selectedUser.name.charAt(0)}</AvatarFallback>
+                                        </Avatar>
+                                    )}
+                                    <div
+                                        className={cn(
+                                            "max-w-xs rounded-lg p-3",
+                                            message.senderEmail === mockUser.email
+                                                ? "bg-primary text-primary-foreground rounded-br-none"
+                                                : "bg-muted rounded-bl-none"
+                                        )}
+                                    >
+                                        <p>{message.text}</p>
+                                        <p className="text-xs opacity-70 mt-1 text-right">{message.timestamp}</p>
+                                    </div>
+                                    {message.senderEmail === mockUser.email && (
+                                        <Avatar className="h-8 w-8">
+                                            <AvatarImage src={mockUser.avatar} data-ai-hint="person face" />
+                                            <AvatarFallback>{mockUser.name.charAt(0)}</AvatarFallback>
+                                        </Avatar>
+                                    )}
+                                </div>
+                            ))}
+                             <div ref={messagesEndRef} />
+                        </div>
+                        <div className="p-4 border-t">
+                            <form className="flex items-center gap-2" onSubmit={handleSendMessage}>
+                                <Input
+                                    placeholder="اكتب رسالتك..."
+                                    className="flex-1"
+                                    value={newMessage}
+                                    onChange={(e) => setNewMessage(e.target.value)}
+                                />
+                                <Button type="submit" size="icon">
+                                    <Send className="h-4 w-4" />
+                                </Button>
+                            </form>
+                        </div>
+                    </>
+                ) : (
+                    <div className="flex-1 flex items-center justify-center">
+                        <div className="text-center text-muted-foreground">
+                            <p>اختر محادثة لبدء المراسلة.</p>
+                        </div>
+                    </div>
+                )}
+            </div>
         </Card>
     );
 }

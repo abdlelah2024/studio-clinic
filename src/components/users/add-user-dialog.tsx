@@ -18,7 +18,7 @@ import type { User, UserRole } from "@/lib/types"
 
 interface AddUserDialogProps {
   children: React.ReactNode;
-  onUserAdded: (user: Omit<User, 'avatar'>) => void;
+  onUserAdded: (user: Omit<User, 'avatar' | 'status'>) => void;
 }
 
 export function AddUserDialog({ children, onUserAdded }: AddUserDialogProps) {

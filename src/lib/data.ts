@@ -1,4 +1,4 @@
-import type { User, Patient, Doctor, Appointment, UserRole, Permissions } from './types';
+import type { User, Patient, Doctor, Appointment, UserRole, Permissions, Message } from './types';
 
 export const mockUser: User = {
   name: 'د. إميلي كارتر',
@@ -6,6 +6,7 @@ export const mockUser: User = {
   avatar: 'https://placehold.co/100x100',
   role: 'Admin',
   password: 'password123',
+  status: 'online',
 };
 
 export const mockPatients: Patient[] = [
@@ -56,3 +57,17 @@ export const initialPermissions: Record<UserRole, Permissions> = {
     users: { add: false, edit: false, delete: false },
   },
 };
+
+export const otherUsers: User[] = [
+  { name: "د. بن هانسون", email: "ben.h@clinicflow.demo", avatar: "https://placehold.co/100x100/A5D8FF/000000.png?text=B", role: "Doctor", password: "password123", status: 'online' },
+  { name: "علياء منصور", email: "alia.m@clinicflow.demo", avatar: "https://placehold.co/100x100/FFC0CB/000000.png?text=A", role: "Receptionist", password: "password123", status: 'offline' },
+];
+
+export const allUsers: User[] = [mockUser, ...otherUsers];
+
+export const mockMessages: Message[] = [
+    { id: 'm1', senderEmail: 'ben.h@clinicflow.demo', receiverEmail: 'emily.carter@clinicflow.com', text: 'مرحبًا د. إميلي، هل يمكنك مراجعة مخطط المريض الجديد؟', timestamp: '10:00 ص' },
+    { id: 'm2', senderEmail: 'emily.carter@clinicflow.com', receiverEmail: 'ben.h@clinicflow.demo', text: 'بالتأكيد د. بن، سألقي نظرة عليه الآن.', timestamp: '10:01 ص' },
+    { id: 'm3', senderEmail: 'ben.h@clinicflow.demo', receiverEmail: 'emily.carter@clinicflow.com', text: 'شكرًا لك!', timestamp: '10:02 ص' },
+    { id: 'm4', senderEmail: 'alia.m@clinicflow.demo', receiverEmail: 'emily.carter@clinicflow.com', text: 'صباح الخير، تم تأكيد جميع مواعيد اليوم.', timestamp: '09:30 ص' },
+];
