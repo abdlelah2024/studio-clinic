@@ -24,7 +24,7 @@ export const mockDoctors: Doctor[] = [
 const getISODate = (year: number, month: number, day: number) => {
     // This helper function ensures dates are created consistently.
     // Note: The month is 1-based for simplicity in the call site.
-    const date = new Date(year, month - 1, day);
+    const date = new Date(Date.UTC(year, month - 1, day));
     return date.toISOString().split('T')[0];
 };
 
