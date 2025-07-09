@@ -1,13 +1,13 @@
 
 "use client"
-import React, { useState } from "react"
+import React, { useState, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuItem } from "@/components/ui/dropdown-menu"
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuItem, DropdownMenuCheckboxItem } from "@/components/ui/dropdown-menu"
 import { mockDoctors } from "@/lib/data"
 import type { Doctor } from "@/lib/types"
-import { MoreHorizontal, PlusCircle, Edit, Trash2, Calendar, Search } from "lucide-react"
+import { MoreHorizontal, PlusCircle, Edit, Trash2, Calendar, Search, ArrowUpDown } from "lucide-react"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import { AddDoctorDialog } from "@/components/doctors/add-doctor-dialog"
 import { EditDoctorDialog } from "@/components/doctors/edit-doctor-dialog"
@@ -15,9 +15,12 @@ import { DeleteDoctorDialog } from "@/components/doctors/delete-doctor-dialog"
 import { useToast } from "@/hooks/use-toast"
 import { Input } from "@/components/ui/input"
 
+type SortKey = 'name-asc' | 'name-desc' | 'specialty-asc' | 'specialty-desc';
+
 export default function DoctorsPage() {
   const [doctors, setDoctors] = useState<Doctor[]>(mockDoctors);
   const [searchQuery, setSearchQuery] = useState("");
+  const [sortKey, setSortKey] = useState<SortKey>('name-asc');
   const { toast } = useToast();
 
   const handleAddDoctor = (doctor: Omit<Doctor, 'id' | 'avatar'>) => {
@@ -51,10 +54,27 @@ export default function DoctorsPage() {
     });
   };
 
-  const filteredDoctors = doctors.filter(doctor =>
-    doctor.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    doctor.specialty.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredAndSortedDoctors = useMemo(() => {
+    const filtered = doctors.filter(doctor =>
+        doctor.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        doctor.specialty.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
+    return filtered.sort((a, b) => {
+        switch (sortKey) {
+            case 'name-asc':
+                return a.name.localeCompare(b.name);
+            case 'name-desc':
+                return b.name.localeCompare(a.name);
+            case 'specialty-asc':
+                return a.specialty.localeCompare(b.specialty);
+            case 'specialty-desc':
+                return b.specialty.localeCompare(a.specialty);
+            default:
+                return 0;
+        }
+    });
+  }, [doctors, searchQuery, sortKey]);
 
   return (
     <Card>
@@ -75,6 +95,44 @@ export default function DoctorsPage() {
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm" className="gap-1">
+                        <ArrowUpDown className="h-3.5 w-3.5" />
+                        <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
+                        تصنيف
+                        </span>
+                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                    <DropdownMenuLabel>تصنيف حسب</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                     <DropdownMenuCheckboxItem
+                        checked={sortKey === 'name-asc'}
+                        onSelect={() => setSortKey('name-asc')}
+                    >
+                        الاسم (أ-ي)
+                    </DropdownMenuCheckboxItem>
+                    <DropdownMenuCheckboxItem
+                        checked={sortKey === 'name-desc'}
+                        onSelect={() => setSortKey('name-desc')}
+                    >
+                        الاسم (ي-أ)
+                    </DropdownMenuCheckboxItem>
+                    <DropdownMenuCheckboxItem
+                        checked={sortKey === 'specialty-asc'}
+                        onSelect={() => setSortKey('specialty-asc')}
+                    >
+                        التخصص (أ-ي)
+                    </DropdownMenuCheckboxItem>
+                     <DropdownMenuCheckboxItem
+                        checked={sortKey === 'specialty-desc'}
+                        onSelect={() => setSortKey('specialty-desc')}
+                    >
+                        التخصص (ي-أ)
+                    </DropdownMenuCheckboxItem>
+                </DropdownMenuContent>
+            </DropdownMenu>
             <AddDoctorDialog onDoctorAdded={handleAddDoctor}>
               <Button size="sm" className="gap-1">
                 <PlusCircle className="h-3.5 w-3.5" />
@@ -96,7 +154,7 @@ export default function DoctorsPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredDoctors.map((doctor) => (
+            {filteredAndSortedDoctors.map((doctor) => (
               <TableRow key={doctor.id}>
                 <TableCell>
                   <div className="flex items-center gap-3">

@@ -1,14 +1,14 @@
 
 "use client"
-import React, { useState } from "react"
+import React, { useState, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuItem } from "@/components/ui/dropdown-menu"
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuItem, DropdownMenuCheckboxItem } from "@/components/ui/dropdown-menu"
 import { mockAppointments, mockPatients, mockDoctors } from "@/lib/data"
 import type { Appointment } from "@/lib/types"
 import { Badge } from "@/components/ui/badge"
-import { MoreHorizontal, PlusCircle, ListFilter, Edit, Trash2, Clock, XCircle, CheckCircle2, Search } from "lucide-react"
+import { MoreHorizontal, PlusCircle, ListFilter, Edit, Trash2, Clock, XCircle, CheckCircle2, Search, ArrowUpDown } from "lucide-react"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import { RescheduleAppointmentDialog } from "@/components/appointments/reschedule-appointment-dialog"
 import { useToast } from "@/hooks/use-toast"
@@ -19,11 +19,13 @@ import { Input } from "@/components/ui/input"
 
 
 type AppointmentStatus = 'Scheduled' | 'Completed' | 'Canceled' | 'Waiting';
+type SortKey = 'date-asc' | 'date-desc';
 
 export default function AppointmentsPage() {
   const [appointments, setAppointments] = useState<Appointment[]>(mockAppointments);
   const [filter, setFilter] = useState<AppointmentStatus | 'All'>('All');
   const [searchQuery, setSearchQuery] = useState("");
+  const [sortKey, setSortKey] = useState<SortKey>('date-desc');
   const [isRescheduleDialogOpen, setIsRescheduleDialogOpen] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | undefined>(undefined);
   const { toast } = useToast();
@@ -92,13 +94,25 @@ export default function AppointmentsPage() {
     }
   }
 
-  const filteredAppointments = appointments.filter(appointment => {
-    const statusFilterMatch = filter === 'All' || appointment.status === filter;
-    const searchFilterMatch = 
-        appointment.patient.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        appointment.doctor.name.toLowerCase().includes(searchQuery.toLowerCase());
-    return statusFilterMatch && searchFilterMatch;
-  });
+  const filteredAndSortedAppointments = useMemo(() => {
+    const filtered = appointments.filter(appointment => {
+        const statusFilterMatch = filter === 'All' || appointment.status === filter;
+        const searchFilterMatch = 
+            appointment.patient.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            appointment.doctor.name.toLowerCase().includes(searchQuery.toLowerCase());
+        return statusFilterMatch && searchFilterMatch;
+    });
+
+    return filtered.sort((a, b) => {
+        switch (sortKey) {
+            case 'date-asc':
+                return new Date(a.date).getTime() - new Date(b.date).getTime();
+            case 'date-desc':
+            default:
+                return new Date(b.date).getTime() - new Date(a.date).getTime();
+        }
+    });
+  }, [appointments, filter, searchQuery, sortKey]);
 
   return (
     <>
@@ -139,6 +153,32 @@ export default function AppointmentsPage() {
                   <DropdownMenuItem onSelect={() => setFilter('Canceled')}>ملغى</DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="gap-1">
+                    <ArrowUpDown className="h-3.5 w-3.5" />
+                    <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
+                      تصنيف
+                    </span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                    <DropdownMenuLabel>تصنيف حسب</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuCheckboxItem
+                        checked={sortKey === 'date-desc'}
+                        onSelect={() => setSortKey('date-desc')}
+                    >
+                        التاريخ (الأحدث أولاً)
+                    </DropdownMenuCheckboxItem>
+                    <DropdownMenuCheckboxItem
+                        checked={sortKey === 'date-asc'}
+                        onSelect={() => setSortKey('date-asc')}
+                    >
+                        التاريخ (الأقدم أولاً)
+                    </DropdownMenuCheckboxItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
               <Button size="sm" className="gap-1" onClick={() => openNewAppointmentDialog({onAppointmentAdded: handleAddAppointment})}>
                 <PlusCircle className="h-3.5 w-3.5" />
                 <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
@@ -162,7 +202,7 @@ export default function AppointmentsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredAppointments.map((appointment) => (
+              {filteredAndSortedAppointments.map((appointment) => (
                 <TableRow key={appointment.id}>
                   <TableCell>
                     <div className="flex items-center gap-2">
