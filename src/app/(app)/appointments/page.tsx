@@ -1,5 +1,6 @@
 
 "use client"
+import React, { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -9,16 +10,33 @@ import { Badge } from "@/components/ui/badge"
 import { MoreHorizontal, PlusCircle, ListFilter, UserPlus } from "lucide-react"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import { AddPatientDialog } from "@/components/patients/add-patient-dialog"
-import { differenceInDays, parseISO, format } from "date-fns"
-import type { Patient } from "@/lib/types"
+import { differenceInDays, parseISO } from "date-fns"
+import type { Patient, Appointment } from "@/lib/types"
+
+type StatusFilter = Appointment['status'] | 'All';
 
 export default function AppointmentsPage() {
+  const [filter, setFilter] = useState<StatusFilter>('All');
 
-   const handleAddPatient = (newPatient: Omit<Patient, 'id' | 'avatar' | 'lastVisit'>) => {
+  const handleAddPatient = (newPatient: Omit<Patient, 'id' | 'avatar' | 'lastVisit'>) => {
     // In a real app, you'd save this to a database and maybe refresh the appointments list
     // or select the new patient in a "New Appointment" form.
     console.log("New patient added:", newPatient);
   };
+
+  const filteredAppointments = mockAppointments.filter(appointment => {
+    if (filter === 'All') return true;
+    return appointment.status === filter;
+  });
+
+  const getStatusTranslation = (status: Appointment['status']) => {
+    switch (status) {
+      case 'Completed': return 'مكتمل';
+      case 'Canceled': return 'ملغى';
+      case 'Scheduled': return 'مجدول';
+      default: return status;
+    }
+  }
 
   return (
     <Card>
@@ -41,9 +59,10 @@ export default function AppointmentsPage() {
               <DropdownMenuContent align="end">
                 <DropdownMenuLabel>فلترة حسب الحالة</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>مجدول</DropdownMenuItem>
-                <DropdownMenuItem>مكتمل</DropdownMenuItem>
-                <DropdownMenuItem>ملغى</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setFilter('All')}>الكل</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setFilter('Scheduled')}>مجدول</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setFilter('Completed')}>مكتمل</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setFilter('Canceled')}>ملغى</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
             <AddPatientDialog onPatientAdded={handleAddPatient}>
@@ -80,7 +99,7 @@ export default function AppointmentsPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {mockAppointments.map((appointment) => {
+            {filteredAppointments.map((appointment) => {
               const appointmentDate = parseISO(appointment.date);
               const daysSinceAppointment = differenceInDays(new Date(), appointmentDate);
               const isFreeReturn = appointment.status === 'Completed' && daysSinceAppointment >= 0 && daysSinceAppointment <= 7;
@@ -110,7 +129,7 @@ export default function AppointmentsPage() {
                   <TableCell>{appointment.startTime}</TableCell>
                   <TableCell>
                     <Badge variant={appointment.status === 'Completed' ? 'default' : appointment.status === 'Canceled' ? 'destructive' : 'secondary'}>
-                      {appointment.status === 'Completed' ? 'مكتمل' : appointment.status === 'Canceled' ? 'ملغى' : 'مجدول'}
+                      {getStatusTranslation(appointment.status)}
                     </Badge>
                   </TableCell>
                   <TableCell>
