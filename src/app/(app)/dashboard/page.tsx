@@ -1,6 +1,6 @@
 
 "use client"
-import React, { useState, useMemo } from "react"
+import React, { useState, useMemo, useEffect } from "react"
 import { StatsCards } from "@/components/dashboard/stats-cards"
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -17,15 +17,17 @@ type TimeRange = 'all' | '30d' | '7d' | 'today';
 export default function DashboardPage() {
   const [timeRange, setTimeRange] = useState<TimeRange>('30d');
   const [isOnline, setIsOnline] = useState(true);
+  const [hydrated, setHydrated] = useState(false);
   
   // Mock browser online status
-  React.useEffect(() => {
+  useEffect(() => {
     const handleOnline = () => setIsOnline(true);
     const handleOffline = () => setIsOnline(false);
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
     // Initial check
     setIsOnline(navigator.onLine);
+    setHydrated(true);
     return () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
@@ -44,6 +46,9 @@ export default function DashboardPage() {
   }
 
   const filteredData = useMemo(() => {
+    if (!hydrated) {
+        return { appointments: [], upcomingAppointments: [] };
+    }
     const now = startOfDay(new Date());
     let startDate: Date | null = null;
     
@@ -70,7 +75,11 @@ export default function DashboardPage() {
       .slice(0, 5);
 
     return { appointments, upcomingAppointments };
-  }, [timeRange]);
+  }, [timeRange, hydrated]);
+  
+  if (!hydrated) {
+      return null;
+  }
 
   return (
     <div className="flex flex-col gap-6">
