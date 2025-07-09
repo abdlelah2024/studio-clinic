@@ -1,3 +1,5 @@
+
+"use client"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -6,10 +8,18 @@ import { mockAppointments } from "@/lib/data"
 import { Badge } from "@/components/ui/badge"
 import { MoreHorizontal, PlusCircle, ListFilter, UserPlus } from "lucide-react"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
-import { QuickAddPatientDialog } from "@/components/appointments/quick-add-patient"
-import { differenceInDays, parseISO } from "date-fns"
+import { AddPatientDialog } from "@/components/patients/add-patient-dialog"
+import { differenceInDays, parseISO, format } from "date-fns"
+import type { Patient } from "@/lib/types"
 
 export default function AppointmentsPage() {
+
+   const handleAddPatient = (newPatient: Omit<Patient, 'id' | 'avatar' | 'lastVisit'>) => {
+    // In a real app, you'd save this to a database and maybe refresh the appointments list
+    // or select the new patient in a "New Appointment" form.
+    console.log("New patient added:", newPatient);
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -36,7 +46,14 @@ export default function AppointmentsPage() {
                 <DropdownMenuItem>ملغى</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-            <QuickAddPatientDialog />
+            <AddPatientDialog onPatientAdded={handleAddPatient}>
+               <Button variant="outline" size="sm" className="gap-1">
+                <UserPlus className="h-3.5 w-3.5" />
+                <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
+                  إضافة سريعة لمريض
+                </span>
+              </Button>
+            </AddPatientDialog>
             <Button size="sm" className="gap-1">
               <PlusCircle className="h-3.5 w-3.5" />
               <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">

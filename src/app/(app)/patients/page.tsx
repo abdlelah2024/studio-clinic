@@ -1,14 +1,32 @@
+
+"use client"
 import Link from "next/link"
+import React, { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuItem } from "@/components/ui/dropdown-menu"
 import { mockPatients } from "@/lib/data"
+import type { Patient } from "@/lib/types"
 import { MoreHorizontal, PlusCircle, Search } from "lucide-react"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import { Input } from "@/components/ui/input"
+import { AddPatientDialog } from "@/components/patients/add-patient-dialog"
+import { format } from "date-fns"
 
 export default function PatientsPage() {
+  const [patients, setPatients] = useState<Patient[]>(mockPatients);
+
+  const handleAddPatient = (newPatient: Omit<Patient, 'id' | 'avatar' | 'lastVisit'>) => {
+    const patientWithDefaults: Patient = {
+      id: `p${patients.length + 1}`,
+      ...newPatient,
+      avatar: `https://placehold.co/100x100/E0E0E0/000000.png?text=${newPatient.name.charAt(0)}`,
+      lastVisit: format(new Date(), 'yyyy-MM-dd')
+    };
+    setPatients(prev => [patientWithDefaults, ...prev]);
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -26,12 +44,14 @@ export default function PatientsPage() {
                 className="w-full rounded-lg bg-background pl-8"
               />
             </div>
-            <Button size="sm" className="gap-1 whitespace-nowrap">
-              <PlusCircle className="h-3.5 w-3.5" />
-              <span className="sr-only sm:not-sr-only">
-                إضافة مريض
-              </span>
-            </Button>
+            <AddPatientDialog onPatientAdded={handleAddPatient}>
+              <Button size="sm" className="gap-1 whitespace-nowrap">
+                <PlusCircle className="h-3.5 w-3.5" />
+                <span className="sr-only sm:not-sr-only">
+                  إضافة مريض
+                </span>
+              </Button>
+            </AddPatientDialog>
           </div>
         </div>
       </CardHeader>
@@ -50,7 +70,7 @@ export default function PatientsPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {mockPatients.map((patient) => (
+            {patients.map((patient) => (
               <TableRow key={patient.id}>
                 <TableCell>
                   <div className="flex items-center gap-3">
