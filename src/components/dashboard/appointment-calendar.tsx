@@ -1,10 +1,11 @@
+
 "use client"
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { ChevronLeft, ChevronRight, MoreVertical } from "lucide-react"
-import { addDays, format, startOfWeek, eachDayOfInterval, endOfWeek } from 'date-fns';
+import { addDays, format, startOfWeek, eachDayOfInterval, endOfWeek, subDays } from 'date-fns';
 import { mockAppointments } from '@/lib/data';
 import type { Appointment } from '@/lib/types';
 import { cn } from '@/lib/utils';
@@ -51,7 +52,7 @@ export function AppointmentCalendar() {
   const weekDays = eachDayOfInterval({ start: startOfCurrentWeek, end: endOfCurrentWeek });
 
   const nextWeek = () => setCurrentDate(addDays(currentDate, 7));
-  const prevWeek = () => setCurrentDate(addDays(currentDate, -7));
+  const prevWeek = () => setCurrentDate(subDays(currentDate, 7));
 
   return (
     <Card className="h-full flex flex-col">
