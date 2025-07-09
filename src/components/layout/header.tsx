@@ -18,20 +18,21 @@ import { SidebarTrigger } from "@/components/ui/sidebar"
 import { mockUser, mockPatients } from "@/lib/data"
 import {
   Command,
-  CommandDialog,
   CommandEmpty,
   CommandGroup,
   CommandInput,
   CommandItem,
   CommandList,
-  CommandSeparator,
-  CommandShortcut,
 } from "@/components/ui/command"
+import { useAppContext } from "@/context/app-context"
+import { useRouter } from "next/navigation"
 
 export function AppHeader() {
   const [searchQuery, setSearchQuery] = useState("")
   const [isSearchFocused, setIsSearchFocused] = useState(false)
   const searchRef = useRef<HTMLDivElement>(null)
+  const { openNewAppointmentDialog, openNewPatientDialog } = useAppContext()
+  const router = useRouter()
 
   const filteredPatients = searchQuery
     ? mockPatients.filter(
@@ -52,6 +53,11 @@ export function AppHeader() {
       document.removeEventListener("mousedown", handleClickOutside)
     }
   }, [])
+
+  const resetSearch = () => {
+    setIsSearchFocused(false)
+    setSearchQuery("")
+  }
 
   return (
     <header className="sticky top-0 z-40 flex h-16 items-center gap-4 border-b bg-card px-4 md:px-6">
@@ -78,8 +84,8 @@ export function AppHeader() {
                       <CommandItem
                         key={patient.id}
                         onSelect={() => {
-                           window.location.href = `/patients/${patient.id}`;
-                           setIsSearchFocused(false);
+                           router.push(`/patients/${patient.id}`);
+                           resetSearch();
                         }}
                       >
                          <Avatar className="mr-2 h-6 w-6">
@@ -96,8 +102,11 @@ export function AppHeader() {
                     <CommandEmpty>
                         <div className="p-4 text-center text-sm">
                             <p>لم يتم العثور على مريض بهذا الاسم/الرقم.</p>
-                             <Button variant="link" className="mt-2" asChild>
-                                <Link href="/patients"><UserPlus className="mr-2 h-4 w-4" /> إضافة مريض جديد</Link>
+                             <Button variant="link" className="mt-2" onMouseDown={(e) => e.preventDefault()} onClick={() => {
+                                openNewPatientDialog();
+                                resetSearch();
+                             }}>
+                                <UserPlus className="mr-2 h-4 w-4" /> إضافة مريض جديد
                             </Button>
                         </div>
                     </CommandEmpty>
@@ -105,17 +114,15 @@ export function AppHeader() {
 
                 <CommandGroup heading="إجراءات سريعة">
                   <CommandItem onSelect={() => {
-                      // Logic to open new appointment dialog
-                      // This part can be implemented later by lifting state up
-                      alert("Opening new appointment dialog...");
-                      setIsSearchFocused(false);
+                      openNewAppointmentDialog({});
+                      resetSearch();
                   }}>
                     <Calendar className="mr-2 h-4 w-4" />
                     <span>حجز موعد جديد</span>
                   </CommandItem>
                    <CommandItem onSelect={() => {
-                        window.location.href = '/appointments';
-                        setIsSearchFocused(false);
+                        router.push('/appointments');
+                        resetSearch();
                    }}>
                     <Calendar className="mr-2 h-4 w-4" />
                     <span>عرض كل المواعيد</span>

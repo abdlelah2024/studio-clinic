@@ -11,15 +11,16 @@ import { PlusCircle, Search, MoreHorizontal, Edit, Trash2 } from "lucide-react"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import { Input } from "@/components/ui/input"
 import type { Patient } from "@/lib/types"
-import { AddPatientDialog } from "@/components/patients/add-patient-dialog"
 import { EditPatientDialog } from "@/components/patients/edit-patient-dialog"
 import { DeletePatientDialog } from "@/components/patients/delete-patient-dialog"
 import { useToast } from "@/hooks/use-toast"
+import { useAppContext } from "@/context/app-context"
 
 export default function PatientsPage() {
   const [patients, setPatients] = useState<Patient[]>(mockPatients);
   const [searchQuery, setSearchQuery] = useState("");
   const { toast } = useToast();
+  const { openNewPatientDialog } = useAppContext();
 
   const handleAddPatient = (patient: Omit<Patient, 'id' | 'avatar' | 'lastVisit'>) => {
     const newPatient: Patient = {
@@ -69,14 +70,12 @@ export default function PatientsPage() {
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
-            <AddPatientDialog onPatientAdded={handleAddPatient}>
-              <Button size="sm" className="gap-1 whitespace-nowrap">
-                <PlusCircle className="h-3.5 w-3.5" />
-                <span className="sr-only sm:not-sr-only">
-                  إضافة مريض
-                </span>
-              </Button>
-            </AddPatientDialog>
+            <Button size="sm" className="gap-1 whitespace-nowrap" onClick={openNewPatientDialog}>
+              <PlusCircle className="h-3.5 w-3.5" />
+              <span className="sr-only sm:not-sr-only">
+                إضافة مريض
+              </span>
+            </Button>
           </div>
         </div>
       </CardHeader>

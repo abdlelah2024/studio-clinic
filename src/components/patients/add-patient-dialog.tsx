@@ -8,7 +8,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -28,12 +27,12 @@ const patientSchema = z.object({
 type PatientFormData = z.infer<typeof patientSchema>;
 
 interface AddPatientDialogProps {
-  children: React.ReactNode;
   onPatientAdded: (patient: Omit<Patient, 'id' | 'avatar' | 'lastVisit'>) => void;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
-export function AddPatientDialog({ children, onPatientAdded }: AddPatientDialogProps) {
-  const [open, setOpen] = useState(false);
+export function AddPatientDialog({ onPatientAdded, open, onOpenChange }: AddPatientDialogProps) {
   const { toast } = useToast();
 
   const form = useForm<PatientFormData>({
@@ -51,18 +50,17 @@ export function AddPatientDialog({ children, onPatientAdded }: AddPatientDialogP
         title: "تمت الإضافة بنجاح",
         description: `تمت إضافة المريض ${data.name} إلى السجلات.`,
     });
-    setOpen(false);
+    onOpenChange(false);
     form.reset();
   };
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => {
-      setOpen(isOpen);
+      onOpenChange(isOpen);
       if (!isOpen) {
         form.reset();
       }
     }}>
-      <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>إضافة مريض جديد</DialogTitle>
@@ -113,7 +111,7 @@ export function AddPatientDialog({ children, onPatientAdded }: AddPatientDialogP
             />
             <DialogFooter>
                 <Button type="submit">حفظ المريض</Button>
-                <Button variant="outline" type="button" onClick={() => setOpen(false)}>إلغاء</Button>
+                <Button variant="outline" type="button" onClick={() => onOpenChange(false)}>إلغاء</Button>
             </DialogFooter>
           </form>
         </Form>

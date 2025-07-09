@@ -6,23 +6,24 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuItem } from "@/components/ui/dropdown-menu"
 import { mockAppointments, mockPatients, mockDoctors } from "@/lib/data"
-import type { Appointment, Patient, Doctor } from "@/lib/types"
+import type { Appointment } from "@/lib/types"
 import { Badge } from "@/components/ui/badge"
 import { MoreHorizontal, PlusCircle, ListFilter, Edit, Trash2, Clock, XCircle } from "lucide-react"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
-import { NewAppointmentDialog } from "@/components/appointments/new-appointment-dialog"
 import { RescheduleAppointmentDialog } from "@/components/appointments/reschedule-appointment-dialog"
 import { useToast } from "@/hooks/use-toast"
+import { useAppContext } from "@/context/app-context"
+
 
 type AppointmentStatus = 'Scheduled' | 'Completed' | 'Canceled';
 
 export default function AppointmentsPage() {
   const [appointments, setAppointments] = useState<Appointment[]>(mockAppointments);
   const [filter, setFilter] = useState<AppointmentStatus | 'All'>('All');
-  const [isNewAppointmentDialogOpen, setIsNewAppointmentDialogOpen] = useState(false);
   const [isRescheduleDialogOpen, setIsRescheduleDialogOpen] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | undefined>(undefined);
   const { toast } = useToast();
+  const { openNewAppointmentDialog } = useAppContext();
 
   const handleAddAppointment = (newAppointmentData: Omit<Appointment, 'id' | 'patient' | 'doctor' | 'status'> & { patientName: string, doctorName: string }) => {
     const patient = mockPatients.find(p => p.name === newAppointmentData.patientName);
@@ -118,7 +119,7 @@ export default function AppointmentsPage() {
                   <DropdownMenuItem onSelect={() => setFilter('Canceled')}>ملغى</DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-              <Button size="sm" className="gap-1" onClick={() => setIsNewAppointmentDialogOpen(true)}>
+              <Button size="sm" className="gap-1" onClick={() => openNewAppointmentDialog({})}>
                 <PlusCircle className="h-3.5 w-3.5" />
                 <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
                   موعد جديد
@@ -204,13 +205,6 @@ export default function AppointmentsPage() {
           </Table>
         </CardContent>
       </Card>
-      
-      <NewAppointmentDialog
-        open={isNewAppointmentDialogOpen}
-        onOpenChange={setIsNewAppointmentDialogOpen}
-        patients={mockPatients}
-        onAppointmentAdded={handleAddAppointment}
-      />
       
       {selectedAppointment && (
         <RescheduleAppointmentDialog
