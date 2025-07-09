@@ -44,7 +44,7 @@ export default function DashboardPage() {
                       </TableCell>
                       <TableCell>{appointment.startTime}</TableCell>
                       <TableCell>
-                        <Badge variant="outline">{appointment.status}</Badge>
+                        <Badge variant="secondary">{appointment.status === 'Completed' ? 'مكتمل' : appointment.status === 'Canceled' ? 'ملغى' : 'مجدول'}</Badge>
                       </TableCell>
                     </TableRow>
                   ))}

@@ -19,21 +19,35 @@ const getAppointmentsForDay = (day: Date, appointments: Appointment[]) => {
 const getStatusColor = (status: Appointment['status']) => {
   switch (status) {
     case 'Scheduled':
-      return 'bg-blue-200 border-blue-400 text-blue-800';
+      return 'bg-secondary';
     case 'Completed':
-      return 'bg-green-200 border-green-400 text-green-800';
+      return 'bg-primary/20';
     case 'Canceled':
-      return 'bg-red-200 border-red-400 text-red-800';
+      return 'bg-destructive/20';
     default:
-      return 'bg-gray-200 border-gray-400 text-gray-800';
+      return 'bg-muted';
   }
 };
+
+const getStatusBorderColor = (status: Appointment['status']) => {
+    switch (status) {
+      case 'Scheduled':
+        return 'border-secondary-foreground/20';
+      case 'Completed':
+        return 'border-primary/80';
+      case 'Canceled':
+        return 'border-destructive/80';
+      default:
+        return 'border-muted-foreground/20';
+    }
+}
+
 
 export function AppointmentCalendar() {
   const [currentDate, setCurrentDate] = useState(new Date());
 
-  const startOfCurrentWeek = startOfWeek(currentDate, { weekStartsOn: 1 });
-  const endOfCurrentWeek = endOfWeek(currentDate, { weekStartsOn: 1 });
+  const startOfCurrentWeek = startOfWeek(currentDate, { weekStartsOn: 0 });
+  const endOfCurrentWeek = endOfWeek(currentDate, { weekStartsOn: 0 });
   const weekDays = eachDayOfInterval({ start: startOfCurrentWeek, end: endOfCurrentWeek });
 
   const nextWeek = () => setCurrentDate(addDays(currentDate, 7));
@@ -89,7 +103,7 @@ export function AppointmentCalendar() {
                   return (
                     <div
                       key={app.id}
-                      className={cn("absolute w-[calc(100%-4px)] left-[2px] p-2 rounded-lg border text-xs shadow-sm overflow-hidden", getStatusColor(app.status))}
+                      className={cn("absolute w-[calc(100%-4px)] right-[2px] p-2 rounded-lg border text-xs shadow-sm overflow-hidden", getStatusColor(app.status), getStatusBorderColor(app.status))}
                       style={{ top: `${top}%`, height: `${height}%` }}
                     >
                       <p className="font-bold truncate">{app.patient.name}</p>
