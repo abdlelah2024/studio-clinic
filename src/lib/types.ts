@@ -12,6 +12,7 @@ export type Doctor = {
   name: string;
   specialty: string;
   avatar: string;
+  servicePrice?: number;
   freeReturnPeriod?: number; // in days
 };
 

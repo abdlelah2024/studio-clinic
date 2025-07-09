@@ -24,13 +24,22 @@ export function AddDoctorDialog({ children, onDoctorAdded }: AddDoctorDialogProp
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [specialty, setSpecialty] = useState("");
+  const [servicePrice, setServicePrice] = useState("");
+  const [freeReturnPeriod, setFreeReturnPeriod] = useState("");
 
   const handleSubmit = () => {
     if (name && specialty) {
-      onDoctorAdded({ name, specialty });
+      onDoctorAdded({ 
+        name, 
+        specialty,
+        servicePrice: servicePrice ? parseInt(servicePrice) : undefined,
+        freeReturnPeriod: freeReturnPeriod ? parseInt(freeReturnPeriod) : undefined
+      });
       setOpen(false);
       setName("");
       setSpecialty("");
+      setServicePrice("");
+      setFreeReturnPeriod("");
     }
   };
 
@@ -56,6 +65,18 @@ export function AddDoctorDialog({ children, onDoctorAdded }: AddDoctorDialogProp
               التخصص
             </Label>
             <Input id="specialty" placeholder="طب الأسنان" className="col-span-3" value={specialty} onChange={(e) => setSpecialty(e.target.value)} />
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="servicePrice" className="text-right">
+              سعر الخدمة
+            </Label>
+            <Input id="servicePrice" type="number" placeholder="200" className="col-span-3" value={servicePrice} onChange={(e) => setServicePrice(e.target.value)} />
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="freeReturnPeriod" className="text-right">
+              عودة مجانية (أيام)
+            </Label>
+            <Input id="freeReturnPeriod" type="number" placeholder="14" className="col-span-3" value={freeReturnPeriod} onChange={(e) => setFreeReturnPeriod(e.target.value)} />
           </div>
         </div>
         <DialogFooter>

@@ -18,9 +18,9 @@ export const mockPatients: Patient[] = [
 ];
 
 export const mockDoctors: Doctor[] = [
-  { id: 'd1', name: 'د. إميلي كارتر', specialty: 'أمراض القلب', avatar: 'https://placehold.co/100x100', freeReturnPeriod: 14 },
-  { id: 'd2', name: 'د. بن هانسون', specialty: 'طب الأطفال', avatar: 'https://placehold.co/100x100', freeReturnPeriod: 7 },
-  { id: 'd3', name: 'د. أوليفيا تشين', specialty: 'الأمراض الجلدية', avatar: 'https://placehold.co/100x100' },
+  { id: 'd1', name: 'د. إميلي كارتر', specialty: 'أمراض القلب', avatar: 'https://placehold.co/100x100', servicePrice: 250, freeReturnPeriod: 14 },
+  { id: 'd2', name: 'د. بن هانسون', specialty: 'طب الأطفال', avatar: 'https://placehold.co/100x100', servicePrice: 150, freeReturnPeriod: 7 },
+  { id: 'd3', name: 'د. أوليفيا تشين', specialty: 'الأمراض الجلدية', avatar: 'https://placehold.co/100x100', servicePrice: 200 },
 ];
 
 const getISODate = (year: number, month: number, day: number) => {

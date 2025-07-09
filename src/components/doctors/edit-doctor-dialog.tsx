@@ -23,7 +23,7 @@ interface EditDoctorDialogProps {
 
 export function EditDoctorDialog({ children, doctor, onDoctorUpdated }: EditDoctorDialogProps) {
   const [open, setOpen] = useState(false);
-  const [formData, setFormData] = useState<Doctor>(doctor);
+  const [formData, setFormData] = useState<Partial<Doctor>>(doctor);
 
   useEffect(() => {
     if (open) {
@@ -37,7 +37,13 @@ export function EditDoctorDialog({ children, doctor, onDoctorUpdated }: EditDoct
   }
   
   const handleSubmit = () => {
-    onDoctorUpdated(formData);
+     const updatedDoctor: Doctor = {
+      ...doctor,
+      ...formData,
+      servicePrice: formData.servicePrice ? parseInt(String(formData.servicePrice)) : undefined,
+      freeReturnPeriod: formData.freeReturnPeriod ? parseInt(String(formData.freeReturnPeriod)) : undefined
+    };
+    onDoctorUpdated(updatedDoctor);
     setOpen(false);
   }
 
@@ -63,6 +69,18 @@ export function EditDoctorDialog({ children, doctor, onDoctorUpdated }: EditDoct
               التخصص
             </Label>
             <Input id="specialty" value={formData.specialty} onChange={handleChange} className="col-span-3" />
+          </div>
+           <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="servicePrice" className="text-right">
+              سعر الخدمة
+            </Label>
+            <Input id="servicePrice" type="number" value={formData.servicePrice ?? ""} onChange={handleChange} className="col-span-3" />
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="freeReturnPeriod" className="text-right">
+              عودة مجانية (أيام)
+            </Label>
+            <Input id="freeReturnPeriod" type="number" value={formData.freeReturnPeriod ?? ""} onChange={handleChange} className="col-span-3" />
           </div>
         </div>
         <DialogFooter>

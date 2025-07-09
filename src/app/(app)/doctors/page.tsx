@@ -150,6 +150,8 @@ export default function DoctorsPage() {
             <TableRow>
               <TableHead>الاسم</TableHead>
               <TableHead>التخصص</TableHead>
+              <TableHead>سعر الخدمة</TableHead>
+              <TableHead>مدة العودة المجانية</TableHead>
               <TableHead className="text-right">الإجراءات</TableHead>
             </TableRow>
           </TableHeader>
@@ -166,6 +168,8 @@ export default function DoctorsPage() {
                   </div>
                 </TableCell>
                 <TableCell>{doctor.specialty}</TableCell>
+                <TableCell>{doctor.servicePrice ? `${doctor.servicePrice} ر.س` : 'N/A'}</TableCell>
+                <TableCell>{doctor.freeReturnPeriod ? `${doctor.freeReturnPeriod} يوم` : 'لا يوجد'}</TableCell>
                 <TableCell className="text-right">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
