@@ -1,6 +1,6 @@
 
 "use client"
-import React, { useState } from "react"
+import React from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
@@ -10,9 +10,6 @@ import type { User } from "@/lib/types"
 import { MoreHorizontal, PlusCircle } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
-import { AddUserDialog } from "@/components/users/add-user-dialog"
-import { EditUserDialog } from "@/components/users/edit-user-dialog"
-import { DeleteUserDialog } from "@/components/users/delete-user-dialog"
 
 // For demonstration, we'll create a small list of users.
 const initialUsers: User[] = [
@@ -22,23 +19,7 @@ const initialUsers: User[] = [
 ]
 
 export default function UsersPage() {
-  const [users, setUsers] = useState(initialUsers);
-
-  const handleAddUser = (newUser: Omit<User, 'avatar'>) => {
-    const userWithAvatar: User = {
-      ...newUser,
-      avatar: `https://placehold.co/100x100/E0E0E0/000000.png?text=${newUser.name.charAt(0)}`
-    }
-    setUsers(prev => [...prev, userWithAvatar]);
-  };
-
-  const handleUpdateUser = (updatedUser: User) => {
-    setUsers(prev => prev.map(user => user.email === updatedUser.email ? updatedUser : user));
-  }
-
-  const handleDeleteUser = (email: string) => {
-    setUsers(prev => prev.filter(user => user.email !== email));
-  };
+  const users = initialUsers;
 
   return (
     <Card>
@@ -48,14 +29,12 @@ export default function UsersPage() {
             <CardTitle>المستخدمون والصلاحيات</CardTitle>
             <CardDescription>إدارة حسابات المستخدمين وأذوناتهم.</CardDescription>
           </div>
-          <AddUserDialog onUserAdded={handleAddUser}>
-            <Button size="sm" className="gap-1">
-              <PlusCircle className="h-3.5 w-3.5" />
-              <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-                إضافة مستخدم
-              </span>
-            </Button>
-          </AddUserDialog>
+          <Button size="sm" className="gap-1">
+            <PlusCircle className="h-3.5 w-3.5" />
+            <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
+              إضافة مستخدم
+            </span>
+          </Button>
         </div>
       </CardHeader>
       <CardContent>
@@ -98,14 +77,10 @@ export default function UsersPage() {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuLabel>الإجراءات</DropdownMenuLabel>
-                       <EditUserDialog user={user} onUserUpdated={handleUpdateUser}>
-                        <DropdownMenuItem onSelect={(e) => e.preventDefault()}>تعديل</DropdownMenuItem>
-                       </EditUserDialog>
+                      <DropdownMenuItem>تعديل</DropdownMenuItem>
                       <DropdownMenuItem>إدارة الصلاحيات</DropdownMenuItem>
                       <DropdownMenuSeparator />
-                       <DeleteUserDialog user={user} onDelete={() => handleDeleteUser(user.email)}>
-                        <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive">حذف</DropdownMenuItem>
-                      </DeleteUserDialog>
+                      <DropdownMenuItem className="text-destructive">حذف</DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </TableCell>

@@ -1,93 +1,21 @@
 
 "use client"
 import Link from "next/link"
-import React, { useState } from "react"
+import React from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuItem } from "@/components/ui/dropdown-menu"
-import { mockPatients, mockDoctors, mockAppointments } from "@/lib/data"
-import type { Patient, Appointment } from "@/lib/types"
+import { mockPatients } from "@/lib/data"
 import { MoreHorizontal, PlusCircle, Search } from "lucide-react"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import { Input } from "@/components/ui/input"
-import { AddPatientDialog } from "@/components/patients/add-patient-dialog"
-import { EditPatientDialog } from "@/components/patients/edit-patient-dialog"
-import { DeletePatientDialog } from "@/components/patients/delete-patient-dialog"
-import { format } from "date-fns"
-import { NewAppointmentDialog } from "@/components/appointments/new-appointment-dialog"
-import { useToast } from "@/hooks/use-toast"
 
 export default function PatientsPage() {
-  const [patients, setPatients] = useState<Patient[]>(mockPatients);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [isNewAppointmentDialogOpen, setIsNewAppointmentDialogOpen] = useState(false);
-  const [selectedPatientForAppointment, setSelectedPatientForAppointment] = useState<string | undefined>(undefined);
-  const [appointments, setAppointments] = useState<Appointment[]>(mockAppointments);
-  const { toast } = useToast();
-
-  const handleAddPatient = (newPatient: Omit<Patient, 'id' | 'avatar' | 'lastVisit'>) => {
-    const patientWithDefaults: Patient = {
-      id: `p${patients.length + 1}`,
-      ...newPatient,
-      avatar: `https://placehold.co/100x100/E0E0E0/000000.png?text=${newPatient.name.charAt(0)}`,
-      lastVisit: format(new Date(), 'yyyy-MM-dd')
-    };
-    setPatients(prev => [patientWithDefaults, ...prev]);
-  };
-
-  const handleUpdatePatient = (updatedPatient: Patient) => {
-    setPatients(prev => prev.map(p => p.id === updatedPatient.id ? updatedPatient : p));
-  }
-
-  const handleDeletePatient = (patientId: string) => {
-    setPatients(prev => prev.filter(p => p.id !== patientId));
-  }
-
-  const handleOpenAppointmentDialog = (patientName: string) => {
-    setSelectedPatientForAppointment(patientName);
-    setIsNewAppointmentDialogOpen(true);
-  }
-
-  const handleAddAppointment = (newAppointmentData: Omit<Appointment, 'id' | 'patient' | 'doctor' | 'status'> & { patientName: string; doctorName: string; }) => {
-    const patient = patients.find(p => p.name === newAppointmentData.patientName);
-    const doctor = mockDoctors.find(d => d.name === newAppointmentData.doctorName);
-
-    if (!patient || !doctor) {
-       toast({
-        title: "خطأ",
-        description: "لم يتم العثور على المريض أو الطبيب.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const newAppointment: Appointment = {
-      id: `a${appointments.length + 1}`,
-      patient: { name: patient.name, avatar: patient.avatar },
-      doctor: { name: doctor.name, avatar: doctor.avatar },
-      date: newAppointmentData.date,
-      startTime: newAppointmentData.startTime,
-      endTime: newAppointmentData.endTime,
-      reason: newAppointmentData.reason,
-      status: 'Scheduled'
-    };
-    // In a real app, this would be a global state update
-    setAppointments(prev => [newAppointment, ...prev]);
-    toast({
-        title: "تمت إضافة الموعد",
-        description: `تم حجز موعد لـ ${patient.name} مع ${doctor.name}.`,
-    });
-  };
-
-
-  const filteredPatients = patients.filter(patient =>
-    patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    patient.phone.includes(searchTerm)
-  );
+  // Search and state management will be added later
+  const patients = mockPatients;
 
   return (
-    <>
     <Card>
       <CardHeader>
         <div className="flex items-center justify-between gap-4">
@@ -102,18 +30,14 @@ export default function PatientsPage() {
                 type="search"
                 placeholder="البحث بالاسم أو الرقم..."
                 className="w-full rounded-lg bg-background pl-8"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
-            <AddPatientDialog onPatientAdded={handleAddPatient}>
-              <Button size="sm" className="gap-1 whitespace-nowrap">
-                <PlusCircle className="h-3.5 w-3.5" />
-                <span className="sr-only sm:not-sr-only">
-                  إضافة مريض
-                </span>
-              </Button>
-            </AddPatientDialog>
+            <Button size="sm" className="gap-1 whitespace-nowrap">
+              <PlusCircle className="h-3.5 w-3.5" />
+              <span className="sr-only sm:not-sr-only">
+                إضافة مريض
+              </span>
+            </Button>
           </div>
         </div>
       </CardHeader>
@@ -132,7 +56,7 @@ export default function PatientsPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredPatients.map((patient) => (
+            {patients.map((patient) => (
               <TableRow key={patient.id}>
                 <TableCell>
                   <div className="flex items-center gap-3">
@@ -160,14 +84,10 @@ export default function PatientsPage() {
                       <DropdownMenuItem asChild>
                         <Link href={`/patients/${patient.id}`}>عرض التاريخ الطبي</Link>
                       </DropdownMenuItem>
-                       <EditPatientDialog patient={patient} onPatientUpdated={handleUpdatePatient}>
-                          <DropdownMenuItem onSelect={(e) => e.preventDefault()}>تعديل الملف الشخصي</DropdownMenuItem>
-                       </EditPatientDialog>
-                      <DropdownMenuItem onSelect={() => handleOpenAppointmentDialog(patient.name)}>حجز موعد</DropdownMenuItem>
+                      <DropdownMenuItem>تعديل الملف الشخصي</DropdownMenuItem>
+                      <DropdownMenuItem>حجز موعد</DropdownMenuItem>
                       <DropdownMenuSeparator />
-                      <DeletePatientDialog patient={patient} onDelete={() => handleDeletePatient(patient.id)}>
-                        <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive">حذف المريض</DropdownMenuItem>
-                      </DeletePatientDialog>
+                      <DropdownMenuItem className="text-destructive">حذف المريض</DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </TableCell>
@@ -177,13 +97,5 @@ export default function PatientsPage() {
         </Table>
       </CardContent>
     </Card>
-    <NewAppointmentDialog
-        open={isNewAppointmentDialogOpen}
-        onOpenChange={setIsNewAppointmentDialogOpen}
-        onAppointmentAdded={handleAddAppointment}
-        patients={patients}
-        initialPatientName={selectedPatientForAppointment}
-     />
-    </>
   )
 }

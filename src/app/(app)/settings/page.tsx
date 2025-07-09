@@ -1,6 +1,6 @@
 
 "use client"
-import React, { useState } from "react"
+import React from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -11,19 +11,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { MoreVertical, PlusCircle, Trash2, Edit } from "lucide-react"
 import { Checkbox } from "@/components/ui/checkbox"
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu"
-import { AddFieldDialog } from "@/components/settings/add-field-dialog"
-import { EditFieldDialog } from "@/components/settings/edit-field-dialog"
-import { DeleteFieldDialog } from "@/components/settings/delete-field-dialog"
 
-type DataField = {
-  id: string;
-  label: string;
-  type: 'نظام' | 'مخصص';
-  required: boolean;
-};
-
-const initialDataFields: DataField[] = [
+const dataFields = [
     { id: "patient-name", label: "اسم المريض", type: "نظام", required: true },
     { id: "dob", label: "تاريخ الميلاد", type: "نظام", required: true },
     { id: "phone", label: "رقم الهاتف", type: "نظام", required: true },
@@ -32,26 +21,6 @@ const initialDataFields: DataField[] = [
 ]
 
 export default function SettingsPage() {
-  const [dataFields, setDataFields] = useState<DataField[]>(initialDataFields);
-
-  const handleAddField = (newField: Omit<DataField, 'id' | 'type'>) => {
-    const fieldWithDefaults: DataField = {
-        id: `custom-${Date.now()}`,
-        type: 'مخصص',
-        ...newField
-    };
-    setDataFields(prev => [...prev, fieldWithDefaults]);
-  }
-
-  const handleUpdateField = (updatedField: DataField) => {
-    setDataFields(prev => prev.map(f => f.id === updatedField.id ? updatedField : f));
-  }
-  
-  const handleDeleteField = (fieldId: string) => {
-     setDataFields(prev => prev.filter(f => f.id !== fieldId));
-  }
-
-
   return (
     <div className="space-y-6">
       <div>
@@ -143,14 +112,12 @@ export default function SettingsPage() {
                         <CardTitle>حقول البيانات</CardTitle>
                         <CardDescription>تخصيص حقول البيانات للمواعيد وسجلات المرضى.</CardDescription>
                     </div>
-                    <AddFieldDialog onFieldAdded={handleAddField}>
-                        <Button size="sm" className="gap-1">
-                            <PlusCircle className="h-3.5 w-3.5" />
-                            <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-                                إضافة حقل
-                            </span>
-                        </Button>
-                    </AddFieldDialog>
+                    <Button size="sm" className="gap-1">
+                        <PlusCircle className="h-3.5 w-3.5" />
+                        <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
+                            إضافة حقل
+                        </span>
+                    </Button>
                 </div>
             </CardHeader>
             <CardContent>
@@ -167,29 +134,15 @@ export default function SettingsPage() {
                         {dataFields.map((field) => (
                             <TableRow key={field.id}>
                                 <TableCell className="font-medium">{field.label}</TableCell>
-                                <TableCell>
-                                  <Badge variant={field.type === 'نظام' ? 'secondary' : 'outline'}>{field.type}</Badge>
-                                </TableCell>
+                                <TableCell>{field.type}</TableCell>
                                 <TableCell>
                                     <Checkbox checked={field.required} disabled={field.type === 'نظام'} />
                                 </TableCell>
                                 <TableCell className="text-right">
                                      {field.type !== 'نظام' && (
-                                        <DropdownMenu>
-                                            <DropdownMenuTrigger asChild>
-                                                <Button size="icon" variant="ghost">
-                                                    <MoreVertical className="h-4 w-4" />
-                                                </Button>
-                                            </DropdownMenuTrigger>
-                                            <DropdownMenuContent align="end">
-                                                <EditFieldDialog field={field} onFieldUpdated={handleUpdateField}>
-                                                    <DropdownMenuItem onSelect={(e) => e.preventDefault()}><Edit className="ml-2 h-4 w-4" />تعديل</DropdownMenuItem>
-                                                </EditFieldDialog>
-                                                <DeleteFieldDialog field={field} onDelete={() => handleDeleteField(field.id)}>
-                                                    <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive"><Trash2 className="ml-2 h-4 w-4" />حذف</DropdownMenuItem>
-                                                </DeleteFieldDialog>
-                                            </DropdownMenuContent>
-                                        </DropdownMenu>
+                                        <Button size="icon" variant="ghost">
+                                            <MoreVertical className="h-4 w-4" />
+                                        </Button>
                                      )}
                                 </TableCell>
                             </TableRow>
