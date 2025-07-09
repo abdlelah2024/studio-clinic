@@ -73,7 +73,6 @@ export const mockMessages: Message[] = [
     { id: 'm4', senderEmail: 'alia.m@clinicflow.demo', receiverEmail: 'asd19082@gmail.com', text: 'صباح الخير، تم تأكيد جميع مواعيد اليوم.', timestamp: '09:30 ص' },
 ];
 
-const now = new Date();
 export const mockAuditLogs: AuditLog[] = [
   {
     id: 'log1',
@@ -81,7 +80,7 @@ export const mockAuditLogs: AuditLog[] = [
     category: 'Patient',
     user: mockUser,
     details: 'أضاف مريضًا جديدًا: أحمد محمود',
-    timestamp: new Date(now.getTime() - 1 * 60 * 60 * 1000).toISOString(),
+    timestamp: '2025-07-10T12:30:00.000Z',
   },
   {
     id: 'log2',
@@ -89,7 +88,7 @@ export const mockAuditLogs: AuditLog[] = [
     category: 'Appointment',
     user: otherUsers[1],
     details: 'تحديث موعد فاطمة علي',
-    timestamp: new Date(now.getTime() - 2 * 60 * 60 * 1000).toISOString(),
+    timestamp: '2025-07-10T11:30:00.000Z',
   },
   {
     id: 'log3',
@@ -97,7 +96,7 @@ export const mockAuditLogs: AuditLog[] = [
     category: 'System',
     user: otherUsers[0],
     details: 'تسجيل الدخول إلى النظام',
-    timestamp: new Date(now.getTime() - 3 * 60 * 60 * 1000).toISOString(),
+    timestamp: '2025-07-10T10:30:00.000Z',
   },
   {
     id: 'log4',
@@ -105,7 +104,7 @@ export const mockAuditLogs: AuditLog[] = [
     category: 'Doctor',
     user: mockUser,
     details: 'إزالة الطبيب: د. ماركوس لي',
-    timestamp: new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString(),
+    timestamp: '2025-07-09T13:30:00.000Z',
   },
    {
     id: 'log5',
@@ -113,7 +112,7 @@ export const mockAuditLogs: AuditLog[] = [
     category: 'Report',
     user: otherUsers[0],
     details: 'إنشاء مسودة تقرير للمريض: خالد عبد الله',
-    timestamp: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+    timestamp: '2025-07-08T13:30:00.000Z',
   },
 ];
 
