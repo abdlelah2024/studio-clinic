@@ -1,11 +1,11 @@
 import type { User, Patient, Doctor, Appointment, UserRole, Permissions, Message } from './types';
 
 export const mockUser: User = {
-  name: 'د. إميلي كارتر',
-  email: 'emily.carter@clinicflow.com',
-  avatar: 'https://placehold.co/100x100',
+  name: 'المسؤول',
+  email: 'asd19082@gmail.com',
+  avatar: 'https://placehold.co/100x100/333/fff?text=A',
   role: 'Admin',
-  password: 'password123',
+  password: '159632Asd',
   status: 'online',
 };
 
@@ -66,8 +66,8 @@ export const otherUsers: User[] = [
 export const allUsers: User[] = [mockUser, ...otherUsers];
 
 export const mockMessages: Message[] = [
-    { id: 'm1', senderEmail: 'ben.h@clinicflow.demo', receiverEmail: 'emily.carter@clinicflow.com', text: 'مرحبًا د. إميلي، هل يمكنك مراجعة مخطط المريض الجديد؟', timestamp: '10:00 ص' },
-    { id: 'm2', senderEmail: 'emily.carter@clinicflow.com', receiverEmail: 'ben.h@clinicflow.demo', text: 'بالتأكيد د. بن، سألقي نظرة عليه الآن.', timestamp: '10:01 ص' },
-    { id: 'm3', senderEmail: 'ben.h@clinicflow.demo', receiverEmail: 'emily.carter@clinicflow.com', text: 'شكرًا لك!', timestamp: '10:02 ص' },
-    { id: 'm4', senderEmail: 'alia.m@clinicflow.demo', receiverEmail: 'emily.carter@clinicflow.com', text: 'صباح الخير، تم تأكيد جميع مواعيد اليوم.', timestamp: '09:30 ص' },
+    { id: 'm1', senderEmail: 'ben.h@clinicflow.demo', receiverEmail: 'asd19082@gmail.com', text: 'مرحبًا د. إميلي، هل يمكنك مراجعة مخطط المريض الجديد؟', timestamp: '10:00 ص' },
+    { id: 'm2', senderEmail: 'asd19082@gmail.com', receiverEmail: 'ben.h@clinicflow.demo', text: 'بالتأكيد د. بن، سألقي نظرة عليه الآن.', timestamp: '10:01 ص' },
+    { id: 'm3', senderEmail: 'ben.h@clinicflow.demo', receiverEmail: 'asd19082@gmail.com', text: 'شكرًا لك!', timestamp: '10:02 ص' },
+    { id: 'm4', senderEmail: 'alia.m@clinicflow.demo', receiverEmail: 'asd19082@gmail.com', text: 'صباح الخير، تم تأكيد جميع مواعيد اليوم.', timestamp: '09:30 ص' },
 ];

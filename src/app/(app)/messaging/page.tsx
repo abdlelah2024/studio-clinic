@@ -49,14 +49,14 @@ export default function MessagingPage() {
                     <h2 className="text-xl font-bold">المحادثات</h2>
                 </div>
                 <div className="flex-1 overflow-y-auto">
-                    {allUsers.map(user => (
+                    {allUsers.filter(u => u.email !== mockUser.email).map(user => (
                         <div
                             key={user.email}
                             className={cn(
                                 "flex items-center gap-3 p-4 cursor-pointer hover:bg-muted/50",
                                 selectedUser?.email === user.email && "bg-muted"
                             )}
-                            onClick={() => user.email !== mockUser.email && setSelectedUser(user)}
+                            onClick={() => setSelectedUser(user)}
                         >
                             <div className="relative">
                                 <Avatar>
@@ -70,7 +70,6 @@ export default function MessagingPage() {
                             </div>
                             <div className="flex-1">
                                 <p className="font-semibold">{user.name}</p>
-                                {user.email === mockUser.email && <span className="text-xs text-primary">(أنت)</span>}
                             </div>
                         </div>
                     ))}
