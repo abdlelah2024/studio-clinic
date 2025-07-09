@@ -12,12 +12,17 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import type { Appointment } from "@/lib/types"
+import type { Appointment, Doctor, Patient } from "@/lib/types"
+
+type EnrichedAppointment = Appointment & {
+  patient: Patient;
+  doctor: Doctor;
+};
 
 interface RescheduleAppointmentDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  appointment: Appointment;
+  appointment: EnrichedAppointment;
   onAppointmentRescheduled: (appointmentId: string, newDate: string, newStartTime: string, newEndTime: string) => void;
 }
 

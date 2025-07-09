@@ -4,7 +4,8 @@ import React, { useState, useMemo, useEffect } from "react"
 import { StatsCards } from "@/components/dashboard/stats-cards"
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { mockAppointments, allUsers } from "@/lib/data"
+import { mockAppointments, allUsers, mockPatients, mockDoctors } from "@/lib/data"
+import type { Appointment, Patient, Doctor } from "@/lib/types"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -13,6 +14,11 @@ import { Wifi, Users, RefreshCw } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 type TimeRange = 'all' | '30d' | '7d' | 'today';
+
+type EnrichedAppointment = Appointment & {
+  patient: Patient;
+  doctor: Doctor;
+};
 
 export default function DashboardPage() {
   const [timeRange, setTimeRange] = useState<TimeRange>('30d');
@@ -23,14 +29,19 @@ export default function DashboardPage() {
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
     const handleOffline = () => setIsOnline(false);
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-    // Initial check
-    setIsOnline(navigator.onLine);
+    
+    if (typeof window !== 'undefined') {
+        window.addEventListener('online', handleOnline);
+        window.addEventListener('offline', handleOffline);
+        setIsOnline(navigator.onLine);
+    }
     setHydrated(true);
+    
     return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('online', handleOnline);
+        window.removeEventListener('offline', handleOffline);
+      }
     };
   }, []);
 
@@ -44,6 +55,14 @@ export default function DashboardPage() {
       default: return status;
     }
   }
+
+  const enrichedAppointments = useMemo(() => {
+    return mockAppointments.map(appointment => {
+      const patient = mockPatients.find(p => p.id === appointment.patientId)!;
+      const doctor = mockDoctors.find(d => d.id === appointment.doctorId)!;
+      return { ...appointment, patient, doctor };
+    }).filter(Boolean) as EnrichedAppointment[];
+  }, [])
 
   const filteredData = useMemo(() => {
     if (!hydrated) {
@@ -60,22 +79,22 @@ export default function DashboardPage() {
       startDate = addDays(now, -30);
     }
 
-    const appointments = mockAppointments.filter(appointment => {
+    const appointments = enrichedAppointments.filter(appointment => {
       const appointmentDate = startOfDay(new Date(appointment.date));
       if (timeRange === 'today') {
         return isToday(appointmentDate);
       }
       if (!startDate) return true;
-      return appointmentDate >= startDate && appointmentDate <= now;
+      return appointmentDate >= startDate; // Allow appointments up to the current day
     });
 
-    const upcomingAppointments = mockAppointments
+    const upcomingAppointments = enrichedAppointments
       .filter(a => (a.status === 'Scheduled' || a.status === 'Waiting') && new Date(a.date) >= now)
       .sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime())
       .slice(0, 5);
 
     return { appointments, upcomingAppointments };
-  }, [timeRange, hydrated]);
+  }, [timeRange, hydrated, enrichedAppointments]);
   
   if (!hydrated) {
       return null;

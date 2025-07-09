@@ -7,7 +7,7 @@ import type { Appointment, Patient } from "@/lib/types"
 import { mockPatients } from "@/lib/data"
 import { useToast } from "@/hooks/use-toast"
 
-type AddAppointmentFunction = (appointment: Omit<Appointment, 'id' | 'patient' | 'doctor' | 'status'> & { patientName: string, doctorName: string }) => void;
+type AddAppointmentFunction = (appointment: Omit<Appointment, 'id' | 'patientId' | 'doctorId' > & { patientName: string, doctorName: string, status: 'Scheduled' }) => void;
 type AddPatientFunction = (patient: Omit<Patient, 'id' | 'avatar' | 'lastVisit'>) => void;
 
 interface AppointmentDialogOptions {

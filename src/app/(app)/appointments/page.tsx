@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuItem, DropdownMenuCheckboxItem } from "@/components/ui/dropdown-menu"
 import { mockAppointments, mockPatients, mockDoctors } from "@/lib/data"
-import type { Appointment } from "@/lib/types"
+import type { Appointment, Doctor, Patient } from "@/lib/types"
 import { Badge } from "@/components/ui/badge"
 import { MoreHorizontal, PlusCircle, ListFilter, Edit, Trash2, Clock, XCircle, CheckCircle2, Search, ArrowUpDown } from "lucide-react"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
@@ -17,6 +17,10 @@ import { cn } from "@/lib/utils"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { Input } from "@/components/ui/input"
 
+type EnrichedAppointment = Appointment & {
+  patient: Patient;
+  doctor: Doctor;
+};
 
 type AppointmentStatus = 'Scheduled' | 'Completed' | 'Canceled' | 'Waiting';
 type SortKey = 'date-asc' | 'date-desc';
@@ -27,11 +31,11 @@ export default function AppointmentsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [sortKey, setSortKey] = useState<SortKey>('date-desc');
   const [isRescheduleDialogOpen, setIsRescheduleDialogOpen] = useState(false);
-  const [selectedAppointment, setSelectedAppointment] = useState<Appointment | undefined>(undefined);
+  const [selectedAppointment, setSelectedAppointment] = useState<EnrichedAppointment | undefined>(undefined);
   const { toast } = useToast();
   const { openNewAppointmentDialog } = useAppContext();
 
-  const handleAddAppointment = (newAppointmentData: Omit<Appointment, 'id' | 'patient' | 'doctor' | 'status'> & { patientName: string, doctorName: string }) => {
+  const handleAddAppointment = (newAppointmentData: Omit<Appointment, 'id' | 'patientId' | 'doctorId' > & { patientName: string, doctorName: string }) => {
     const patient = mockPatients.find(p => p.name === newAppointmentData.patientName);
     const doctor = mockDoctors.find(d => d.name === newAppointmentData.doctorName);
 
@@ -41,11 +45,15 @@ export default function AppointmentsPage() {
     }
 
     const newAppointment: Appointment = {
-      ...newAppointmentData,
       id: `a${appointments.length + 1}`,
-      patient: { name: patient.name, avatar: patient.avatar },
-      doctor: { name: doctor.name, avatar: doctor.avatar },
+      patientId: patient.id,
+      doctorId: doctor.id,
+      date: newAppointmentData.date,
+      startTime: newAppointmentData.startTime,
+      endTime: newAppointmentData.endTime,
+      reason: newAppointmentData.reason,
       status: 'Scheduled',
+      freeReturn: newAppointmentData.freeReturn,
     };
     setAppointments(prev => [newAppointment, ...prev]);
     toast({
@@ -95,7 +103,13 @@ export default function AppointmentsPage() {
   }
 
   const filteredAndSortedAppointments = useMemo(() => {
-    const filtered = appointments.filter(appointment => {
+    const enrichedAppointments: EnrichedAppointment[] = appointments.map(appointment => {
+      const patient = mockPatients.find(p => p.id === appointment.patientId)!;
+      const doctor = mockDoctors.find(d => d.id === appointment.doctorId)!;
+      return { ...appointment, patient, doctor };
+    }).filter(Boolean) as EnrichedAppointment[];
+
+    const filtered = enrichedAppointments.filter(appointment => {
         const statusFilterMatch = filter === 'All' || appointment.status === filter;
         const searchFilterMatch = 
             appointment.patient.name.toLowerCase().includes(searchQuery.toLowerCase()) ||

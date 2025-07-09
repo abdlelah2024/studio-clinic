@@ -18,8 +18,8 @@ export type Doctor = {
 
 export type Appointment = {
   id: string;
-  patient: Pick<Patient, 'name' | 'avatar'>;
-  doctor: Pick<Doctor, 'name' | 'avatar'>;
+  patientId: string;
+  doctorId: string;
   date: string;
   startTime: string;
   endTime: string;

@@ -10,17 +10,19 @@ export const mockUser: User = {
 };
 
 export const mockPatients: Patient[] = [
-  { id: 'p1', name: 'أحمد محمود', lastVisit: '2023-10-15', avatar: 'https://placehold.co/100x100', phone: '555-0101', age: 39 },
-  { id: 'p2', name: 'فاطمة علي', lastVisit: '2023-11-02', avatar: 'https://placehold.co/100x100', phone: '555-0102', age: 32 },
-  { id: 'p3', name: 'خالد عبد الله', lastVisit: '2023-09-20', avatar: 'https://placehold.co/100x100', phone: '555-0103', age: 45 },
-  { id: 'p4', name: 'سارة حسين', lastVisit: '2023-10-28', avatar: 'https://placehold.co/100x100', phone: '555-0104', age: 23 },
-  { id: 'p5', name: 'يوسف محمد', lastVisit: '2023-11-05', avatar: 'https://placehold.co/100x100', phone: '555-0105', age: 35 },
+  { id: 'p1', name: 'أحمد محمود', lastVisit: '2023-10-15', avatar: 'https://placehold.co/100x100/FFC0CB/000000.png?text=A', phone: '555-0101', age: 39 },
+  { id: 'p2', name: 'فاطمة علي', lastVisit: '2023-11-02', avatar: 'https://placehold.co/100x100/A5D8FF/000000.png?text=F', phone: '555-0102', age: 32 },
+  { id: 'p3', name: 'خالد عبد الله', lastVisit: '2023-09-20', avatar: 'https://placehold.co/100x100/C1FFC1/000000.png?text=K', phone: '555-0103', age: 45 },
+  { id: 'p4', name: 'سارة حسين', lastVisit: '2023-10-28', avatar: 'https://placehold.co/100x100/FFFACD/000000.png?text=S', phone: '555-0104', age: 23 },
+  { id: 'p5', name: 'يوسف محمد', lastVisit: '2023-11-05', avatar: 'https://placehold.co/100x100/E6E6FA/000000.png?text=Y', phone: '555-0105', age: 35 },
+  { id: 'p6', name: 'ليلى إبراهيم', lastVisit: '2023-06-30', avatar: 'https://placehold.co/100x100/D2B48C/000000.png?text=L', phone: '555-0106', age: 29 },
+
 ];
 
 export const mockDoctors: Doctor[] = [
-  { id: 'd1', name: 'د. إميلي كارتر', specialty: 'أمراض القلب', avatar: 'https://placehold.co/100x100', servicePrice: 250, freeReturnPeriod: 14 },
-  { id: 'd2', name: 'د. بن هانسون', specialty: 'طب الأطفال', avatar: 'https://placehold.co/100x100', servicePrice: 150, freeReturnPeriod: 7 },
-  { id: 'd3', name: 'د. أوليفيا تشين', specialty: 'الأمراض الجلدية', avatar: 'https://placehold.co/100x100', servicePrice: 200 },
+  { id: 'd1', name: 'د. إميلي كارتر', specialty: 'أمراض القلب', avatar: 'https://placehold.co/100x100/F0E68C/000000.png?text=E', servicePrice: 250, freeReturnPeriod: 14 },
+  { id: 'd2', name: 'د. بن هانسون', specialty: 'طب الأطفال', avatar: 'https://placehold.co/100x100/ADD8E6/000000.png?text=B', servicePrice: 150, freeReturnPeriod: 7 },
+  { id: 'd3', name: 'د. أوليفيا تشين', specialty: 'الأمراض الجلدية', avatar: 'https://placehold.co/100x100/90EE90/000000.png?text=O', servicePrice: 200 },
 ];
 
 const getISODate = (year: number, month: number, day: number) => {
@@ -29,12 +31,12 @@ const getISODate = (year: number, month: number, day: number) => {
 };
 
 export const mockAppointments: Appointment[] = [
-  { id: 'a1', patient: { name: 'أحمد محمود', avatar: 'https://placehold.co/100x100' }, doctor: mockDoctors[0], date: getISODate(2025, 7, 10), startTime: '09:00', endTime: '09:30', status: 'Scheduled', reason: 'فحص سنوي', freeReturn: true },
-  { id: 'a2', patient: { name: 'فاطمة علي', avatar: 'https://placehold.co/100x100' }, doctor: mockDoctors[1], date: getISODate(2025, 7, 10), startTime: '10:00', endTime: '10:45', status: 'Waiting', reason: 'تطعيم' },
-  { id: 'a3', patient: { name: 'خالد عبد الله', avatar: 'https://placehold.co/100x100' }, doctor: mockDoctors[0], date: getISODate(2025, 7, 7), startTime: '11:00', endTime: '11:30', status: 'Completed', reason: 'متابعة' },
-  { id: 'a4', patient: { name: 'سارة حسين', avatar: 'https://placehold.co/100x100' }, doctor: mockDoctors[2], date: getISODate(2025, 7, 11), startTime: '14:00', endTime: '14:30', status: 'Scheduled', reason: 'استشارة طفح جلدي' },
-  { id: 'a5', patient: { name: 'يوسف محمد', avatar: 'https://placehold.co/100x100' }, doctor: mockDoctors[1], date: getISODate(2025, 7, 11), startTime: '09:30', endTime: '10:00', status: 'Canceled', reason: 'مرض طفولي' },
-  { id: 'a6', patient: { name: 'ليلى إبراهيم', avatar: 'https://placehold.co/100x100' }, doctor: mockDoctors[0], date: getISODate(2025, 6, 30), startTime: '13:00', endTime: '13:30', status: 'Completed', reason: 'ألم في الصدر' },
+  { id: 'a1', patientId: 'p1', doctorId: 'd1', date: getISODate(2025, 7, 10), startTime: '09:00', endTime: '09:30', status: 'Scheduled', reason: 'فحص سنوي', freeReturn: true },
+  { id: 'a2', patientId: 'p2', doctorId: 'd2', date: getISODate(2025, 7, 10), startTime: '10:00', endTime: '10:45', status: 'Waiting', reason: 'تطعيم' },
+  { id: 'a3', patientId: 'p3', doctorId: 'd1', date: getISODate(2025, 7, 7), startTime: '11:00', endTime: '11:30', status: 'Completed', reason: 'متابعة' },
+  { id: 'a4', patientId: 'p4', doctorId: 'd3', date: getISODate(2025, 7, 11), startTime: '14:00', endTime: '14:30', status: 'Scheduled', reason: 'استشارة طفح جلدي' },
+  { id: 'a5', patientId: 'p5', doctorId: 'd2', date: getISODate(2025, 7, 11), startTime: '09:30', endTime: '10:00', status: 'Canceled', reason: 'مرض طفولي' },
+  { id: 'a6', patientId: 'p6', doctorId: 'd1', date: getISODate(2025, 6, 30), startTime: '13:00', endTime: '13:30', status: 'Completed', reason: 'ألم في الصدر' },
 ];
 
 
@@ -80,7 +82,7 @@ export const mockAuditLogs: AuditLog[] = [
     category: 'Patient',
     user: mockUser,
     details: 'أضاف مريضًا جديدًا: أحمد محمود',
-    timestamp: '2025-07-10T12:30:00.000Z',
+    timestamp: '2025-07-10T09:30:00.000Z',
   },
   {
     id: 'log2',
@@ -88,7 +90,7 @@ export const mockAuditLogs: AuditLog[] = [
     category: 'Appointment',
     user: otherUsers[1],
     details: 'تحديث موعد فاطمة علي',
-    timestamp: '2025-07-10T11:30:00.000Z',
+    timestamp: '2025-07-10T08:30:00.000Z',
   },
   {
     id: 'log3',
@@ -96,7 +98,7 @@ export const mockAuditLogs: AuditLog[] = [
     category: 'System',
     user: otherUsers[0],
     details: 'تسجيل الدخول إلى النظام',
-    timestamp: '2025-07-10T10:30:00.000Z',
+    timestamp: '2025-07-10T07:30:00.000Z',
   },
   {
     id: 'log4',
@@ -104,7 +106,7 @@ export const mockAuditLogs: AuditLog[] = [
     category: 'Doctor',
     user: mockUser,
     details: 'إزالة الطبيب: د. ماركوس لي',
-    timestamp: '2025-07-09T13:30:00.000Z',
+    timestamp: '2025-07-09T10:30:00.000Z',
   },
    {
     id: 'log5',
@@ -112,8 +114,6 @@ export const mockAuditLogs: AuditLog[] = [
     category: 'Report',
     user: otherUsers[0],
     details: 'إنشاء مسودة تقرير للمريض: خالد عبد الله',
-    timestamp: '2025-07-08T13:30:00.000Z',
+    timestamp: '2025-07-08T10:30:00.000Z',
   },
 ];
-
-    

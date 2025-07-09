@@ -1,4 +1,4 @@
-import { mockPatients, mockAppointments } from "@/lib/data";
+import { mockPatients, mockAppointments, mockDoctors } from "@/lib/data";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -6,7 +6,12 @@ import { Badge } from "@/components/ui/badge";
 
 export default function PatientDetailPage({ params }: { params: { id: string } }) {
   const patient = mockPatients.find(p => p.id === params.id);
-  const patientAppointments = mockAppointments.filter(a => a.patient.name === patient?.name);
+  const patientAppointments = mockAppointments
+    .filter(a => a.patientId === patient?.id)
+    .map(appointment => {
+      const doctor = mockDoctors.find(d => d.id === appointment.doctorId);
+      return { ...appointment, doctor };
+    });
 
   if (!patient) {
     return (
@@ -63,7 +68,7 @@ export default function PatientDetailPage({ params }: { params: { id: string } }
                             patientAppointments.map(appointment => (
                                 <TableRow key={appointment.id}>
                                     <TableCell>{appointment.date}</TableCell>
-                                    <TableCell>{appointment.doctor.name}</TableCell>
+                                    <TableCell>{appointment.doctor?.name || 'غير محدد'}</TableCell>
                                     <TableCell>{appointment.reason}</TableCell>
                                     <TableCell>
                                         <Badge variant={appointment.status === 'Completed' ? 'default' : appointment.status === 'Canceled' ? 'destructive' : 'secondary'}>

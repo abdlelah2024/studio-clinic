@@ -19,7 +19,7 @@ import { mockDoctors } from "@/lib/data"
 import { Combobox } from "../ui/combobox"
 import { Checkbox } from "../ui/checkbox"
 
-type AddAppointmentFunction = (appointment: Omit<Appointment, 'id' | 'patient' | 'doctor' | 'status'> & { patientName: string, doctorName: string }) => void;
+type AddAppointmentFunction = (appointment: Omit<Appointment, 'id' | 'patientId' | 'doctorId' > & { patientName: string, doctorName: string }) => void;
 
 interface NewAppointmentDialogProps {
   children?: React.ReactNode;
@@ -65,7 +65,7 @@ export function NewAppointmentDialog({ children, onAppointmentAdded, patients, o
 
   const handleSubmit = () => {
     if (patientName && doctorName && date && startTime && endTime && reason) {
-      onAppointmentAdded({ patientName, doctorName, date, startTime, endTime, reason, freeReturn });
+      onAppointmentAdded({ patientName, doctorName, date, startTime, endTime, reason, freeReturn, status: 'Scheduled' });
       onOpenChange(false);
     }
   };

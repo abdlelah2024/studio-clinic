@@ -13,11 +13,17 @@ import { Calendar } from "@/components/ui/calendar"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend } from "recharts"
-import { mockAppointments, mockDoctors } from "@/lib/data"
-import type { Appointment } from "@/lib/types"
+import { mockAppointments, mockDoctors, mockPatients } from "@/lib/data"
+import type { Appointment, Patient, Doctor } from "@/lib/types"
 import { cn } from "@/lib/utils"
 
 type AppointmentStatus = 'Scheduled' | 'Completed' | 'Canceled' | 'Waiting';
+
+type EnrichedAppointment = Appointment & {
+  patient: Patient;
+  doctor: Doctor;
+};
+
 
 export default function ReportsPage() {
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
@@ -28,7 +34,13 @@ export default function ReportsPage() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
   const filteredAppointments = useMemo(() => {
-    return mockAppointments.filter(appointment => {
+     const enriched = mockAppointments.map(appointment => {
+      const patient = mockPatients.find(p => p.id === appointment.patientId)!;
+      const doctor = mockDoctors.find(d => d.id === appointment.doctorId)!;
+      return { ...appointment, patient, doctor };
+    }).filter(Boolean) as EnrichedAppointment[];
+
+    return enriched.filter(appointment => {
       const appointmentDate = startOfDay(new Date(appointment.date));
       
       const isDateInRange = dateRange?.from && dateRange?.to ? 
