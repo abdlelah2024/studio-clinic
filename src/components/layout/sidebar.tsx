@@ -21,6 +21,8 @@ import {
   ShieldCheck,
   Stethoscope,
   Users,
+  History,
+  MessageSquare
 } from "lucide-react"
 
 export function AppSidebar() {
@@ -32,6 +34,8 @@ export function AppSidebar() {
     { href: "/patients", label: "إدارة المرضى", icon: Users },
     { href: "/doctors", label: "إدارة الأطباء", icon: Stethoscope },
     { href: "/reports", label: "التقارير والإحصائيات", icon: BarChart3 },
+    { href: "/messaging", label: "المراسلات", icon: MessageSquare },
+    { href: "/audit-log", label: "مراقبة التعديلات", icon: History },
     { href: "/users", label: "المستخدمون والصلاحيات", icon: ShieldCheck },
     { href: "/settings", label: "الإعدادات", icon: Settings },
   ]
