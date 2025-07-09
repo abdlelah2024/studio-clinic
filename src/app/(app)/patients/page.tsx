@@ -5,9 +5,8 @@ import React from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuItem } from "@/components/ui/dropdown-menu"
 import { mockPatients } from "@/lib/data"
-import { MoreHorizontal, PlusCircle, Search } from "lucide-react"
+import { PlusCircle, Search } from "lucide-react"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import { Input } from "@/components/ui/input"
 
@@ -46,13 +45,10 @@ export default function PatientsPage() {
           <TableHeader>
             <TableRow>
               <TableHead>الاسم</TableHead>
-              <TableHead>البريد الإلكتروني</TableHead>
               <TableHead>الهاتف</TableHead>
               <TableHead>تاريخ الميلاد</TableHead>
               <TableHead>آخر زيارة</TableHead>
-              <TableHead>
-                <span className="sr-only">الإجراءات</span>
-              </TableHead>
+              <TableHead className="text-right">الإجراءات</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -67,29 +63,13 @@ export default function PatientsPage() {
                     <span className="font-medium">{patient.name}</span>
                   </div>
                 </TableCell>
-                <TableCell>{patient.email}</TableCell>
                 <TableCell>{patient.phone}</TableCell>
                 <TableCell>{patient.dob}</TableCell>
                 <TableCell>{patient.lastVisit}</TableCell>
-                <TableCell>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button aria-haspopup="true" size="icon" variant="ghost">
-                        <MoreHorizontal className="h-4 w-4" />
-                        <span className="sr-only">Toggle menu</span>
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuLabel>الإجراءات</DropdownMenuLabel>
-                      <DropdownMenuItem asChild>
-                        <Link href={`/patients/${patient.id}`}>عرض التاريخ الطبي</Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem>تعديل الملف الشخصي</DropdownMenuItem>
-                      <DropdownMenuItem>حجز موعد</DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem className="text-destructive">حذف المريض</DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                <TableCell className="text-right">
+                    <Button asChild variant="outline" size="sm">
+                        <Link href={`/patients/${patient.id}`}>عرض</Link>
+                    </Button>
                 </TableCell>
               </TableRow>
             ))}
