@@ -168,7 +168,7 @@ export default function DoctorsPage() {
                   </div>
                 </TableCell>
                 <TableCell>{doctor.specialty}</TableCell>
-                <TableCell>{doctor.servicePrice ? `${doctor.servicePrice} ر.س` : 'N/A'}</TableCell>
+                <TableCell>{doctor.servicePrice ? `${doctor.servicePrice} ر.ي` : 'N/A'}</TableCell>
                 <TableCell>{doctor.freeReturnPeriod ? `${doctor.freeReturnPeriod} يوم` : 'لا يوجد'}</TableCell>
                 <TableCell className="text-right">
                   <DropdownMenu>

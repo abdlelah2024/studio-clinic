@@ -21,7 +21,7 @@ export function StatsCards({ appointments }: StatsCardsProps) {
   const stats = [
     { title: "إجمالي المواعيد", value: totalAppointments.toString(), icon: Calendar, change: "ضمن النطاق المحدد" },
     { title: "المرضى (فريد)", value: newPatientsCount.toString(), icon: Users, change: "ضمن النطاق المحدد" },
-    { title: "الإيرادات (تقديري)", value: `$${revenue.toLocaleString()}`, icon: DollarSign, change: "ضمن النطاق المحدد" },
+    { title: "الإيرادات (تقديري)", value: `${revenue.toLocaleString()} ر.ي`, icon: DollarSign, change: "ضمن النطاق المحدد" },
     { title: "مواعيد مكتملة", value: completedAppointments.toString(), icon: Activity, change: "ضمن النطاق المحدد" },
   ]
 
