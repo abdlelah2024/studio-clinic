@@ -9,8 +9,8 @@ export default function ReportsPage() {
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle>التقارير</CardTitle>
-            <CardDescription>عرض وإدارة تقارير المرضى.</CardDescription>
+            <CardTitle>التقارير والإحصائيات</CardTitle>
+            <CardDescription>عرض وإدارة تقارير المرضى وتحليلات العيادة.</CardDescription>
           </div>
           <Button size="sm" className="gap-1" asChild>
             <Link href="/reports/new">

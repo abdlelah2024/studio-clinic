@@ -1,25 +1,28 @@
+
 "use client"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import {
-  SidebarProvider,
   Sidebar,
-  SidebarHeader,
   SidebarContent,
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
   SidebarFooter,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarProvider,
 } from "@/components/ui/sidebar"
 import {
-  LayoutDashboard,
-  CalendarDays,
-  Users,
-  FileText,
-  Settings,
   BadgeHelp,
-  Stethoscope,
+  BarChart3,
+  CalendarDays,
+  FileText,
   HeartPulse,
+  LayoutDashboard,
+  Settings,
+  ShieldCheck,
+  Stethoscope,
+  Users,
 } from "lucide-react"
 
 export function AppSidebar() {
@@ -27,11 +30,11 @@ export function AppSidebar() {
 
   const menuItems = [
     { href: "/dashboard", label: "لوحة التحكم", icon: LayoutDashboard },
-    { href: "/appointments", label: "المواعيد", icon: CalendarDays },
-    { href: "/patients", label: "المرضى", icon: Users },
-    { href: "/doctors", label: "الأطباء", icon: Stethoscope },
-    { href: "/reports", label: "التقارير", icon: FileText },
-    { href: "/users", label: "المستخدمون", icon: Users },
+    { href: "/appointments", label: "إدارة المواعيد", icon: CalendarDays },
+    { href: "/patients", label: "إدارة المرضى", icon: Users },
+    { href: "/doctors", label: "إدارة الأطباء", icon: Stethoscope },
+    { href: "/reports", label: "التقارير والإحصائيات", icon: BarChart3 },
+    { href: "/users", label: "المستخدمون والصلاحيات", icon: ShieldCheck },
     { href: "/settings", label: "الإعدادات", icon: Settings },
   ]
 

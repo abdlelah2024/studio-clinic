@@ -45,8 +45,8 @@ export default function UsersPage() {
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle>المستخدمون</CardTitle>
-            <CardDescription>إدارة حسابات المستخدمين والأذونات.</CardDescription>
+            <CardTitle>المستخدمون والصلاحيات</CardTitle>
+            <CardDescription>إدارة حسابات المستخدمين وأذوناتهم.</CardDescription>
           </div>
           <AddUserDialog onUserAdded={handleAddUser}>
             <Button size="sm" className="gap-1">

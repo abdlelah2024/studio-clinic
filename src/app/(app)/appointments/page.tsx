@@ -14,6 +14,7 @@ import { differenceInDays, parseISO, format } from "date-fns"
 import type { Patient, Appointment } from "@/lib/types"
 import { NewAppointmentDialog } from "@/components/appointments/new-appointment-dialog"
 import { RescheduleAppointmentDialog } from "@/components/appointments/reschedule-appointment-dialog"
+import { useToast } from "@/hooks/use-toast"
 
 type StatusFilter = Appointment['status'] | 'All';
 
@@ -24,6 +25,7 @@ export default function AppointmentsPage() {
   const [isNewAppointmentDialogOpen, setIsNewAppointmentDialogOpen] = useState(false);
   const [isRescheduleDialogOpen, setIsRescheduleDialogOpen] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
+  const { toast } = useToast();
 
 
   const handleAddPatient = (newPatient: Omit<Patient, 'id' | 'avatar' | 'lastVisit'>) => {
@@ -41,7 +43,11 @@ export default function AppointmentsPage() {
     const doctor = mockDoctors.find(d => d.name === newAppointmentData.doctorName);
 
     if (!patient || !doctor) {
-      console.error("Patient or Doctor not found");
+      toast({
+        title: "خطأ",
+        description: "لم يتم العثور على المريض أو الطبيب.",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -55,7 +61,11 @@ export default function AppointmentsPage() {
       reason: newAppointmentData.reason,
       status: 'Scheduled'
     };
-    setAppointments(prev => [newAppointment, ...prev]);
+    setAppointments(prev => [newAppointment, ...prev].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
+    toast({
+        title: "تمت إضافة الموعد",
+        description: `تم حجز موعد لـ ${patient.name} مع ${doctor.name}.`,
+    });
   };
 
   const handleRescheduleAppointment = (appointmentId: string, newDate: string, newStartTime: string, newEndTime: string) => {
@@ -65,6 +75,10 @@ export default function AppointmentsPage() {
         : app
     ));
     setSelectedAppointment(null);
+     toast({
+        title: "تمت إعادة الجدولة",
+        description: `تم تحديث الموعد بنجاح.`,
+    });
   }
 
   const handleOpenRescheduleDialog = (appointment: Appointment) => {
@@ -123,14 +137,12 @@ export default function AppointmentsPage() {
                 </span>
               </Button>
             </AddPatientDialog>
-            <NewAppointmentDialog open={isNewAppointmentDialogOpen} onOpenChange={setIsNewAppointmentDialogOpen} onAppointmentAdded={handleAddAppointment} patients={patients}>
-              <Button size="sm" className="gap-1" onClick={() => setIsNewAppointmentDialogOpen(true)}>
+            <Button size="sm" className="gap-1" onClick={() => setIsNewAppointmentDialogOpen(true)}>
                 <PlusCircle className="h-3.5 w-3.5" />
                 <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
                   موعد جديد
                 </span>
-              </Button>
-            </NewAppointmentDialog>
+            </Button>
           </div>
         </div>
       </CardHeader>
@@ -216,6 +228,12 @@ export default function AppointmentsPage() {
         </Table>
       </CardContent>
     </Card>
+     <NewAppointmentDialog
+        open={isNewAppointmentDialogOpen}
+        onOpenChange={setIsNewAppointmentDialogOpen}
+        onAppointmentAdded={handleAddAppointment}
+        patients={patients}
+     />
      {selectedAppointment && (
       <RescheduleAppointmentDialog
         open={isRescheduleDialogOpen}

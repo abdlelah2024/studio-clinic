@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuItem } from "@/components/ui/dropdown-menu"
-import { mockPatients, mockDoctors } from "@/lib/data"
+import { mockPatients, mockDoctors, mockAppointments } from "@/lib/data"
 import type { Patient, Appointment } from "@/lib/types"
 import { MoreHorizontal, PlusCircle, Search } from "lucide-react"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
@@ -16,13 +16,15 @@ import { EditPatientDialog } from "@/components/patients/edit-patient-dialog"
 import { DeletePatientDialog } from "@/components/patients/delete-patient-dialog"
 import { format } from "date-fns"
 import { NewAppointmentDialog } from "@/components/appointments/new-appointment-dialog"
+import { useToast } from "@/hooks/use-toast"
 
 export default function PatientsPage() {
   const [patients, setPatients] = useState<Patient[]>(mockPatients);
   const [searchTerm, setSearchTerm] = useState("");
   const [isNewAppointmentDialogOpen, setIsNewAppointmentDialogOpen] = useState(false);
   const [selectedPatientForAppointment, setSelectedPatientForAppointment] = useState<string | undefined>(undefined);
-  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [appointments, setAppointments] = useState<Appointment[]>(mockAppointments);
+  const { toast } = useToast();
 
   const handleAddPatient = (newPatient: Omit<Patient, 'id' | 'avatar' | 'lastVisit'>) => {
     const patientWithDefaults: Patient = {
@@ -52,7 +54,11 @@ export default function PatientsPage() {
     const doctor = mockDoctors.find(d => d.name === newAppointmentData.doctorName);
 
     if (!patient || !doctor) {
-      console.error("Patient or Doctor not found");
+       toast({
+        title: "خطأ",
+        description: "لم يتم العثور على المريض أو الطبيب.",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -67,8 +73,11 @@ export default function PatientsPage() {
       status: 'Scheduled'
     };
     // In a real app, this would be a global state update
-    console.log("New appointment added:", newAppointment);
     setAppointments(prev => [newAppointment, ...prev]);
+    toast({
+        title: "تمت إضافة الموعد",
+        description: `تم حجز موعد لـ ${patient.name} مع ${doctor.name}.`,
+    });
   };
 
 
