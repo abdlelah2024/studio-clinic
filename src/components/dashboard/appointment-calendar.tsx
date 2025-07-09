@@ -1,6 +1,6 @@
 
 "use client"
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -46,6 +46,19 @@ const getStatusBorderColor = (status: Appointment['status']) => {
 
 export function AppointmentCalendar() {
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [hydrated, setHydrated] = useState(false);
+
+  useEffect(() => {
+    setHydrated(true);
+    // We can also set currentDate to new Date() here again
+    // to ensure it's the client's date after hydration if needed.
+    // For this calendar, just ensuring it doesn't mismatch is enough.
+  }, []);
+
+  if (!hydrated) {
+      // Render a placeholder or null on the server and initial client render
+      return null;
+  }
 
   const startOfCurrentWeek = startOfWeek(currentDate, { weekStartsOn: 0 });
   const endOfCurrentWeek = endOfWeek(currentDate, { weekStartsOn: 0 });
