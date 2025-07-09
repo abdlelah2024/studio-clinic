@@ -12,10 +12,13 @@ import { MoreHorizontal, PlusCircle, Search } from "lucide-react"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import { Input } from "@/components/ui/input"
 import { AddPatientDialog } from "@/components/patients/add-patient-dialog"
+import { EditPatientDialog } from "@/components/patients/edit-patient-dialog"
+import { DeletePatientDialog } from "@/components/patients/delete-patient-dialog"
 import { format } from "date-fns"
 
 export default function PatientsPage() {
   const [patients, setPatients] = useState<Patient[]>(mockPatients);
+  const [searchTerm, setSearchTerm] = useState("");
 
   const handleAddPatient = (newPatient: Omit<Patient, 'id' | 'avatar' | 'lastVisit'>) => {
     const patientWithDefaults: Patient = {
@@ -26,6 +29,19 @@ export default function PatientsPage() {
     };
     setPatients(prev => [patientWithDefaults, ...prev]);
   };
+
+  const handleUpdatePatient = (updatedPatient: Patient) => {
+    setPatients(prev => prev.map(p => p.id === updatedPatient.id ? updatedPatient : p));
+  }
+
+  const handleDeletePatient = (patientId: string) => {
+    setPatients(prev => prev.filter(p => p.id !== patientId));
+  }
+
+  const filteredPatients = patients.filter(patient =>
+    patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    patient.phone.includes(searchTerm)
+  );
 
   return (
     <Card>
@@ -42,6 +58,8 @@ export default function PatientsPage() {
                 type="search"
                 placeholder="البحث بالاسم أو الرقم..."
                 className="w-full rounded-lg bg-background pl-8"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
             <AddPatientDialog onPatientAdded={handleAddPatient}>
@@ -70,7 +88,7 @@ export default function PatientsPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {patients.map((patient) => (
+            {filteredPatients.map((patient) => (
               <TableRow key={patient.id}>
                 <TableCell>
                   <div className="flex items-center gap-3">
@@ -98,10 +116,14 @@ export default function PatientsPage() {
                       <DropdownMenuItem asChild>
                         <Link href={`/patients/${patient.id}`}>عرض التاريخ الطبي</Link>
                       </DropdownMenuItem>
-                      <DropdownMenuItem>تعديل الملف الشخصي</DropdownMenuItem>
+                       <EditPatientDialog patient={patient} onPatientUpdated={handleUpdatePatient}>
+                          <DropdownMenuItem onSelect={(e) => e.preventDefault()}>تعديل الملف الشخصي</DropdownMenuItem>
+                       </EditPatientDialog>
                       <DropdownMenuItem>حجز موعد</DropdownMenuItem>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem className="text-destructive">حذف المريض</DropdownMenuItem>
+                      <DeletePatientDialog patient={patient} onDelete={() => handleDeletePatient(patient.id)}>
+                        <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive">حذف المريض</DropdownMenuItem>
+                      </DeletePatientDialog>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </TableCell>
