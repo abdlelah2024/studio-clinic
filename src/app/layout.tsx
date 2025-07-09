@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster"
 export const metadata: Metadata = {
   title: 'ClinicFlow',
   description: 'نظام متقدم لإدارة المواعيد الطبية.',
+  manifest: '/manifest.webmanifest',
 };
 
 export default function RootLayout({

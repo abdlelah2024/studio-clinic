@@ -12,6 +12,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 import { mockUser } from "@/lib/data"
+import Link from "next/link"
 
 export function AppHeader() {
   return (
@@ -51,9 +52,9 @@ export function AppHeader() {
               <div className="text-xs text-muted-foreground">{mockUser.email}</div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>الملف الشخصي</DropdownMenuItem>
+            <DropdownMenuItem asChild><Link href="/settings">الملف الشخصي</Link></DropdownMenuItem>
             <DropdownMenuItem>الفواتير</DropdownMenuItem>
-            <DropdownMenuItem>الإعدادات</DropdownMenuItem>
+            <DropdownMenuItem asChild><Link href="/settings">الإعدادات</Link></DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem>تسجيل الخروج</DropdownMenuItem>
           </DropdownMenuContent>
