@@ -104,10 +104,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
     // --- Memoized Enriched Data ---
     const enrichedAppointments = useMemo(() => {
         return appointments.map(appointment => {
-            const patient = patients.find(p => p.id === appointment.patientId)!;
-            const doctor = doctors.find(d => d.id === appointment.doctorId)!;
+            const patient = patients.find(p => p.id === appointment.patientId);
+            const doctor = doctors.find(d => d.id === appointment.doctorId);
+            if (!patient || !doctor) return null;
             return { ...appointment, patient, doctor };
-        }).filter(item => item.patient && item.doctor) as (Appointment & { patient: Patient; doctor: Doctor; })[];
+        }).filter(Boolean) as (Appointment & { patient: Patient; doctor: Doctor; })[];
     }, [appointments, patients, doctors]);
 
 

@@ -1,8 +1,8 @@
 
 "use client"
-import React, { useState, useEffect, useRef, useCallback } from "react"
-import Link from "next/link"
-import { Bell, Search, Calendar, UserPlus, CircleUser, CalendarCheck, CalendarX2 } from "lucide-react"
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react"
+import { useRouter } from "next/navigation"
+import { Bell, Search, Calendar, UserPlus, CircleUser, CalendarCheck, CalendarX2, Stethoscope, User } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -24,7 +24,7 @@ import {
   CommandList,
 } from "@/components/ui/command"
 import { useAppContext } from "@/context/app-context"
-import { useRouter } from "next/navigation"
+import { Badge } from "../ui/badge"
 
 const mockNotifications = [
     {
@@ -52,16 +52,36 @@ export function AppHeader() {
   const [searchQuery, setSearchQuery] = useState("")
   const [isSearchFocused, setIsSearchFocused] = useState(false)
   const searchRef = useRef<HTMLDivElement>(null)
-  const { patients, openNewAppointmentDialog, openNewPatientDialog } = useAppContext()
+  const { patients, doctors, enrichedAppointments, openNewAppointmentDialog, openNewPatientDialog } = useAppContext()
   const router = useRouter()
 
-  const filteredPatients = searchQuery
-    ? patients.filter(
-        (p) =>
-          p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          p.phone.includes(searchQuery)
-      )
-    : []
+  const searchResults = useMemo(() => {
+    if (!searchQuery) return { patients: [], doctors: [], appointments: [] };
+
+    const lowerCaseQuery = searchQuery.toLowerCase();
+
+    const filteredPatients = patients.filter(
+      p => p.name.toLowerCase().includes(lowerCaseQuery) || p.phone.includes(lowerCaseQuery)
+    );
+
+    const filteredDoctors = doctors.filter(
+      d => d.name.toLowerCase().includes(lowerCaseQuery) || d.specialty.toLowerCase().includes(lowerCaseQuery)
+    );
+
+    const filteredAppointments = enrichedAppointments.filter(a => 
+        a.patient.name.toLowerCase().includes(lowerCaseQuery) ||
+        a.doctor.name.toLowerCase().includes(lowerCaseQuery) ||
+        a.reason.toLowerCase().includes(lowerCaseQuery)
+    );
+
+    return { 
+        patients: filteredPatients.slice(0, 3), 
+        doctors: filteredDoctors.slice(0, 3),
+        appointments: filteredAppointments.slice(0, 3)
+    };
+  }, [searchQuery, patients, doctors, enrichedAppointments]);
+
+  const hasResults = searchResults.patients.length > 0 || searchResults.doctors.length > 0 || searchResults.appointments.length > 0;
 
   const resetSearch = useCallback(() => {
     setIsSearchFocused(false)
@@ -72,34 +92,33 @@ export function AppHeader() {
       openNewAppointmentDialog({ initialPatientId: patientId });
       resetSearch();
   };
-
-  const handlePatientSelect = (patientId: string) => {
-    router.push(`/patients/${patientId}`);
+  
+  const handleItemSelect = (path: string) => {
+    router.push(path);
     resetSearch();
   };
-  
-  const handleNewAppointment = () => {
+
+  const handleNewAppointment = useCallback(() => {
     openNewAppointmentDialog();
     resetSearch();
-  };
+  }, [openNewAppointmentDialog, resetSearch]);
 
-  const handleNewPatient = () => {
+  const handleNewPatient = useCallback(() => {
     openNewPatientDialog({ initialName: searchQuery });
     resetSearch();
-  };
-
+  }, [openNewPatientDialog, resetSearch, searchQuery]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
-        setIsSearchFocused(false)
+        resetSearch()
       }
     }
     document.addEventListener("mousedown", handleClickOutside)
     return () => {
       document.removeEventListener("mousedown", handleClickOutside)
     }
-  }, [])
+  }, [resetSearch])
   
 
   return (
@@ -112,44 +131,61 @@ export function AppHeader() {
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             type="search"
-            placeholder="بحث سريع عن مريض بالاسم أو الرقم..."
-            className="w-full rounded-lg bg-background pl-8 md:w-[280px] lg:w-[320px]"
+            placeholder="بحث سريع (مرضى, أطباء, مواعيد)..."
+            className="w-full rounded-lg bg-background pl-8 md:w-[280px] lg:w-[400px]"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             onFocus={() => setIsSearchFocused(true)}
           />
           {isSearchFocused && (
-            <Command className="absolute top-full mt-2 w-full rounded-lg border bg-card shadow-lg md:w-[320px] lg:w-[500px]">
+            <Command className="absolute top-full mt-2 w-full rounded-lg border bg-card shadow-lg md:w-[400px] lg:w-[550px]">
               <CommandList>
-                {searchQuery && filteredPatients.length > 0 && (
-                  <CommandGroup heading="المرضى">
-                    {filteredPatients.map((patient) => (
-                      <CommandItem key={patient.id} value={patient.name} onSelect={() => setIsSearchFocused(false)} className="p-0">
-                        <div className="flex items-center justify-between w-full p-2">
-                            <div className="flex items-center gap-2 overflow-hidden">
-                                <Avatar className="h-8 w-8">
-                                    <AvatarImage src={patient.avatar} data-ai-hint="person face" />
-                                    <AvatarFallback>{patient.name.charAt(0)}</AvatarFallback>
-                                </Avatar>
-                                <div className="truncate">
-                                    <p className="font-medium truncate">{patient.name}</p>
-                                    <p className="text-xs text-muted-foreground truncate">{patient.phone}</p>
+                {searchQuery && hasResults && (
+                    <>
+                    {searchResults.patients.length > 0 && (
+                        <CommandGroup heading="المرضى">
+                            {searchResults.patients.map((patient) => (
+                            <CommandItem key={`p-${patient.id}`} onSelect={() => handleItemSelect(`/patients/${patient.id}`)} className="p-2 cursor-pointer">
+                                <User className="mr-2 h-4 w-4" />
+                                <div className="flex-1">
+                                    <p className="font-medium">{patient.name}</p>
+                                    <p className="text-xs text-muted-foreground">{patient.phone}</p>
                                 </div>
-                            </div>
-                            <div className="flex items-center gap-2 flex-shrink-0">
-                                 <Button variant="secondary" size="sm" onClick={() => handleQuickAppointment(patient.id)}>
-                                    موعد سريع
-                                </Button>
-                                <Button variant="outline" size="sm" onClick={() => handlePatientSelect(patient.id)}>
-                                    عرض السجل
-                                </Button>
-                            </div>
-                        </div>
-                      </CommandItem>
-                    ))}
-                  </CommandGroup>
+                                <Button variant="secondary" size="sm" onClick={(e) => { e.stopPropagation(); handleQuickAppointment(patient.id); }}>موعد سريع</Button>
+                            </CommandItem>
+                            ))}
+                        </CommandGroup>
+                    )}
+                    {searchResults.doctors.length > 0 && (
+                        <CommandGroup heading="الأطباء">
+                            {searchResults.doctors.map((doctor) => (
+                            <CommandItem key={`d-${doctor.id}`} onSelect={() => handleItemSelect(`/doctors`)} className="p-2 cursor-pointer">
+                                <Stethoscope className="mr-2 h-4 w-4" />
+                                <div>
+                                    <p className="font-medium">{doctor.name}</p>
+                                    <p className="text-xs text-muted-foreground">{doctor.specialty}</p>
+                                </div>
+                            </CommandItem>
+                            ))}
+                        </CommandGroup>
+                    )}
+                    {searchResults.appointments.length > 0 && (
+                        <CommandGroup heading="المواعيد">
+                            {searchResults.appointments.map((appointment) => (
+                            <CommandItem key={`a-${appointment.id}`} onSelect={() => handleItemSelect('/appointments')} className="p-2 cursor-pointer">
+                                <Calendar className="mr-2 h-4 w-4" />
+                                <div className="flex-1">
+                                    <p className="font-medium">{appointment.patient.name}</p>
+                                    <p className="text-xs text-muted-foreground">مع {appointment.doctor.name} - {appointment.reason}</p>
+                                </div>
+                                <Badge variant="outline">{appointment.date}</Badge>
+                            </CommandItem>
+                            ))}
+                        </CommandGroup>
+                    )}
+                    </>
                 )}
-                 {searchQuery && filteredPatients.length === 0 && (
+                 {searchQuery && !hasResults && (
                     <CommandEmpty>
                         <div onClick={handleNewPatient} className="flex-col items-center justify-center py-4 cursor-pointer">
                              <p>لم يتم العثور على مريض. هل تريد إضافة واحد جديد؟</p>
@@ -222,9 +258,9 @@ export function AppHeader() {
               <div className="text-xs text-muted-foreground">{mockUser.email}</div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem asChild><Link href="/settings">الملف الشخصي</Link></DropdownMenuItem>
+            <DropdownMenuItem onSelect={() => handleItemSelect('/settings')}>الملف الشخصي</DropdownMenuItem>
             <DropdownMenuItem>الفواتير</DropdownMenuItem>
-            <DropdownMenuItem asChild><Link href="/settings">الإعدادات</Link></DropdownMenuItem>
+            <DropdownMenuItem onSelect={() => handleItemSelect('/settings')}>الإعدادات</DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem>تسجيل الخروج</DropdownMenuItem>
           </DropdownMenuContent>
