@@ -102,47 +102,48 @@ export function AppProvider({ children }: { children: ReactNode }) {
     
     const { toast } = useToast();
 
-    // --- Data Fetching ---
+    // --- Real-time Data Fetching ---
     useEffect(() => {
+        const unsubscribers: (() => void)[] = [];
+        let isCancelled = false;
+        
         const fetchData = async () => {
             try {
-                setLoading(true);
-                const [
-                    patientsData,
-                    doctorsData,
-                    appointmentsData,
-                    usersData,
-                    permissionsData,
-                    dataFieldsData,
-                ] = await Promise.all([
-                    firestoreService.getPatients(),
-                    firestoreService.getDoctors(),
-                    firestoreService.getAppointments(),
-                    firestoreService.getUsers(),
-                    firestoreService.getPermissions(),
-                    firestoreService.getDataFields(),
-                ]);
+                // One-time fetches
+                const permissionsData = await firestoreService.getPermissions();
+                if (!isCancelled) {
+                    setPermissions(permissionsData);
+                }
 
-                setPatients(patientsData);
-                setDoctors(doctorsData);
-                setAppointments(appointmentsData);
-                setUsers(usersData);
-                setPermissions(permissionsData);
-                setDataFields(dataFieldsData);
+                // Real-time listeners
+                unsubscribers.push(firestoreService.listenToCollection('patients', setPatients, { orderBy: 'lastVisit', direction: 'desc' }));
+                unsubscribers.push(firestoreService.listenToCollection('doctors', setDoctors, { orderBy: 'name' }));
+                unsubscribers.push(firestoreService.listenToCollection('appointments', setAppointments, { orderBy: 'date', direction: 'desc' }));
+                unsubscribers.push(firestoreService.listenToCollection('users', setUsers, { idField: 'email' }));
+                unsubscribers.push(firestoreService.listenToCollection('dataFields', setDataFields, {}));
 
             } catch (error) {
                 console.error("Failed to fetch data from Firestore:", error);
-                toast({
-                    title: "فشل تحميل البيانات",
-                    description: "لم نتمكن من تحميل البيانات من قاعدة البيانات. يرجى المحاولة مرة أخرى.",
-                    variant: "destructive"
-                });
+                if (!isCancelled) {
+                    toast({
+                        title: "فشل تحميل البيانات",
+                        description: "لم نتمكن من تحميل البيانات من قاعدة البيانات. يرجى المحاولة مرة أخرى.",
+                        variant: "destructive"
+                    });
+                }
             } finally {
-                setLoading(false);
+                if (!isCancelled) {
+                    setLoading(false);
+                }
             }
         };
 
         fetchData();
+
+        return () => {
+            isCancelled = true;
+            unsubscribers.forEach(unsubscribe => unsubscribe());
+        };
     }, [toast]);
 
 
@@ -166,8 +167,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
                 avatar: `https://placehold.co/100x100?text=${patient.name.charAt(0)}`,
                 lastVisit: new Date().toISOString().split('T')[0],
             };
-            const id = await firestoreService.addPatient(newPatientData);
-            setPatients(prev => [{ id, ...newPatientData }, ...prev]);
+            await firestoreService.addPatient(newPatientData);
             toast({
                 title: "تمت الإضافة بنجاح",
                 description: `تمت إضافة المريض ${patient.name} إلى السجلات.`,
@@ -180,7 +180,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const updatePatient: UpdatePatientFunction = useCallback(async (updatedPatient) => {
         try {
             await firestoreService.updatePatient(updatedPatient.id, updatedPatient);
-            setPatients(prev => prev.map(p => p.id === updatedPatient.id ? updatedPatient : p));
             toast({
                 title: "تم التحديث بنجاح",
                 description: `تم تحديث بيانات المريض ${updatedPatient.name}.`,
@@ -194,7 +193,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
         try {
             const patientName = patients.find(p => p.id === patientId)?.name;
             await firestoreService.deletePatient(patientId);
-            setPatients(prev => prev.filter(p => p.id !== patientId));
             toast({
                 title: "تم الحذف بنجاح",
                 description: `تم حذف المريض ${patientName}.`,
@@ -217,8 +215,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
               ...doctor,
               avatar: `https://placehold.co/100x100?text=${doctor.name.charAt(0)}`,
             };
-            const id = await firestoreService.addDoctor(newDoctorData);
-            setDoctors(prev => [{ id, ...newDoctorData }, ...prev].sort((a,b) => a.name.localeCompare(b.name)));
+            await firestoreService.addDoctor(newDoctorData);
             toast({
               title: "تمت الإضافة بنجاح",
               description: `تمت إضافة الطبيب ${doctor.name}.`,
@@ -231,7 +228,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const updateDoctor: UpdateDoctorFunction = useCallback(async (updatedDoctor) => {
         try {
             await firestoreService.updateDoctor(updatedDoctor.id, updatedDoctor);
-            setDoctors(prev => prev.map(d => d.id === updatedDoctor.id ? updatedDoctor : d).sort((a,b) => a.name.localeCompare(b.name)));
             toast({
               title: "تم التحديث بنجاح",
               description: `تم تحديث بيانات الطبيب ${updatedDoctor.name}.`,
@@ -245,7 +241,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
         try {
             const doctorName = doctors.find(d => d.id === doctorId)?.name;
             await firestoreService.deleteDoctor(doctorId);
-            setDoctors(prev => prev.filter(d => d.id !== doctorId));
             toast({
               title: "تم الحذف بنجاح",
               description: `تم حذف الطبيب ${doctorName}.`,
@@ -259,8 +254,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     // --- Appointment Actions ---
     const addAppointment: AddAppointmentFunction = useCallback(async (appointment) => {
         try {
-            const id = await firestoreService.addAppointment(appointment);
-            setAppointments(prev => [{ id, ...appointment }, ...prev]);
+            await firestoreService.addAppointment(appointment);
             const patientName = patients.find(p => p.id === appointment.patientId)?.name || "Unknown Patient";
             const doctorName = doctors.find(d => d.id === appointment.doctorId)?.name || "Unknown Doctor";
             toast({
@@ -275,7 +269,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const updateAppointment: UpdateAppointmentFunction = useCallback(async (updatedAppointment) => {
         try {
             await firestoreService.updateAppointment(updatedAppointment.id, updatedAppointment);
-            setAppointments(prev => prev.map(app => app.id === updatedAppointment.id ? updatedAppointment : app));
             toast({
                 title: "تم تحديث الموعد بنجاح",
             });
@@ -287,7 +280,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const deleteAppointment: DeleteAppointmentFunction = useCallback(async (appointmentId) => {
         try {
             await firestoreService.deleteAppointment(appointmentId);
-            setAppointments(prev => prev.filter(app => app.id !== appointmentId));
             toast({
                 title: "تم حذف الموعد",
                 variant: "destructive"
@@ -311,7 +303,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
                 status: 'offline',
             };
             await firestoreService.addUser(newUserData);
-            setUsers(prev => [newUserData, ...prev]);
             toast({
                 title: "تمت الإضافة بنجاح",
                 description: `تمت إضافة المستخدم ${user.name}.`,
@@ -324,7 +315,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const updateUser: UpdateUserFunction = useCallback(async (updatedUser) => {
        try {
             await firestoreService.updateUser(updatedUser.email, updatedUser);
-            setUsers(prev => prev.map(u => u.email === updatedUser.email ? updatedUser : u));
             toast({
                 title: "تم التحديث بنجاح",
                 description: `تم تحديث بيانات المستخدم ${updatedUser.name}.`,
@@ -338,7 +328,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
         try {
             const userName = users.find(u => u.email === email)?.name;
             await firestoreService.deleteUser(email);
-            setUsers(prev => prev.filter(u => u.email !== email));
             toast({
                 title: "تم الحذف بنجاح",
                 description: `تم حذف المستخدم ${userName}.`,
@@ -378,8 +367,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
                 ...field,
                 type: 'مخصص' as const,
             };
-            const id = await firestoreService.addDataField(newFieldData);
-            setDataFields(prev => [...prev, { id, ...newFieldData }]);
+            await firestoreService.addDataField(newFieldData);
             toast({
                 title: "تمت إضافة الحقل بنجاح",
                 description: `تمت إضافة حقل "${field.label}".`,
@@ -392,7 +380,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const updateDataField: UpdateDataFieldFunction = useCallback(async (updatedField) => {
         try {
             await firestoreService.updateDataField(updatedField.id, updatedField);
-            setDataFields(prev => prev.map(f => f.id === updatedField.id ? updatedField : f));
             toast({
                 title: "تم تحديث الحقل بنجاح",
                 description: `تم تحديث حقل "${updatedField.label}".`,
@@ -406,7 +393,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
         try {
             const fieldLabel = dataFields.find(f => f.id === fieldId)?.label;
             await firestoreService.deleteDataField(fieldId);
-            setDataFields(prev => prev.filter(f => f.id !== fieldId));
             toast({
                 title: "تم حذف الحقل بنجاح",
                 description: `تم حذف حقل "${fieldLabel}".`,
