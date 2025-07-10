@@ -119,24 +119,24 @@ export function AppHeader() {
             onFocus={() => setIsSearchFocused(true)}
           />
           {isSearchFocused && (
-            <Command className="absolute top-full mt-2 w-full rounded-lg border bg-card shadow-lg md:w-[320px] lg:w-[450px]">
+            <Command className="absolute top-full mt-2 w-full rounded-lg border bg-card shadow-lg md:w-[320px] lg:w-[500px]">
               <CommandList>
                 {searchQuery && filteredPatients.length > 0 && (
                   <CommandGroup heading="المرضى">
                     {filteredPatients.map((patient) => (
                       <CommandItem key={patient.id} value={patient.name} onSelect={() => setIsSearchFocused(false)} className="p-0">
                         <div className="flex items-center justify-between w-full p-2">
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 overflow-hidden">
                                 <Avatar className="h-8 w-8">
                                     <AvatarImage src={patient.avatar} data-ai-hint="person face" />
                                     <AvatarFallback>{patient.name.charAt(0)}</AvatarFallback>
                                 </Avatar>
-                                <div>
-                                    <p className="font-medium">{patient.name}</p>
-                                    <p className="text-xs text-muted-foreground">{patient.phone}</p>
+                                <div className="truncate">
+                                    <p className="font-medium truncate">{patient.name}</p>
+                                    <p className="text-xs text-muted-foreground truncate">{patient.phone}</p>
                                 </div>
                             </div>
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 flex-shrink-0">
                                  <Button variant="secondary" size="sm" onClick={(e) => {e.stopPropagation(); handleQuickAppointment(patient.id)}}>
                                     موعد سريع
                                 </Button>
