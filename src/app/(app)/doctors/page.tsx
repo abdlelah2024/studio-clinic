@@ -22,9 +22,7 @@ export default function DoctorsPage() {
   const [sortKey, setSortKey] = useState<SortKey>('default');
   
   const filteredAndSortedDoctors = useMemo(() => {
-    let doctorsToProcess = [...doctors];
-    
-    const filtered = doctorsToProcess.filter(doctor =>
+    const filtered = doctors.filter(doctor =>
         doctor.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         doctor.specialty.toLowerCase().includes(searchQuery.toLowerCase())
     );
@@ -33,7 +31,10 @@ export default function DoctorsPage() {
       return filtered;
     }
 
-    return filtered.sort((a, b) => {
+    // Create a new array to avoid mutating the original
+    const sortable = [...filtered];
+
+    return sortable.sort((a, b) => {
         switch (sortKey) {
             case 'name-asc':
                 return a.name.localeCompare(b.name);
