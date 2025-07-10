@@ -7,6 +7,8 @@ import type { Appointment, Patient, Doctor, User, UserRole, Permissions, DataFie
 import { useToast } from "@/hooks/use-toast"
 import * as firestoreService from "@/services/firestore"
 import { useAuth } from "./auth-context"
+import { createUserWithEmailAndPassword } from "firebase/auth"
+import { auth } from "@/lib/firebase"
 
 type AddAppointmentFunction = (appointment: Omit<Appointment, 'id'>) => void;
 type UpdateAppointmentFunction = (appointment: Appointment) => void;
@@ -92,6 +94,46 @@ interface AppContextType {
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
+// Function to seed the admin user
+const seedAdminUser = async () => {
+    const adminEmail = "asd19082@gmail.com";
+    const adminPassword = "159632Asd";
+    
+    try {
+        // Check if user exists in Firestore
+        const userExists = await firestoreService.checkUserExists(adminEmail);
+        
+        if (!userExists) {
+            console.log("Admin user does not exist, creating...");
+            // Create user in Firebase Auth
+            try {
+                await createUserWithEmailAndPassword(auth, adminEmail, adminPassword);
+                console.log("Admin user created in Firebase Auth.");
+            } catch (error: any) {
+                // If user already exists in Auth but not in Firestore
+                if (error.code !== 'auth/email-already-in-use') {
+                    throw error;
+                }
+                console.log("Admin user already exists in Firebase Auth.");
+            }
+            
+            // Add user to Firestore
+            const adminUserData: User = {
+                name: "Admin User",
+                email: adminEmail,
+                role: 'Admin',
+                avatar: `https://placehold.co/100x100?text=A`,
+                status: 'offline',
+            };
+            await firestoreService.addUser(adminUserData);
+            console.log("Admin user document created in Firestore.");
+        }
+    } catch (error) {
+        console.error("Error seeding admin user:", error);
+    }
+};
+
+
 export function AppProvider({ children }: { children: ReactNode }) {
     const { currentUser } = useAuth();
     const [loading, setLoading] = useState(true);
@@ -114,6 +156,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     
     const { toast } = useToast();
+
+    // --- Data Seeding ---
+    useEffect(() => {
+        seedAdminUser();
+    }, []);
 
     // --- Real-time Data Fetching ---
     useEffect(() => {

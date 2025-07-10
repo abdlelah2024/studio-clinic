@@ -85,9 +85,15 @@ export const addAppointment = (appointment: Omit<Appointment, 'id'>) => addDocum
 export const updateAppointment = (id: string, appointment: Partial<Appointment>) => updateDocument('appointments', id, appointment);
 export const deleteAppointment = (id: string) => deleteDocument('appointments', id);
 
-export const addUser = (user: User) => setDoc(doc(db, "users", user.email), user);
+export const addUser = (user: User) => setDoc(doc(db, "users", user.email), user, { merge: true });
 export const updateUser = (email: string, user: Partial<User>) => updateDocument('users', email, user);
 export const deleteUser = (email: string) => deleteDocument('users', email);
+export const checkUserExists = async (email: string): Promise<boolean> => {
+    const docRef = doc(db, 'users', email);
+    const docSnap = await getDoc(docRef);
+    return docSnap.exists();
+};
+
 
 export const addDataField = (field: Omit<DataField, 'id'>) => addDocument('dataFields', field);
 export const updateDataField = (id: string, field: Partial<DataField>) => updateDocument('dataFields', id, field);
