@@ -13,28 +13,25 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-let app;
-if (!getApps().length) {
-    app = initializeApp(firebaseConfig);
-} else {
-    app = getApp();
-}
-
+const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 const db = getFirestore(app);
 
 // Enable offline persistence
-try {
-    enableIndexedDbPersistence(db)
-        .then(() => console.log("Firestore persistence enabled."))
-        .catch((err) => {
-            if (err.code == 'failed-precondition') {
-                console.warn('Firestore persistence failed: Multiple tabs open, persistence can only be enabled in one tab at a time.');
-            } else if (err.code == 'unimplemented') {
-                console.warn('Firestore persistence failed: Browser does not support persistence.');
-            }
-        });
-} catch (error) {
-    console.error("Error enabling Firestore persistence:", error);
+if (typeof window !== 'undefined') {
+    try {
+        enableIndexedDbPersistence(db)
+            .then(() => console.log("Firestore persistence enabled."))
+            .catch((err) => {
+                if (err.code == 'failed-precondition') {
+                    console.warn('Firestore persistence failed: Multiple tabs open, persistence can only be enabled in one tab at a time.');
+                } else if (err.code == 'unimplemented') {
+                    console.warn('Firestore persistence failed: Browser does not support persistence.');
+                }
+            });
+    } catch (error) {
+        console.error("Error enabling Firestore persistence:", error);
+    }
 }
+
 
 export { db };
