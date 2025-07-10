@@ -30,24 +30,28 @@ interface AddPatientDialogProps {
   onPatientAdded?: AddPatientFunction;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  initialName?: string;
 }
 
-export function AddPatientDialog({ onPatientAdded, open, onOpenChange }: AddPatientDialogProps) {
+export function AddPatientDialog({ onPatientAdded, open, onOpenChange, initialName }: AddPatientDialogProps) {
   const form = useForm<PatientFormData>({
     resolver: zodResolver(patientSchema),
     defaultValues: {
-      name: "",
+      name: initialName || "",
       phone: "",
       age: 0,
     },
   });
   
-  // Reset form when dialog opens/closes
   useEffect(() => {
-    if (!open) {
-      form.reset();
+    if (open) {
+      form.reset({
+        name: initialName || "",
+        phone: "",
+        age: 0,
+      });
     }
-  }, [open, form]);
+  }, [open, initialName, form]);
 
   const onSubmit = (data: PatientFormData) => {
     if (onPatientAdded) {

@@ -68,25 +68,25 @@ export function AppHeader() {
     setSearchQuery("")
   }, []);
 
-  const handleQuickAppointment = useCallback((patientId: string) => {
+  const handleQuickAppointment = (patientId: string) => {
       openNewAppointmentDialog({ initialPatientId: patientId });
       resetSearch();
-  }, [openNewAppointmentDialog, resetSearch]);
+  };
 
-  const handlePatientSelect = useCallback((patientId: string) => {
+  const handlePatientSelect = (patientId: string) => {
     router.push(`/patients/${patientId}`);
     resetSearch();
-  }, [router, resetSearch]);
+  };
   
-  const handleNewAppointment = useCallback(() => {
+  const handleNewAppointment = () => {
     openNewAppointmentDialog();
     resetSearch();
-  }, [openNewAppointmentDialog, resetSearch]);
+  };
 
-  const handleNewPatient = useCallback(() => {
-    openNewPatientDialog();
+  const handleNewPatient = () => {
+    openNewPatientDialog({ initialName: searchQuery });
     resetSearch();
-  }, [openNewPatientDialog, resetSearch]);
+  };
 
 
   useEffect(() => {
@@ -137,10 +137,10 @@ export function AppHeader() {
                                 </div>
                             </div>
                             <div className="flex items-center gap-2 flex-shrink-0">
-                                 <Button variant="secondary" size="sm" onClick={(e) => {e.stopPropagation(); handleQuickAppointment(patient.id)}}>
+                                 <Button variant="secondary" size="sm" onClick={() => handleQuickAppointment(patient.id)}>
                                     موعد سريع
                                 </Button>
-                                <Button variant="outline" size="sm" onClick={(e) => {e.stopPropagation(); handlePatientSelect(patient.id)}}>
+                                <Button variant="outline" size="sm" onClick={() => handlePatientSelect(patient.id)}>
                                     عرض السجل
                                 </Button>
                             </div>

@@ -34,6 +34,10 @@ interface AppointmentDialogOptions {
     initialPatientId?: string;
 }
 
+interface PatientDialogOptions {
+    initialName?: string;
+}
+
 interface AppContextType {
   // Data
   patients: Patient[];
@@ -47,7 +51,7 @@ interface AppContextType {
   enrichedAppointments: (Appointment & { patient: Patient; doctor: Doctor; })[];
 
   // Patient Actions
-  openNewPatientDialog: () => void;
+  openNewPatientDialog: (options?: PatientDialogOptions) => void;
   addPatient: AddPatientFunction;
   updatePatient: UpdatePatientFunction;
   deletePatient: DeletePatientFunction;
@@ -92,6 +96,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const [isAppointmentDialogOpen, setAppointmentDialogOpen] = useState(false);
     const [appointmentDialogOptions, setAppointmentDialogOptions] = useState<AppointmentDialogOptions | null>(null);
     const [isPatientDialogOpen, setPatientDialogOpen] = useState(false);
+    const [patientDialogOptions, setPatientDialogOptions] = useState<PatientDialogOptions | null>(null);
+
     
     const { toast } = useToast();
 
@@ -138,7 +144,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
         });
     }, [patients, toast]);
 
-    const openNewPatientDialog = useCallback(() => {
+    const openNewPatientDialog = useCallback((options?: PatientDialogOptions) => {
+        setPatientDialogOptions(options || {});
         setPatientDialogOpen(true);
     }, []);
 
@@ -328,6 +335,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
                 open={isPatientDialogOpen}
                 onOpenChange={setPatientDialogOpen}
                 onPatientAdded={addPatient}
+                initialName={patientDialogOptions?.initialName}
             />
         </AppContext.Provider>
     );
