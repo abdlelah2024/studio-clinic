@@ -63,23 +63,11 @@ export function AppHeader() {
       )
     : []
 
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
-        setIsSearchFocused(false)
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside)
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside)
-    }
-  }, [])
-
   const resetSearch = useCallback(() => {
     setIsSearchFocused(false)
     setSearchQuery("")
   }, []);
-  
+
   const handleQuickAppointment = useCallback((patientId: string) => {
       openNewAppointmentDialog({ initialPatientId: patientId });
       resetSearch();
@@ -99,6 +87,20 @@ export function AppHeader() {
     openNewPatientDialog();
     resetSearch();
   }, [openNewPatientDialog, resetSearch]);
+
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+        setIsSearchFocused(false)
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside)
+    }
+  }, [])
+  
 
   return (
     <header className="sticky top-0 z-40 flex h-16 items-center gap-4 border-b bg-card px-4 md:px-6">
@@ -122,8 +124,8 @@ export function AppHeader() {
                 {searchQuery && filteredPatients.length > 0 && (
                   <CommandGroup heading="المرضى">
                     {filteredPatients.map((patient) => (
-                      <div key={patient.id} className="p-2">
-                        <div className="flex items-center justify-between">
+                      <CommandItem key={patient.id} value={patient.name} onSelect={() => setIsSearchFocused(false)} className="p-0">
+                        <div className="flex items-center justify-between w-full p-2">
                             <div className="flex items-center gap-2">
                                 <Avatar className="h-8 w-8">
                                     <AvatarImage src={patient.avatar} data-ai-hint="person face" />
@@ -135,36 +137,36 @@ export function AppHeader() {
                                 </div>
                             </div>
                             <div className="flex items-center gap-2">
-                                 <Button variant="secondary" size="sm" onClick={() => handleQuickAppointment(patient.id)}>
+                                 <Button variant="secondary" size="sm" onClick={(e) => {e.stopPropagation(); handleQuickAppointment(patient.id)}}>
                                     موعد سريع
                                 </Button>
-                                <Button variant="outline" size="sm" onClick={() => handlePatientSelect(patient.id)}>
+                                <Button variant="outline" size="sm" onClick={(e) => {e.stopPropagation(); handlePatientSelect(patient.id)}}>
                                     عرض السجل
                                 </Button>
                             </div>
                         </div>
-                      </div>
+                      </CommandItem>
                     ))}
                   </CommandGroup>
                 )}
                  {searchQuery && filteredPatients.length === 0 && (
                     <CommandEmpty>
-                        <CommandItem onSelect={() => handleNewPatient()} className="flex-col items-center justify-center py-4 cursor-pointer">
+                        <div onClick={handleNewPatient} className="flex-col items-center justify-center py-4 cursor-pointer">
                              <p>لم يتم العثور على مريض. هل تريد إضافة واحد جديد؟</p>
                              <div className="flex items-center text-primary mt-2">
                                 <UserPlus className="mr-2 h-4 w-4" /> إضافة مريض جديد
                             </div>
-                        </CommandItem>
+                        </div>
                     </CommandEmpty>
                  )}
 
                 {!searchQuery && (
                     <CommandGroup heading="إجراءات سريعة">
-                        <CommandItem onSelect={() => handleNewAppointment()} className="cursor-pointer">
+                        <CommandItem onSelect={handleNewAppointment} className="cursor-pointer">
                             <Calendar className="mr-2 h-4 w-4" />
                             <span>حجز موعد جديد</span>
                         </CommandItem>
-                        <CommandItem onSelect={() => handleNewPatient()} className="cursor-pointer">
+                        <CommandItem onSelect={handleNewPatient} className="cursor-pointer">
                             <UserPlus className="mr-2 h-4 w-4" />
                             <span>إضافة مريض جديد</span>
                         </CommandItem>
