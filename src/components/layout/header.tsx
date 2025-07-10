@@ -15,7 +15,6 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { SidebarTrigger } from "@/components/ui/sidebar"
-import { mockUser } from "@/lib/data"
 import {
   Command,
   CommandEmpty,
@@ -25,6 +24,10 @@ import {
 } from "@/components/ui/command"
 import { useAppContext } from "@/context/app-context"
 import { Badge } from "../ui/badge"
+import type { User as UserType } from "@/lib/types"
+
+// TODO: Replace with real user data from auth later
+const mockUser: UserType = { name: "You", email: "you@clinicflow.demo", avatar: "", role: "Admin", status: "online" };
 
 const mockNotifications = [
     {
@@ -145,8 +148,8 @@ export function AppHeader() {
                     {searchResults.patients.length > 0 && (
                         <CommandGroup heading="المرضى">
                             {searchResults.patients.map((patient) => (
-                            <CommandItem key={`p-${patient.id}`} value={`patient-${patient.id}`} className="p-2 flex justify-between items-center" onSelect={() => handleNavigation(`/patients/${patient.id}`)}>
-                                <div className="flex items-center gap-2">
+                            <CommandItem key={`p-${patient.id}`} value={`patient-${patient.id}`} className="p-2 flex justify-between items-center" onSelect={() => setIsSearchFocused(false)}>
+                                <div className="flex items-center gap-2 cursor-pointer" onClick={() => handleNavigation(`/patients/${patient.id}`)}>
                                     <User className="h-4 w-4" />
                                     <div>
                                         <p className="font-medium">{patient.name}</p>
@@ -154,10 +157,10 @@ export function AppHeader() {
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-2">
-                                    <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); handleNavigation(`/patients/${patient.id}`); }}>
+                                    <Button variant="ghost" size="sm" onClick={() => handleNavigation(`/patients/${patient.id}`)}>
                                         عرض السجل
                                     </Button>
-                                    <Button variant="secondary" size="sm" onClick={(e) => { e.stopPropagation(); handleQuickAppointment(patient.id); }}>موعد سريع</Button>
+                                    <Button variant="secondary" size="sm" onClick={() => handleQuickAppointment(patient.id)}>موعد سريع</Button>
                                 </div>
                             </CommandItem>
                             ))}

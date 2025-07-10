@@ -6,16 +6,14 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { ChevronLeft, ChevronRight, MoreVertical } from "lucide-react"
 import { addDays, format, startOfWeek, eachDayOfInterval, endOfWeek, subDays } from 'date-fns';
-import { mockAppointments } from '@/lib/data';
 import type { Appointment } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
+import { useAppContext } from '@/context/app-context';
+import { Skeleton } from '../ui/skeleton';
 
 const timeSlots = Array.from({ length: 12 }, (_, i) => `${String(i + 8).padStart(2, '0')}:00`);
 
-const getAppointmentsForDay = (day: Date, appointments: Appointment[]) => {
-  return appointments.filter(app => app.date === format(day, 'yyyy-MM-dd'));
-};
 
 const getStatusColor = (status: Appointment['status']) => {
   switch (status) {
@@ -45,19 +43,24 @@ const getStatusBorderColor = (status: Appointment['status']) => {
 
 
 export function AppointmentCalendar() {
+  const { enrichedAppointments, loading } = useAppContext();
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [hydrated, setHydrated] = useState(false);
 
-  useEffect(() => {
-    setHydrated(true);
-    // We can also set currentDate to new Date() here again
-    // to ensure it's the client's date after hydration if needed.
-    // For this calendar, just ensuring it doesn't mismatch is enough.
-  }, []);
+  const getAppointmentsForDay = (day: Date) => {
+    return enrichedAppointments.filter(app => app.date === format(day, 'yyyy-MM-dd'));
+  };
 
-  if (!hydrated) {
-      // Render a placeholder or null on the server and initial client render
-      return null;
+  if (loading) {
+    return (
+        <Card className="h-full flex flex-col">
+          <CardHeader>
+            <Skeleton className="h-8 w-3/4" />
+          </CardHeader>
+          <CardContent>
+            <Skeleton className="h-full w-full" />
+          </CardContent>
+        </Card>
+    )
   }
 
   const startOfCurrentWeek = startOfWeek(currentDate, { weekStartsOn: 0 });
@@ -105,7 +108,7 @@ export function AppointmentCalendar() {
                 <p className="text-2xl font-bold">{format(day, 'd')}</p>
               </div>
               <div className="relative h-[calc(12*5rem)]"> {/* 12 time slots * 5rem height */}
-                {getAppointmentsForDay(day, mockAppointments).map(app => {
+                {getAppointmentsForDay(day).map(app => {
                   const startHour = parseInt(app.startTime.split(':')[0]);
                   const startMinutes = parseInt(app.startTime.split(':')[1]);
                   const endHour = parseInt(app.endTime.split(':')[0]);

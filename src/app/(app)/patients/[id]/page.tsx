@@ -1,22 +1,52 @@
-import { mockPatients, mockAppointments, mockDoctors } from "@/lib/data";
+
+"use client"
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { useAppContext } from "@/context/app-context";
+import { Skeleton } from "@/components/ui/skeleton";
+import type { Patient } from "@/lib/types";
 
 export default function PatientDetailPage({ params }: { params: { id: string } }) {
-  const patient = mockPatients.find(p => p.id === params.id);
-  const patientAppointments = mockAppointments
-    .filter(a => a.patientId === patient?.id)
-    .map(appointment => {
-      const doctor = mockDoctors.find(d => d.id === appointment.doctorId);
-      return { ...appointment, doctor };
-    });
+  const { enrichedAppointments, patients, loading } = useAppContext();
+  const [patient, setPatient] = useState<Patient | undefined>(undefined);
 
-  if (!patient) {
+  useEffect(() => {
+    if (!loading) {
+      const foundPatient = patients.find(p => p.id === params.id);
+      setPatient(foundPatient);
+    }
+  }, [params.id, patients, loading]);
+  
+  const patientAppointments = enrichedAppointments
+    .filter(a => a.patientId === patient?.id)
+    .sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+  if (loading || !patient) {
     return (
-        <div className="flex items-center justify-center h-full">
-            <p>لم يتم العثور على المريض.</p>
+        <div className="space-y-6">
+            <div className="flex items-center space-x-4 rtl:space-x-reverse">
+                 <Skeleton className="h-24 w-24 rounded-full" />
+                <div className="space-y-2">
+                    <Skeleton className="h-8 w-48" />
+                    <Skeleton className="h-4 w-64" />
+                </div>
+            </div>
+            <Card>
+                <CardHeader>
+                    <Skeleton className="h-6 w-40" />
+                    <Skeleton className="h-4 w-72" />
+                </CardHeader>
+                <CardContent>
+                    <div className="space-y-2">
+                        <Skeleton className="h-10 w-full" />
+                        <Skeleton className="h-10 w-full" />
+                        <Skeleton className="h-10 w-full" />
+                    </div>
+                </CardContent>
+            </Card>
         </div>
     )
   }

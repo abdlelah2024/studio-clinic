@@ -7,7 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { mockAuditLogs } from "@/lib/data";
+// import { mockAuditLogs } from "@/lib/data"; // We will replace this with real data later
 import type { AuditLog, AuditLogAction, AuditLogCategory } from "@/lib/types";
 import { format, formatDistanceToNow } from 'date-fns';
 import { ar } from 'date-fns/locale';
@@ -15,8 +15,13 @@ import { Search, ListFilter, ArrowUpDown, History, User, Stethoscope, Calendar, 
 import { cn } from '@/lib/utils';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuCheckboxItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
+import { useAppContext } from '@/context/app-context';
+import { Skeleton } from '@/components/ui/skeleton';
 
 type SortKey = 'date-asc' | 'date-desc';
+
+// TODO: Replace this with real audit logs from Firestore later
+const mockAuditLogs: AuditLog[] = [];
 
 const getCategoryTranslation = (category: AuditLogCategory) => {
     switch (category) {
@@ -65,6 +70,7 @@ const getCategoryIcon = (category: AuditLogCategory) => {
 }
 
 export default function AuditLogPage() {
+    const { loading } = useAppContext();
     const [searchQuery, setSearchQuery] = useState("");
     const [actionFilter, setActionFilter] = useState<AuditLogAction | 'all'>('all');
     const [categoryFilter, setCategoryFilter] = useState<AuditLogCategory | 'all'>('all');
@@ -90,6 +96,21 @@ export default function AuditLogPage() {
             }
         });
     }, [searchQuery, actionFilter, categoryFilter, sortKey]);
+
+    if (loading) {
+        return (
+            <Card>
+                <CardHeader><Skeleton className="h-8 w-1/2" /></CardHeader>
+                <CardContent>
+                    <div className="space-y-4">
+                        <Skeleton className="h-12 w-full" />
+                        <Skeleton className="h-12 w-full" />
+                        <Skeleton className="h-12 w-full" />
+                    </div>
+                </CardContent>
+            </Card>
+        )
+    }
 
     return (
         <Card>
@@ -201,7 +222,7 @@ export default function AuditLogPage() {
                         ) : (
                             <TableRow>
                                 <TableCell colSpan={5} className="h-24 text-center">
-                                    لا توجد سجلات مطابقة.
+                                    لا توجد سجلات. سيتم تفعيل هذه الميزة قريباً.
                                 </TableCell>
                             </TableRow>
                         )}
@@ -211,5 +232,3 @@ export default function AuditLogPage() {
         </Card>
     );
 }
-    
-    

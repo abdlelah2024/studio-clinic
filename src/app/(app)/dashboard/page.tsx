@@ -4,7 +4,6 @@ import React, { useState, useMemo, useEffect } from "react"
 import { StatsCards } from "@/components/dashboard/stats-cards"
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { allUsers } from "@/lib/data"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -13,14 +12,14 @@ import { Wifi, Users, RefreshCw, Calendar } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useAppContext } from "@/context/app-context"
 import type { AppointmentStatus } from "@/lib/types"
+import { Skeleton } from "@/components/ui/skeleton"
 
 type TimeRange = 'all' | '30d' | '7d' | 'today';
 
 export default function DashboardPage() {
-  const { enrichedAppointments } = useAppContext();
+  const { enrichedAppointments, users, loading } = useAppContext();
   const [timeRange, setTimeRange] = useState<TimeRange>('today');
   const [isOnline, setIsOnline] = useState(true);
-  const [hydrated, setHydrated] = useState(false);
   
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
@@ -31,7 +30,6 @@ export default function DashboardPage() {
         window.addEventListener('offline', handleOffline);
         setIsOnline(navigator.onLine);
     }
-    setHydrated(true);
     
     return () => {
       if (typeof window !== 'undefined') {
@@ -53,9 +51,6 @@ export default function DashboardPage() {
   }
 
   const filteredData = useMemo(() => {
-    if (!hydrated) {
-        return { appointments: [], todayAppointments: [] };
-    }
     const now = new Date();
     let startDate: Date | null = null;
     
@@ -81,10 +76,27 @@ export default function DashboardPage() {
       .sort((a,b) => a.startTime.localeCompare(b.startTime));
 
     return { appointments, todayAppointments };
-  }, [timeRange, hydrated, enrichedAppointments]);
+  }, [timeRange, enrichedAppointments]);
   
-  if (!hydrated) {
-      return null;
+  if (loading) {
+      return (
+          <div className="flex flex-col gap-6">
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                  <Skeleton className="h-28 w-full" />
+                  <Skeleton className="h-28 w-full" />
+                  <Skeleton className="h-28 w-full" />
+                  <Skeleton className="h-28 w-full" />
+              </div>
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  <div className="lg:col-span-2">
+                      <Skeleton className="h-96 w-full" />
+                  </div>
+                   <div className="lg:col-span-1">
+                       <Skeleton className="h-96 w-full" />
+                  </div>
+              </div>
+          </div>
+      )
   }
 
   return (
@@ -177,7 +189,7 @@ export default function DashboardPage() {
                         </TableRow>
                         </TableHeader>
                         <TableBody>
-                        {allUsers.map((user) => (
+                        {users.map((user) => (
                             <TableRow key={user.email}>
                                 <TableCell>
                                     <div className="flex items-center gap-3">

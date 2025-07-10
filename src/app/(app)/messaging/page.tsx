@@ -6,15 +6,29 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Send } from "lucide-react";
-import { allUsers, mockUser, mockMessages } from "@/lib/data";
 import type { User, Message } from "@/lib/types";
 import { cn } from '@/lib/utils';
+import { useAppContext } from '@/context/app-context';
+import { Skeleton } from '@/components/ui/skeleton';
+
+// TODO: Replace with real data from Firestore later
+const mockUser: User = { name: "You", email: "you@clinicflow.demo", avatar: "", role: "Admin", status: "online" };
+const mockMessages: Message[] = [];
 
 export default function MessagingPage() {
-    const [selectedUser, setSelectedUser] = useState<User | null>(allUsers.find(u => u.email !== mockUser.email) || null);
+    const { users, loading } = useAppContext();
+    const [selectedUser, setSelectedUser] = useState<User | null>(null);
     const [messages, setMessages] = useState<Message[]>(mockMessages);
     const [newMessage, setNewMessage] = useState("");
     const messagesEndRef = useRef<HTMLDivElement>(null);
+
+    const otherUsers = users.filter(u => u.email !== mockUser.email);
+    
+    useEffect(() => {
+        if (!selectedUser && otherUsers.length > 0) {
+            setSelectedUser(otherUsers[0]);
+        }
+    }, [users, selectedUser, otherUsers]);
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -42,6 +56,24 @@ export default function MessagingPage() {
              (m.senderEmail === selectedUser.email && m.receiverEmail === mockUser.email)
     ).sort((a,b) => a.timestamp.localeCompare(b.timestamp)) : [];
 
+    if (loading) {
+        return (
+            <Card className="h-[calc(100vh-10rem)] flex">
+                <div className="w-1/3 border-r flex flex-col">
+                   <div className="p-4"><Skeleton className="h-8 w-3/4" /></div>
+                   <div className="flex-1 p-2 space-y-2">
+                       <Skeleton className="h-16 w-full" />
+                       <Skeleton className="h-16 w-full" />
+                       <Skeleton className="h-16 w-full" />
+                   </div>
+                </div>
+                <div className="w-2/3 flex items-center justify-center">
+                     <p>جاري التحميل...</p>
+                </div>
+            </Card>
+        )
+    }
+
     return (
         <Card className="h-[calc(100vh-10rem)] flex">
             <div className="w-1/3 border-r flex flex-col">
@@ -49,7 +81,7 @@ export default function MessagingPage() {
                     <h2 className="text-xl font-bold">المحادثات</h2>
                 </div>
                 <div className="flex-1 overflow-y-auto">
-                    {allUsers.filter(u => u.email !== mockUser.email).map(user => (
+                    {otherUsers.map(user => (
                         <div
                             key={user.email}
                             className={cn(
@@ -96,6 +128,11 @@ export default function MessagingPage() {
                             </div>
                         </div>
                         <div className="flex-1 overflow-y-auto p-6 space-y-4">
+                           {conversation.length === 0 && (
+                                <div className="text-center text-muted-foreground pt-10">
+                                    لا توجد رسائل. ابدأ المحادثة. (ميزة قيد التطوير)
+                                </div>
+                           )}
                             {conversation.map(message => (
                                 <div
                                     key={message.id}
@@ -138,8 +175,9 @@ export default function MessagingPage() {
                                     className="flex-1"
                                     value={newMessage}
                                     onChange={(e) => setNewMessage(e.target.value)}
+                                    disabled
                                 />
-                                <Button type="submit" size="icon">
+                                <Button type="submit" size="icon" disabled>
                                     <Send className="h-4 w-4" />
                                 </Button>
                             </form>
