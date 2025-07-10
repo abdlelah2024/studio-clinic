@@ -145,7 +145,7 @@ export function AppHeader() {
                     {searchResults.patients.length > 0 && (
                         <CommandGroup heading="المرضى">
                             {searchResults.patients.map((patient) => (
-                            <CommandItem key={`p-${patient.id}`} value={`patient-${patient.id}`} className="p-2 cursor-pointer flex justify-between items-center" onSelect={() => handleNavigation(`/patients/${patient.id}`)}>
+                            <CommandItem key={`p-${patient.id}`} value={`patient-${patient.id}`} className="p-2 flex justify-between items-center" onSelect={() => handleNavigation(`/patients/${patient.id}`)}>
                                 <div className="flex items-center gap-2">
                                     <User className="h-4 w-4" />
                                     <div>
