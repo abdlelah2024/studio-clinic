@@ -53,7 +53,7 @@ export const listenToCollection = <T>(
 };
 
 // Generic function to add a document
-const addDocument = async <T>(collectionName: string, data: T) => {
+const addDocument = async <T extends object>(collectionName: string, data: T) => {
   const docRef = await addDoc(collection(db, collectionName), data);
   return docRef.id;
 };
