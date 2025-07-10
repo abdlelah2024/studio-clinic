@@ -18,7 +18,7 @@ type TimeRange = 'all' | '30d' | '7d' | 'today';
 
 export default function DashboardPage() {
   const { enrichedAppointments } = useAppContext();
-  const [timeRange, setTimeRange] = useState<TimeRange>('30d');
+  const [timeRange, setTimeRange] = useState<TimeRange>('today');
   const [isOnline, setIsOnline] = useState(true);
   const [hydrated, setHydrated] = useState(false);
   
