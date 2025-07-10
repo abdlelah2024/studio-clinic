@@ -22,8 +22,9 @@ export default function DoctorsPage() {
   const [sortKey, setSortKey] = useState<SortKey>('default');
   
   const filteredAndSortedDoctors = useMemo(() => {
-    let sortedDoctors = [...doctors];
-    const filtered = sortedDoctors.filter(doctor =>
+    let doctorsToProcess = [...doctors];
+    
+    const filtered = doctorsToProcess.filter(doctor =>
         doctor.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         doctor.specialty.toLowerCase().includes(searchQuery.toLowerCase())
     );
