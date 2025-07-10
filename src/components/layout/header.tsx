@@ -20,7 +20,6 @@ import {
   Command,
   CommandEmpty,
   CommandGroup,
-  CommandInput,
   CommandItem,
   CommandList,
 } from "@/components/ui/command"
@@ -76,30 +75,30 @@ export function AppHeader() {
     }
   }, [])
 
-  const resetSearch = () => {
+  const resetSearch = useCallback(() => {
     setIsSearchFocused(false)
     setSearchQuery("")
-  }
+  }, []);
   
-  const handleQuickAppointment = (patientId: string) => {
+  const handleQuickAppointment = useCallback((patientId: string) => {
       openNewAppointmentDialog({ initialPatientId: patientId });
       resetSearch();
-  }
+  }, [openNewAppointmentDialog, resetSearch]);
 
-  const handlePatientSelect = (patientId: string) => {
+  const handlePatientSelect = useCallback((patientId: string) => {
     router.push(`/patients/${patientId}`);
     resetSearch();
-  }
+  }, [router, resetSearch]);
   
   const handleNewAppointment = useCallback(() => {
     openNewAppointmentDialog();
     resetSearch();
-  }, [openNewAppointmentDialog]);
+  }, [openNewAppointmentDialog, resetSearch]);
 
-  const handleNewPatient = () => {
+  const handleNewPatient = useCallback(() => {
     openNewPatientDialog();
     resetSearch();
-  }
+  }, [openNewPatientDialog, resetSearch]);
 
   return (
     <header className="sticky top-0 z-40 flex h-16 items-center gap-4 border-b bg-card px-4 md:px-6">
