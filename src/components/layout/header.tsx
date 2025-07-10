@@ -1,6 +1,6 @@
 
 "use client"
-import React, { useState, useEffect, useRef } from "react"
+import React, { useState, useEffect, useRef, useCallback } from "react"
 import Link from "next/link"
 import { Bell, Search, Calendar, UserPlus, CircleUser, CalendarCheck, CalendarX2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -91,10 +91,10 @@ export function AppHeader() {
     resetSearch();
   }
   
-  const handleNewAppointment = () => {
+  const handleNewAppointment = useCallback(() => {
     openNewAppointmentDialog();
     resetSearch();
-  };
+  }, [openNewAppointmentDialog]);
 
   const handleNewPatient = () => {
     openNewPatientDialog();
