@@ -91,6 +91,11 @@ export function AppHeader() {
     router.push(`/patients/${patientId}`);
     resetSearch();
   }
+  
+  const handleNewAppointment = () => {
+    openNewAppointmentDialog({onAppointmentAdded: () => {}});
+    resetSearch();
+  };
 
   const handleNewPatient = () => {
     openNewPatientDialog(()=>{});
