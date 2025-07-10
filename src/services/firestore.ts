@@ -93,8 +93,7 @@ export const addDataField = (field: Omit<DataField, 'id'>) => addDocument('dataF
 export const updateDataField = (id: string, field: Partial<DataField>) => updateDocument('dataFields', id, field);
 export const deleteDataField = (id: string) => deleteDocument('dataFields', id);
 
-export const addMessage = (message: Omit<Message, 'id'|'timestamp'> & { timestamp?: any }) => {
-    message.timestamp = serverTimestamp();
+export const addMessage = (message: Omit<Message, 'id'|'timestamp'>) => {
     return addDocument('messages', message);
 };
 
