@@ -24,11 +24,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      setLoading(true);
       if (firebaseUser) {
         setUser(firebaseUser);
-        const userDoc = await getDoc(doc(db, 'users', firebaseUser.email!));
-        if(userDoc.exists()) {
-            setCurrentUser({ ...userDoc.data() } as AppUser);
+        try {
+          const userDoc = await getDoc(doc(db, 'users', firebaseUser.email!));
+          if(userDoc.exists()) {
+              setCurrentUser({ ...userDoc.data() } as AppUser);
+          } else {
+             setCurrentUser(null);
+          }
+        } catch (error) {
+            console.error("Error fetching user document:", error);
+            setCurrentUser(null);
         }
       } else {
         setUser(null);
