@@ -8,7 +8,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -19,19 +18,21 @@ import { Combobox } from "../ui/combobox"
 import { Checkbox } from "../ui/checkbox"
 import { useAppContext } from "@/context/app-context"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select"
+import { useToast } from "@/hooks/use-toast"
 
 type AddAppointmentFunction = (appointment: Omit<Appointment, 'id' >) => void;
 
 interface NewAppointmentDialogProps {
-  children?: React.ReactNode;
   onAppointmentAdded: AddAppointmentFunction;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   initialPatientId?: string;
 }
 
-export function NewAppointmentDialog({ children, onAppointmentAdded, open, onOpenChange, initialPatientId }: NewAppointmentDialogProps) {
+export function NewAppointmentDialog({ onAppointmentAdded, open, onOpenChange, initialPatientId }: NewAppointmentDialogProps) {
   const { patients, doctors } = useAppContext();
+  const { toast } = useToast();
+  
   const [patientId, setPatientId] = useState("");
   const [doctorId, setDoctorId] = useState("");
   const [date, setDate] = useState("");
@@ -40,7 +41,8 @@ export function NewAppointmentDialog({ children, onAppointmentAdded, open, onOpe
   const [reason, setReason] = useState("");
   const [status, setStatus] = useState<AppointmentStatus>('Scheduled');
   const [freeReturn, setFreeReturn] = useState(false);
-  const [selectedDoctor, setSelectedDoctor] = useState<Doctor | null>(null);
+  
+  const selectedDoctor = doctors.find(d => d.id === doctorId) || null;
 
   const resetForm = useCallback(() => {
     setPatientId(initialPatientId || "");
@@ -51,35 +53,32 @@ export function NewAppointmentDialog({ children, onAppointmentAdded, open, onOpe
     setReason("");
     setStatus('Scheduled');
     setFreeReturn(false);
-    setSelectedDoctor(null);
   },[initialPatientId]);
-
 
   useEffect(() => {
     if (open) {
        resetForm();
     }
-  }, [initialPatientId, open, resetForm]);
-
-  useEffect(() => {
-    const doctor = doctors.find(d => d.id === doctorId) || null;
-    setSelectedDoctor(doctor);
-  }, [doctorId, doctors]);
+  }, [open, resetForm]);
 
   const handleSubmit = () => {
-    if (patientId && doctorId && date && startTime && endTime && reason) {
-      onAppointmentAdded({ patientId, doctorId, date, startTime, endTime, reason, freeReturn, status });
-      onOpenChange(false);
+    if (!patientId || !doctorId || !date || !startTime || !endTime || !reason) {
+       toast({
+        title: "بيانات ناقصة",
+        description: "يرجى ملء جميع الحقول المطلوبة.",
+        variant: "destructive",
+      });
+      return;
     }
+    onAppointmentAdded({ patientId, doctorId, date, startTime, endTime, reason, freeReturn, status });
+    onOpenChange(false);
   };
   
   const patientOptions = patients.map(p => ({ value: p.id, label: p.name }));
   const doctorOptions = doctors.map(d => ({ value: d.id, label: d.name }));
 
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      {children && <DialogTrigger asChild>{children}</DialogTrigger>}
       <DialogContent className="sm:max-w-[480px]">
         <DialogHeader>
           <DialogTitle>حجز موعد جديد</DialogTitle>
@@ -149,6 +148,7 @@ export function NewAppointmentDialog({ children, onAppointmentAdded, open, onOpe
                     <SelectItem value="Scheduled">مجدول</SelectItem>
                     <SelectItem value="Waiting">منتظر</SelectItem>
                     <SelectItem value="Completed">مكتمل</SelectItem>
+                    <SelectItem value="Canceled">ملغى</SelectItem>
                 </SelectContent>
             </Select>
           </div>

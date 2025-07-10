@@ -33,7 +33,7 @@ interface AppContextType {
   enrichedAppointments: (Appointment & { patient: Patient; doctor: Doctor; })[];
 
   // Patient Actions
-  openNewPatientDialog: (onPatientAdded?: AddPatientFunction) => void;
+  openNewPatientDialog: () => void;
   addPatient: AddPatientFunction;
   updatePatient: UpdatePatientFunction;
   deletePatient: DeletePatientFunction;
@@ -62,8 +62,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const [isAppointmentDialogOpen, setAppointmentDialogOpen] = useState(false);
     const [appointmentDialogOptions, setAppointmentDialogOptions] = useState<AppointmentDialogOptions | null>(null);
     const [isPatientDialogOpen, setPatientDialogOpen] = useState(false);
-    const [onPatientAddedCallback, setOnPatientAddedCallback] = useState<AddPatientFunction | null>(null);
-
+    
     const { toast } = useToast();
 
     // --- Memoized Enriched Data ---
@@ -72,7 +71,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
             const patient = patients.find(p => p.id === appointment.patientId)!;
             const doctor = doctors.find(d => d.id === appointment.doctorId)!;
             return { ...appointment, patient, doctor };
-        }).filter(Boolean) as (Appointment & { patient: Patient; doctor: Doctor; })[];
+        }).filter(item => item.patient && item.doctor) as (Appointment & { patient: Patient; doctor: Doctor; })[];
     }, [appointments, patients, doctors]);
 
 
@@ -80,19 +79,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const addPatient: AddPatientFunction = useCallback((patient) => {
         const newPatient: Patient = {
             ...patient,
-            id: `p${patients.length + 1}`,
+            id: `p${Date.now()}`,
             avatar: `https://placehold.co/100x100?text=${patient.name.charAt(0)}`,
             lastVisit: new Date().toISOString().split('T')[0],
         };
         setPatients(prev => [newPatient, ...prev]);
-        if (onPatientAddedCallback) {
-            onPatientAddedCallback(patient);
-        }
         toast({
             title: "تمت الإضافة بنجاح",
             description: `تمت إضافة المريض ${patient.name} إلى السجلات.`,
         });
-    }, [patients.length, onPatientAddedCallback, toast]);
+    }, [toast]);
 
     const updatePatient: UpdatePatientFunction = useCallback((updatedPatient) => {
         setPatients(prev => prev.map(p => p.id === updatedPatient.id ? updatedPatient : p));
@@ -112,8 +108,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         });
     }, [patients, toast]);
 
-    const openNewPatientDialog = useCallback((onPatientAdded?: AddPatientFunction) => {
-        setOnPatientAddedCallback(() => onPatientAdded || (() => {}));
+    const openNewPatientDialog = useCallback(() => {
         setPatientDialogOpen(true);
     }, []);
 
@@ -121,7 +116,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const addDoctor: AddDoctorFunction = useCallback((doctor) => {
         const newDoctor: Doctor = {
           ...doctor,
-          id: `d${doctors.length + 1}`,
+          id: `d${Date.now()}`,
           avatar: `https://placehold.co/100x100?text=${doctor.name.charAt(0)}`,
         };
         setDoctors(prev => [newDoctor, ...prev]);
@@ -129,7 +124,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           title: "تمت الإضافة بنجاح",
           description: `تمت إضافة الطبيب ${doctor.name}.`,
         });
-    }, [doctors.length, toast]);
+    }, [toast]);
 
     const updateDoctor: UpdateDoctorFunction = useCallback((updatedDoctor) => {
         setDoctors(prev => prev.map(d => d.id === updatedDoctor.id ? updatedDoctor : d));
@@ -153,7 +148,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const addAppointment: AddAppointmentFunction = useCallback((appointment) => {
         const newAppointment: Appointment = {
             ...appointment,
-            id: `a${appointments.length + 1}`,
+            id: `a${Date.now()}`,
         };
         setAppointments(prev => [newAppointment, ...prev]);
         const patientName = patients.find(p => p.id === appointment.patientId)?.name || "Unknown Patient";
@@ -162,7 +157,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
             title: "تمت جدولة الموعد بنجاح",
             description: `تم حجز موعد لـ ${patientName} مع ${doctorName}.`,
         });
-    }, [appointments.length, patients, doctors, toast]);
+    }, [patients, doctors, toast]);
 
     const updateAppointment: UpdateAppointmentFunction = useCallback((updatedAppointment) => {
         setAppointments(prev => prev.map(app => app.id === updatedAppointment.id ? updatedAppointment : app));
