@@ -5,10 +5,11 @@ import { NewAppointmentDialog } from "@/components/appointments/new-appointment-
 import { AddPatientDialog } from "@/components/patients/add-patient-dialog"
 import type { Appointment, Patient, Doctor, User, UserRole, Permissions, DataField, Message, AuditLog, Notification } from "@/lib/types"
 import { useToast } from "@/hooks/use-toast"
-import { useAuth } from "./auth-context"
-import { initializeApp, getApps, getApp } from "firebase/app"
-import { getFirestore, onSnapshot, collection, query, orderBy, addDoc, updateDoc, deleteDoc, doc, setDoc, getDoc, serverTimestamp } from "firebase/firestore"
-import { getAuth, createUserWithEmailAndPassword } from "firebase/auth"
+import { initializeApp, getApps, getApp, FirebaseApp } from "firebase/app"
+import { getFirestore, onSnapshot, collection, query, orderBy, addDoc, updateDoc, deleteDoc, doc, setDoc, getDoc, Firestore, serverTimestamp } from "firebase/firestore"
+import { getAuth, createUserWithEmailAndPassword, onAuthStateChanged, signInWithEmailAndPassword, signOut, User as FirebaseUser, Auth } from 'firebase/auth';
+import { Skeleton } from "@/components/ui/skeleton"
+
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -19,148 +20,34 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-// Initialize Firebase
-const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
-const db = getFirestore(app);
-const auth = getAuth(app);
-
-
-// Generic function to listen to a collection with optional ordering
-const listenToCollection = <T>(
-  collectionName: string,
-  callback: (data: T[]) => void,
-  options: {
-    idField?: string;
-    orderBy?: string;
-    direction?: 'asc' | 'desc';
-  }
-): (() => void) => {
-  const { idField = 'id', orderBy: orderByField, direction = 'asc' } = options;
-
-  let q: any = collection(db, collectionName);
-
-  if (orderByField) {
-    q = query(q, orderBy(orderByField, direction));
-  }
-
-  const unsubscribe = onSnapshot(
-    q,
-    (snapshot) => {
-      const data = snapshot.docs.map((doc) => ({
-        [idField]: doc.id,
-        ...doc.data(),
-      })) as T[];
-      callback(data);
-    },
-    (error) => {
-      console.error(`Error listening to ${collectionName}:`, error);
-    }
-  );
-
-  return unsubscribe;
-};
-
-// Generic function to add a document
-const addDocument = async <T extends object>(collectionName: string, data: T) => {
-  const docRef = await addDoc(collection(db, collectionName), data);
-  return docRef.id;
-};
-
-// Generic function to update a document
-const updateDocument = async (collectionName: string, id: string, data: any) => {
-  const docRef = doc(db, collectionName, id);
-  await updateDoc(docRef, data);
-};
-
-// Generic function to delete a document
-const deleteDocument = async (collectionName: string, id: string) => {
-  const docRef = doc(db, collectionName, id);
-  await deleteDoc(docRef);
-};
-
-
-// Specific functions for each collection
-const addPatientDoc = (patient: Omit<Patient, 'id'>) => addDocument('patients', patient);
-const updatePatientDoc = (id: string, patient: Partial<Patient>) => updateDocument('patients', id, patient);
-const deletePatientDoc = (id: string) => deleteDocument('patients', id);
-
-const addDoctorDoc = (doctor: Omit<Doctor, 'id'>) => addDocument('doctors', doctor);
-const updateDoctorDoc = (id: string, doctor: Partial<Doctor>) => updateDocument('doctors', id, doctor);
-const deleteDoctorDoc = (id: string) => deleteDocument('doctors', id);
-
-const addAppointmentDoc = (appointment: Omit<Appointment, 'id'>) => addDocument('appointments', appointment);
-const updateAppointmentDoc = (id: string, appointment: Partial<Appointment>) => updateDocument('appointments', id, appointment);
-const deleteAppointmentDoc = (id: string) => deleteDocument('appointments', id);
-
-const addUserDoc = (user: User) => setDoc(doc(db, "users", user.email), user, { merge: true });
-const updateUserDoc = (email: string, user: Partial<User>) => updateDocument('users', email, user);
-const deleteUserDoc = (email: string) => deleteDocument('users', email);
-const checkUserExists = async (email: string): Promise<boolean> => {
-    const docRef = doc(db, 'users', email);
-    const docSnap = await getDoc(docRef);
-    return docSnap.exists();
-};
-
-
-const addDataFieldDoc = (field: Omit<DataField, 'id'>) => addDocument('dataFields', field);
-const updateDataFieldDoc = (id: string, field: Partial<DataField>) => updateDocument('dataFields', id, field);
-const deleteDataFieldDoc = (id: string) => deleteDocument('dataFields', id);
-
-const addMessageDoc = (message: Omit<Message, 'id'|'timestamp'>) => {
-    return addDocument('messages', message);
-};
-
-const getPermissions = async (): Promise<Record<UserRole, Permissions>> => {
-    const docRef = doc(db, 'system', 'permissions');
-    const docSnap = await getDoc(docRef);
-    if (docSnap.exists()) {
-        return docSnap.data() as Record<UserRole, Permissions>;
-    } else {
-        console.warn("Permissions document not found, returning empty object.");
-        return {} as Record<UserRole, Permissions>;
-    }
-};
-
-const updatePermissions = async (permissions: Partial<Record<UserRole, Permissions>>) => {
-    const docRef = doc(db, 'system', 'permissions');
-    await setDoc(docRef, permissions, { merge: true });
-};
-
-
+// --- AppContext Types ---
 type AddAppointmentFunction = (appointment: Omit<Appointment, 'id'>) => void;
 type UpdateAppointmentFunction = (appointment: Appointment) => void;
 type DeleteAppointmentFunction = (appointmentId: string) => void;
-
 type AddPatientFunction = (patient: Omit<Patient, 'id' | 'avatar' | 'lastVisit'>) => void;
 type UpdatePatientFunction = (patient: Patient) => void;
 type DeletePatientFunction = (patientId: string) => void;
-
 type AddDoctorFunction = (doctor: Omit<Doctor, 'id' | 'avatar'>) => void;
 type UpdateDoctorFunction = (doctor: Doctor) => void;
 type DeleteDoctorFunction = (doctorId: string) => void;
-
 type AddUserFunction = (user: Omit<User, 'avatar' | 'status'>) => void;
 type UpdateUserFunction = (user: User) => void;
 type DeleteUserFunction = (email: string) => void;
-
 type UpdatePermissionFunction = (role: UserRole, section: keyof Permissions['Admin'], action: keyof Permissions['Admin']['patients'], value: boolean) => void;
-
 type AddDataFieldFunction = (field: { label: string, required: boolean }) => void;
 type UpdateDataFieldFunction = (field: DataField) => void;
 type DeleteDataFieldFunction = (fieldId: string) => void;
-
 type AddMessageFunction = (message: Omit<Message, 'id' | 'timestamp'>) => void;
-
-interface AppointmentDialogOptions {
-    initialPatientId?: string;
-}
-
-interface PatientDialogOptions {
-    initialName?: string;
-}
+interface AppointmentDialogOptions { initialPatientId?: string; }
+interface PatientDialogOptions { initialName?: string; }
 
 interface AppContextType {
+  // Auth
+  currentUser: User | null;
   loading: boolean;
+  login: (email: string, pass: string) => Promise<void>;
+  logout: () => Promise<void>;
+  
   // Data
   patients: Patient[];
   doctors: Doctor[];
@@ -175,85 +62,91 @@ interface AppContextType {
   // Enriched Data
   enrichedAppointments: (Appointment & { patient: Patient; doctor: Doctor; })[];
 
-  // Patient Actions
+  // Actions
   openNewPatientDialog: (options?: PatientDialogOptions) => void;
   addPatient: AddPatientFunction;
   updatePatient: UpdatePatientFunction;
   deletePatient: DeletePatientFunction;
-  
-  // Doctor Actions
   addDoctor: AddDoctorFunction;
   updateDoctor: UpdateDoctorFunction;
   deleteDoctor: DeleteDoctorFunction;
-
-  // Appointment Actions
   openNewAppointmentDialog: (options?: AppointmentDialogOptions) => void;
   addAppointment: AddAppointmentFunction;
   updateAppointment: UpdateAppointmentFunction;
   deleteAppointment: DeleteAppointmentFunction;
-
-  // User Actions
   addUser: AddUserFunction;
   updateUser: UpdateUserFunction;
   deleteUser: DeleteUserFunction;
-
-  // Permission Actions
   updatePermission: UpdatePermissionFunction;
-  
-  // Data Field Actions
   addDataField: AddDataFieldFunction;
   updateDataField: UpdateDataFieldFunction;
   deleteDataField: DeleteDataFieldFunction;
-
-  // Message Actions
   addMessage: AddMessageFunction;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
-// Function to seed the admin user
-const seedAdminUser = async () => {
-    const adminEmail = "asd19082@gmail.com";
-    const adminPassword = "159632Asd";
-    
-    try {
-        // Check if user exists in Firestore
-        const userExists = await checkUserExists(adminEmail);
-        
-        if (!userExists) {
-            console.log("Admin user does not exist, creating...");
-            // Create user in Firebase Auth
-            try {
-                await createUserWithEmailAndPassword(auth, adminEmail, adminPassword);
-                console.log("Admin user created in Firebase Auth.");
-            } catch (error: any) {
-                // If user already exists in Auth but not in Firestore
-                if (error.code !== 'auth/email-already-in-use') {
-                    throw error;
-                }
-                console.log("Admin user already exists in Firebase Auth.");
-            }
-            
-            // Add user to Firestore
-            const adminUserData: User = {
-                name: "Admin User",
-                email: adminEmail,
-                role: 'Admin',
-                avatar: `https://placehold.co/100x100?text=A`,
-                status: 'offline',
-            };
-            await addUserDoc(adminUserData);
-            console.log("Admin user document created in Firestore.");
-        }
-    } catch (error) {
-        console.error("Error seeding admin user:", error);
-    }
+// --- Firebase Initialization and Helpers ---
+let app: FirebaseApp;
+let auth: Auth;
+let db: Firestore;
+
+if (getApps().length === 0) {
+    app = initializeApp(firebaseConfig);
+} else {
+    app = getApp();
+}
+auth = getAuth(app);
+db = getFirestore(app);
+
+// Generic function to listen to a collection
+const listenToCollection = <T>(collectionName: string, callback: (data: T[]) => void, options: { idField?: string; orderBy?: string; direction?: 'asc' | 'desc'; }) => {
+  const { idField = 'id', orderBy: orderByField, direction = 'asc' } = options;
+  let q: any = collection(db, collectionName);
+  if (orderByField) {
+    q = query(q, orderBy(orderByField, direction));
+  }
+  return onSnapshot(q, (snapshot) => {
+    const data = snapshot.docs.map((doc) => ({ [idField]: doc.id, ...doc.data() })) as T[];
+    callback(data);
+  }, (error) => console.error(`Error listening to ${collectionName}:`, error));
 };
+
+const addDocument = async <T extends object>(collectionName: string, data: T) => addDoc(collection(db, collectionName), data);
+const updateDocument = async (collectionName: string, id: string, data: any) => updateDoc(doc(db, collectionName, id), data);
+const deleteDocument = async (collectionName: string, id: string) => deleteDoc(doc(db, collectionName, id));
+const setDocument = async (collectionName: string, id: string, data: any, merge = true) => setDoc(doc(db, collectionName, id), data, { merge });
+
+const addPatientDoc = (patient: Omit<Patient, 'id'>) => addDocument('patients', patient);
+const updatePatientDoc = (id: string, patient: Partial<Patient>) => updateDocument('patients', id, patient);
+const deletePatientDoc = (id: string) => deleteDocument('patients', id);
+const addDoctorDoc = (doctor: Omit<Doctor, 'id'>) => addDocument('doctors', doctor);
+const updateDoctorDoc = (id: string, doctor: Partial<Doctor>) => updateDocument('doctors', id, doctor);
+const deleteDoctorDoc = (id: string) => deleteDocument('doctors', id);
+const addAppointmentDoc = (appointment: Omit<Appointment, 'id'>) => addDocument('appointments', appointment);
+const updateAppointmentDoc = (id: string, appointment: Partial<Appointment>) => updateDocument('appointments', id, appointment);
+const deleteAppointmentDoc = (id: string) => deleteDocument('appointments', id);
+const addUserDoc = (user: User) => setDocument('users', user.email, user);
+const updateUserDoc = (email: string, user: Partial<User>) => updateDocument('users', email, user);
+const deleteUserDoc = (email: string) => deleteDocument('users', email);
+const addDataFieldDoc = (field: Omit<DataField, 'id'>) => addDocument('dataFields', field);
+const updateDataFieldDoc = (id: string, field: Partial<DataField>) => updateDocument('dataFields', id, field);
+const deleteDataFieldDoc = (id: string) => deleteDocument('dataFields', id);
+const addMessageDoc = (message: Omit<Message, 'id'|'timestamp'>) => addDocument('messages', { ...message, timestamp: serverTimestamp() });
+const getPermissions = async (): Promise<Record<UserRole, Permissions>> => {
+    const docSnap = await getDoc(doc(db, 'system', 'permissions'));
+    return docSnap.exists() ? docSnap.data() as Record<UserRole, Permissions> : {} as Record<UserRole, Permissions>;
+};
+const updatePermissions = async (permissions: Partial<Record<UserRole, Permissions>>) => setDocument('system', 'permissions', permissions);
+const checkUserExists = async (email: string): Promise<boolean> => (await getDoc(doc(db, 'users', email))).exists();
 
 
 export function AppProvider({ children }: { children: ReactNode }) {
-    const { currentUser } = useAuth();
+    // Auth State
+    const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
+    const [currentUser, setCurrentUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
+
     // Main Data State
     const [patients, setPatients] = useState<Patient[]>([]);
     const [doctors, setDoctors] = useState<Doctor[]>([]);
@@ -271,74 +164,83 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const [isPatientDialogOpen, setPatientDialogOpen] = useState(false);
     const [patientDialogOptions, setPatientDialogOptions] = useState<PatientDialogOptions | null>(null);
 
-    
     const { toast } = useToast();
 
+    // --- Auth Logic ---
+    useEffect(() => {
+        const unsubscribe = onAuthStateChanged(auth, async (user) => {
+            setLoading(true);
+            if (user) {
+                setFirebaseUser(user);
+                try {
+                    const userDoc = await getDoc(doc(db, 'users', user.email!));
+                    if (userDoc.exists()) {
+                        setCurrentUser({ ...userDoc.data() } as User);
+                    } else {
+                        setCurrentUser(null);
+                    }
+                } catch (error) {
+                    console.error("Error fetching user document:", error);
+                    setCurrentUser(null);
+                }
+            } else {
+                setFirebaseUser(null);
+                setCurrentUser(null);
+            }
+            setLoading(false);
+        });
+        return () => unsubscribe();
+    }, []);
+
+    const login = async (email: string, pass: string) => {
+      await signInWithEmailAndPassword(auth, email, pass);
+    };
+  
+    const logout = async () => {
+      await signOut(auth);
+    };
+
     // --- Data Seeding ---
+    const seedAdminUser = useCallback(async () => {
+        const adminEmail = "asd19082@gmail.com";
+        const adminPassword = "159632Asd";
+        try {
+            if (!(await checkUserExists(adminEmail))) {
+                console.log("Admin user does not exist, creating...");
+                try {
+                    await createUserWithEmailAndPassword(auth, adminEmail, adminPassword);
+                } catch (error: any) {
+                    if (error.code !== 'auth/email-already-in-use') throw error;
+                }
+                await addUserDoc({ name: "Admin User", email: adminEmail, role: 'Admin', avatar: `https://placehold.co/100x100?text=A`, status: 'offline' });
+            }
+        } catch (error) { console.error("Error seeding admin user:", error); }
+    }, []);
+
     useEffect(() => {
         seedAdminUser();
-    }, []);
+    }, [seedAdminUser]);
 
     // --- Real-time Data Fetching ---
     useEffect(() => {
-        if (!currentUser) {
-            setLoading(false);
-            return;
-        };
-
-        const unsubscribers: (() => void)[] = [];
-        let isCancelled = false;
+        if (!currentUser) return;
+        const unsubscribers: (() => void)[] = [
+            listenToCollection('patients', setPatients, { orderBy: 'lastVisit', direction: 'desc' }),
+            listenToCollection('doctors', setDoctors, { orderBy: 'name' }),
+            listenToCollection('appointments', setAppointments, { orderBy: 'date', direction: 'desc' }),
+            listenToCollection('users', (data: User[]) => {
+                setUsers(data.map(u => ({ ...u, status: (u.email === currentUser.email) ? 'online' : u.status || 'offline' })));
+            }, { idField: 'email' }),
+            listenToCollection('dataFields', setDataFields, {}),
+            listenToCollection('messages', setMessages, { orderBy: 'timestamp', direction: 'asc' }),
+            listenToCollection('auditLogs', setAuditLogs, { orderBy: 'timestamp', direction: 'desc' }),
+            listenToCollection('notifications', setNotifications, { orderBy: 'timestamp', direction: 'desc' })
+        ];
         
-        const fetchData = async () => {
-            setLoading(true);
-            try {
-                // One-time fetches
-                const permissionsData = await getPermissions();
-                if (!isCancelled) {
-                    setPermissions(permissionsData);
-                }
+        getPermissions().then(setPermissions);
 
-                // Real-time listeners
-                unsubscribers.push(listenToCollection('patients', setPatients, { orderBy: 'lastVisit', direction: 'desc' }));
-                unsubscribers.push(listenToCollection('doctors', setDoctors, { orderBy: 'name' }));
-                unsubscribers.push(listenToCollection('appointments', setAppointments, { orderBy: 'date', direction: 'desc' }));
-                unsubscribers.push(listenToCollection('users', (data) => {
-                   if (!isCancelled) {
-                        const enrichedUsers = data.map(u => ({
-                            ...u,
-                            status: (u.email === currentUser.email) ? 'online' : u.status || 'offline'
-                        }))
-                        setUsers(enrichedUsers);
-                    }
-                }, { idField: 'email' }));
-                unsubscribers.push(listenToCollection('dataFields', setDataFields, {}));
-                unsubscribers.push(listenToCollection('messages', setMessages, { orderBy: 'timestamp', direction: 'asc' }));
-                unsubscribers.push(listenToCollection('auditLogs', setAuditLogs, { orderBy: 'timestamp', direction: 'desc' }));
-                unsubscribers.push(listenToCollection('notifications', setNotifications, { orderBy: 'timestamp', direction: 'desc' }));
-
-            } catch (error) {
-                console.error("Failed to fetch data from Firestore:", error);
-                if (!isCancelled) {
-                    toast({
-                        title: "فشل تحميل البيانات",
-                        description: "لم نتمكن من تحميل البيانات من قاعدة البيانات. يرجى المحاولة مرة أخرى.",
-                        variant: "destructive"
-                    });
-                }
-            } finally {
-                if (!isCancelled) {
-                    setLoading(false);
-                }
-            }
-        };
-
-        fetchData();
-
-        return () => {
-            isCancelled = true;
-            unsubscribers.forEach(unsubscribe => unsubscribe());
-        };
-    }, [toast, currentUser]);
+        return () => unsubscribers.forEach(unsubscribe => unsubscribe());
+    }, [currentUser]);
 
 
     // --- Memoized Enriched Data ---
@@ -347,317 +249,119 @@ export function AppProvider({ children }: { children: ReactNode }) {
         return appointments.map(appointment => {
             const patient = patients.find(p => p.id === appointment.patientId);
             const doctor = doctors.find(d => d.id === appointment.doctorId);
-            if (!patient || !doctor) return null;
-            return { ...appointment, patient, doctor };
+            return patient && doctor ? { ...appointment, patient, doctor } : null;
         }).filter(Boolean) as (Appointment & { patient: Patient; doctor: Doctor; })[];
     }, [appointments, patients, doctors, loading]);
 
-
-    // --- Patient Actions ---
+    // --- Actions (Patients, Doctors, etc.) ---
     const addPatient: AddPatientFunction = useCallback(async (patient) => {
         try {
-            const newPatientData = {
-                ...patient,
-                avatar: `https://placehold.co/100x100?text=${patient.name.charAt(0)}`,
-                lastVisit: new Date().toISOString().split('T')[0],
-            };
-            await addPatientDoc(newPatientData);
-            toast({
-                title: "تمت الإضافة بنجاح",
-                description: `تمت إضافة المريض ${patient.name} إلى السجلات.`,
-            });
-        } catch(e) {
-             toast({ title: "خطأ", description: "فشل إضافة المريض.", variant: "destructive" });
-        }
+            await addPatientDoc({ ...patient, avatar: `https://placehold.co/100x100?text=${patient.name.charAt(0)}`, lastVisit: new Date().toISOString().split('T')[0] });
+            toast({ title: "تمت الإضافة بنجاح", description: `تمت إضافة المريض ${patient.name}.` });
+        } catch(e) { toast({ title: "خطأ", description: "فشل إضافة المريض.", variant: "destructive" }); }
+    }, [toast]);
+    const updatePatient: UpdatePatientFunction = useCallback(async (p) => {
+        try { await updatePatientDoc(p.id, p); toast({ title: "تم التحديث بنجاح", description: `تم تحديث بيانات المريض ${p.name}.` }); }
+        catch(e) { toast({ title: "خطأ", description: "فشل تحديث المريض.", variant: "destructive" }); }
+    }, [toast]);
+    const deletePatient: DeletePatientFunction = useCallback(async (id) => {
+        try { await deletePatientDoc(id); toast({ title: "تم الحذف بنجاح", variant: "destructive" }); }
+        catch(e) { toast({ title: "خطأ", description: "فشل حذف المريض.", variant: "destructive" }); }
     }, [toast]);
 
-    const updatePatient: UpdatePatientFunction = useCallback(async (updatedPatient) => {
-        try {
-            await updatePatientDoc(updatedPatient.id, updatedPatient);
-            toast({
-                title: "تم التحديث بنجاح",
-                description: `تم تحديث بيانات المريض ${updatedPatient.name}.`,
-            });
-        } catch(e) {
-            toast({ title: "خطأ", description: "فشل تحديث المريض.", variant: "destructive" });
-        }
-    }, [toast]);
-
-    const deletePatient: DeletePatientFunction = useCallback(async (patientId) => {
-        try {
-            const patientName = patients.find(p => p.id === patientId)?.name;
-            await deletePatientDoc(patientId);
-            toast({
-                title: "تم الحذف بنجاح",
-                description: `تم حذف المريض ${patientName}.`,
-                variant: "destructive"
-            });
-        } catch(e) {
-            toast({ title: "خطأ", description: "فشل حذف المريض.", variant: "destructive" });
-        }
-    }, [patients, toast]);
-
-    const openNewPatientDialog = useCallback((options?: PatientDialogOptions) => {
-        setPatientDialogOptions(options || {});
-        setPatientDialogOpen(true);
-    }, []);
-
-    // --- Doctor Actions ---
     const addDoctor: AddDoctorFunction = useCallback(async (doctor) => {
-        try {
-            const newDoctorData = {
-              ...doctor,
-              avatar: `https://placehold.co/100x100?text=${doctor.name.charAt(0)}`,
-            };
-            await addDoctorDoc(newDoctorData);
-            toast({
-              title: "تمت الإضافة بنجاح",
-              description: `تمت إضافة الطبيب ${doctor.name}.`,
-            });
-        } catch(e) {
-            toast({ title: "خطأ", description: "فشل إضافة الطبيب.", variant: "destructive" });
-        }
+        try { await addDoctorDoc({ ...doctor, avatar: `https://placehold.co/100x100?text=${doctor.name.charAt(0)}` }); toast({ title: "تمت الإضافة بنجاح", description: `تمت إضافة الطبيب ${doctor.name}.` }); }
+        catch(e) { toast({ title: "خطأ", description: "فشل إضافة الطبيب.", variant: "destructive" }); }
+    }, [toast]);
+    const updateDoctor: UpdateDoctorFunction = useCallback(async (d) => {
+        try { await updateDoctorDoc(d.id, d); toast({ title: "تم التحديث بنجاح", description: `تم تحديث بيانات الطبيب ${d.name}.` }); }
+        catch(e) { toast({ title: "خطأ", description: "فشل تحديث الطبيب.", variant: "destructive" }); }
+    }, [toast]);
+    const deleteDoctor: DeleteDoctorFunction = useCallback(async (id) => {
+        try { await deleteDoctorDoc(id); toast({ title: "تم الحذف بنجاح", variant: "destructive" }); }
+        catch(e) { toast({ title: "خطأ", description: "فشل حذف الطبيب.", variant: "destructive" }); }
     }, [toast]);
 
-    const updateDoctor: UpdateDoctorFunction = useCallback(async (updatedDoctor) => {
-        try {
-            await updateDoctorDoc(updatedDoctor.id, updatedDoctor);
-            toast({
-              title: "تم التحديث بنجاح",
-              description: `تم تحديث بيانات الطبيب ${updatedDoctor.name}.`,
-            });
-        } catch(e) {
-            toast({ title: "خطأ", description: "فشل تحديث الطبيب.", variant: "destructive" });
-        }
+    const addAppointment: AddAppointmentFunction = useCallback(async (app) => {
+        try { await addAppointmentDoc(app); toast({ title: "تمت جدولة الموعد بنجاح" }); }
+        catch(e) { toast({ title: "خطأ", description: "فشل إضافة الموعد.", variant: "destructive" }); }
+    }, [toast]);
+    const updateAppointment: UpdateAppointmentFunction = useCallback(async (app) => {
+        try { await updateAppointmentDoc(app.id, app); toast({ title: "تم تحديث الموعد بنجاح" }); }
+        catch(e) { toast({ title: "خطأ", description: "فشل تحديث الموعد.", variant: "destructive" }); }
+    }, [toast]);
+    const deleteAppointment: DeleteAppointmentFunction = useCallback(async (id) => {
+        try { await deleteAppointmentDoc(id); toast({ title: "تم حذف الموعد", variant: "destructive" }); }
+        catch(e) { toast({ title: "خطأ", description: "فشل حذف الموعد.", variant: "destructive" }); }
     }, [toast]);
 
-    const deleteDoctor: DeleteDoctorFunction = useCallback(async (doctorId) => {
-        try {
-            const doctorName = doctors.find(d => d.id === doctorId)?.name;
-            await deleteDoctorDoc(doctorId);
-            toast({
-              title: "تم الحذف بنجاح",
-              description: `تم حذف الطبيب ${doctorName}.`,
-              variant: "destructive",
-            });
-        } catch(e) {
-            toast({ title: "خطأ", description: "فشل حذف الطبيب.", variant: "destructive" });
-        }
-    }, [doctors, toast]);
-
-    // --- Appointment Actions ---
-    const addAppointment: AddAppointmentFunction = useCallback(async (appointment) => {
-        try {
-            await addAppointmentDoc(appointment);
-            const patientName = patients.find(p => p.id === appointment.patientId)?.name || "Unknown Patient";
-            const doctorName = doctors.find(d => d.id === appointment.doctorId)?.name || "Unknown Doctor";
-            toast({
-                title: "تمت جدولة الموعد بنجاح",
-                description: `تم حجز موعد لـ ${patientName} مع ${doctorName}.`,
-            });
-        } catch(e) {
-            toast({ title: "خطأ", description: "فشل إضافة الموعد.", variant: "destructive" });
-        }
-    }, [patients, doctors, toast]);
-
-    const updateAppointment: UpdateAppointmentFunction = useCallback(async (updatedAppointment) => {
-        try {
-            await updateAppointmentDoc(updatedAppointment.id, updatedAppointment);
-            toast({
-                title: "تم تحديث الموعد بنجاح",
-            });
-        } catch(e) {
-             toast({ title: "خطأ", description: "فشل تحديث الموعد.", variant: "destructive" });
-        }
-    }, [toast]);
-    
-    const deleteAppointment: DeleteAppointmentFunction = useCallback(async (appointmentId) => {
-        try {
-            await deleteAppointmentDoc(appointmentId);
-            toast({
-                title: "تم حذف الموعد",
-                variant: "destructive"
-            });
-        } catch(e) {
-            toast({ title: "خطأ", description: "فشل حذف الموعد.", variant: "destructive" });
-        }
-    }, [toast]);
-
-    const openNewAppointmentDialog = useCallback((options?: AppointmentDialogOptions) => {
-        setAppointmentDialogOptions(options || {});
-        setAppointmentDialogOpen(true);
-    }, []);
-
-    // User Actions
     const addUser: AddUserFunction = useCallback(async (user) => {
-        try {
-            const newUserData: User = {
-                ...user,
-                avatar: `https://placehold.co/100x100?text=${user.name.charAt(0)}`,
-                status: 'offline',
-            };
-            await addUserDoc(newUserData);
-            toast({
-                title: "تمت الإضافة بنجاح",
-                description: `تمت إضافة المستخدم ${user.name}.`,
-            });
-        } catch(e) {
-            toast({ title: "خطأ", description: "فشل إضافة المستخدم.", variant: "destructive" });
-        }
+        try { await addUserDoc({ ...user, avatar: `https://placehold.co/100x100?text=${user.name.charAt(0)}`, status: 'offline' }); toast({ title: "تمت الإضافة بنجاح" }); }
+        catch(e) { toast({ title: "خطأ", description: "فشل إضافة المستخدم.", variant: "destructive" }); }
     }, [toast]);
-
-    const updateUser: UpdateUserFunction = useCallback(async (updatedUser) => {
-       try {
-            await updateUserDoc(updatedUser.email, updatedUser);
-            toast({
-                title: "تم التحديث بنجاح",
-                description: `تم تحديث بيانات المستخدم ${updatedUser.name}.`,
-            });
-       } catch (e) {
-            toast({ title: "خطأ", description: "فشل تحديث المستخدم.", variant: "destructive" });
-       }
+    const updateUser: UpdateUserFunction = useCallback(async (u) => {
+        try { await updateUserDoc(u.email, u); toast({ title: "تم التحديث بنجاح" }); }
+        catch (e) { toast({ title: "خطأ", description: "فشل تحديث المستخدم.", variant: "destructive" }); }
     }, [toast]);
-
     const deleteUser: DeleteUserFunction = useCallback(async (email) => {
-        try {
-            const userName = users.find(u => u.email === email)?.name;
-            await deleteUserDoc(email);
-            toast({
-                title: "تم الحذف بنجاح",
-                description: `تم حذف المستخدم ${userName}.`,
-                variant: "destructive"
-            });
-        } catch (e) {
-            toast({ title: "خطأ", description: "فشل حذف المستخدم.", variant: "destructive" });
-        }
-    }, [users, toast]);
+        try { await deleteUserDoc(email); toast({ title: "تم الحذف بنجاح", variant: "destructive" }); }
+        catch (e) { toast({ title: "خطأ", description: "فشل حذف المستخدم.", variant: "destructive" }); }
+    }, [toast]);
 
-    // Permission Actions
     const updatePermission: UpdatePermissionFunction = useCallback(async (role, section, action, value) => {
-        const newPermissions = {
-            ...permissions,
-            [role]: {
-                ...permissions[role],
-                [section]: {
-                ...permissions[role][section],
-                [action]: value,
-                },
-            },
-        };
-        setPermissions(newPermissions);
-        try {
-            await updatePermissions({ [role]: newPermissions[role] });
-        } catch(e) {
-            toast({ title: "خطأ", description: "فشل تحديث الصلاحيات.", variant: "destructive" });
-            // Revert state on failure
-            setPermissions(permissions);
-        }
+        const newPerms = { ...permissions, [role]: { ...permissions[role], [section]: { ...permissions[role][section], [action]: value } } };
+        setPermissions(newPerms);
+        try { await updatePermissions({ [role]: newPerms[role] }); }
+        catch(e) { setPermissions(permissions); toast({ title: "خطأ", description: "فشل تحديث الصلاحيات.", variant: "destructive" }); }
     }, [permissions, toast]);
 
-    // Data Field Actions
     const addDataField: AddDataFieldFunction = useCallback(async (field) => {
-        try {
-            const newFieldData = {
-                ...field,
-                type: 'مخصص' as const,
-            };
-            await addDataFieldDoc(newFieldData);
-            toast({
-                title: "تمت إضافة الحقل بنجاح",
-                description: `تمت إضافة حقل "${field.label}".`,
-            });
-        } catch(e) {
-            toast({ title: "خطأ", description: "فشل إضافة الحقل.", variant: "destructive" });
-        }
+        try { await addDataFieldDoc({ ...field, type: 'مخصص' as const }); toast({ title: "تمت إضافة الحقل بنجاح" }); }
+        catch(e) { toast({ title: "خطأ", description: "فشل إضافة الحقل.", variant: "destructive" }); }
     }, [toast]);
-
-    const updateDataField: UpdateDataFieldFunction = useCallback(async (updatedField) => {
-        try {
-            await updateDataFieldDoc(updatedField.id, updatedField);
-            toast({
-                title: "تم تحديث الحقل بنجاح",
-                description: `تم تحديث حقل "${updatedField.label}".`,
-            });
-        } catch(e) {
-            toast({ title: "خطأ", description: "فشل تحديث الحقل.", variant: "destructive" });
-        }
+    const updateDataField: UpdateDataFieldFunction = useCallback(async (field) => {
+        try { await updateDataFieldDoc(field.id, field); toast({ title: "تم تحديث الحقل بنجاح" }); }
+        catch(e) { toast({ title: "خطأ", description: "فشل تحديث الحقل.", variant: "destructive" }); }
     }, [toast]);
-
-    const deleteDataField: DeleteDataFieldFunction = useCallback(async (fieldId) => {
-        try {
-            const fieldLabel = dataFields.find(f => f.id === fieldId)?.label;
-            await deleteDataFieldDoc(fieldId);
-            toast({
-                title: "تم حذف الحقل بنجاح",
-                description: `تم حذف حقل "${fieldLabel}".`,
-                variant: "destructive"
-            });
-        } catch(e) {
-             toast({ title: "خطأ", description: "فشل حذف الحقل.", variant: "destructive" });
-        }
-    }, [dataFields, toast]);
+    const deleteDataField: DeleteDataFieldFunction = useCallback(async (id) => {
+        try { await deleteDataFieldDoc(id); toast({ title: "تم حذف الحقل بنجاح", variant: "destructive" }); }
+        catch(e) { toast({ title: "خطأ", description: "فشل حذف الحقل.", variant: "destructive" }); }
+    }, [toast]);
     
-    // Message Actions
     const addMessage: AddMessageFunction = useCallback(async (message) => {
-        try {
-            const newMessageData = {
-                ...message,
-                timestamp: new Date().toISOString(),
-            };
-            await addMessageDoc(newMessageData);
-        } catch (e) {
-            toast({ title: "خطأ", description: "فشل إرسال الرسالة.", variant: "destructive" });
-        }
+        try { await addMessageDoc(message); }
+        catch (e) { toast({ title: "خطأ", description: "فشل إرسال الرسالة.", variant: "destructive" }); }
     }, [toast]);
 
+    // --- Dialog Triggers ---
+    const openNewPatientDialog = useCallback((options?: PatientDialogOptions) => { setPatientDialogOptions(options || {}); setPatientDialogOpen(true); }, []);
+    const openNewAppointmentDialog = useCallback((options?: AppointmentDialogOptions) => { setAppointmentDialogOptions(options || {}); setAppointmentDialogOpen(true); }, []);
 
+    // --- Context Value ---
     const value: AppContextType = {
-        loading,
-        patients,
-        doctors,
-        appointments,
-        users,
-        permissions,
-        dataFields,
-        messages,
-        auditLogs,
-        notifications,
+        loading, currentUser, login, logout,
+        patients, doctors, appointments, users, permissions, dataFields, messages, auditLogs, notifications,
         enrichedAppointments,
-        openNewPatientDialog,
-        addPatient,
-        updatePatient,
-        deletePatient,
-        addDoctor,
-        updateDoctor,
-        deleteDoctor,
-        openNewAppointmentDialog,
-        addAppointment,
-        updateAppointment,
-        deleteAppointment,
-        addUser,
-        updateUser,
-        deleteUser,
-        updatePermission,
-        addDataField,
-        updateDataField,
-        deleteDataField,
-        addMessage,
+        openNewPatientDialog, addPatient, updatePatient, deletePatient,
+        addDoctor, updateDoctor, deleteDoctor,
+        openNewAppointmentDialog, addAppointment, updateAppointment, deleteAppointment,
+        addUser, updateUser, deleteUser, updatePermission,
+        addDataField, updateDataField, deleteDataField, addMessage,
     };
 
+    if (loading) {
+        return (
+            <div className="flex min-h-screen items-center justify-center">
+                <Skeleton className="h-screen w-screen" />
+            </div>
+        );
+    }
+    
     return (
         <AppContext.Provider value={value}>
             {children}
-            <NewAppointmentDialog
-                open={isAppointmentDialogOpen}
-                onOpenChange={setAppointmentDialogOpen}
-                initialPatientId={appointmentDialogOptions?.initialPatientId}
-            />
-            <AddPatientDialog
-                open={isPatientDialogOpen}
-                onOpenChange={setPatientDialogOpen}
-                onPatientAdded={addPatient}
-                initialName={patientDialogOptions?.initialName}
-            />
+            <NewAppointmentDialog open={isAppointmentDialogOpen} onOpenChange={setAppointmentDialogOpen} initialPatientId={appointmentDialogOptions?.initialPatientId} />
+            <AddPatientDialog open={isPatientDialogOpen} onOpenChange={setPatientDialogOpen} onPatientAdded={addPatient} initialName={patientDialogOptions?.initialName} />
         </AppContext.Provider>
     );
 }

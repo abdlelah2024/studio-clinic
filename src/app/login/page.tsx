@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { useAuth } from '@/context/auth-context'
+import { useAppContext } from '@/context/app-context'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { AlertCircle, HeartPulse, Loader2 } from 'lucide-react'
 
@@ -15,14 +15,14 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
-  const { user, login } = useAuth()
+  const { currentUser, login } = useAppContext()
   const router = useRouter()
 
   useEffect(() => {
-    if (user) {
+    if (currentUser) {
       router.push('/dashboard')
     }
-  }, [user, router])
+  }, [currentUser, router])
 
   const handleLogin = async (e: FormEvent) => {
     e.preventDefault()

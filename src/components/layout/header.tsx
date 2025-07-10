@@ -24,14 +24,12 @@ import {
 } from "@/components/ui/command"
 import { useAppContext } from "@/context/app-context"
 import { Badge } from "../ui/badge"
-import { useAuth } from "@/context/auth-context"
 
 export function AppHeader() {
   const [searchQuery, setSearchQuery] = useState("")
   const [isSearchFocused, setIsSearchFocused] = useState(false)
   const searchRef = useRef<HTMLDivElement>(null)
-  const { patients, doctors, enrichedAppointments, openNewAppointmentDialog, openNewPatientDialog, notifications } = useAppContext()
-  const { currentUser, logout } = useAuth();
+  const { patients, doctors, enrichedAppointments, openNewAppointmentDialog, openNewPatientDialog, notifications, currentUser, logout } = useAppContext()
   const router = useRouter()
 
   const searchResults = useMemo(() => {

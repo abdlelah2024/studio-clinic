@@ -3,23 +3,22 @@
 import { AppSidebar } from "@/components/layout/sidebar"
 import { AppHeader } from "@/components/layout/header"
 import { SidebarProvider } from "@/components/ui/sidebar"
-import { AppProvider } from "@/context/app-context"
-import { useAuth } from "@/context/auth-context"
+import { useAppContext } from "@/context/app-context"
 import { useRouter } from "next/navigation"
 import { useEffect } from "react"
 import { Skeleton } from "@/components/ui/skeleton"
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
-  const { user, loading } = useAuth();
+  const { currentUser, loading } = useAppContext();
   const router = useRouter();
 
   useEffect(() => {
-    if (!loading && !user) {
+    if (!loading && !currentUser) {
       router.push('/login');
     }
-  }, [user, loading, router]);
+  }, [currentUser, loading, router]);
 
-  if (loading || !user) {
+  if (loading || !currentUser) {
     return (
       <div className="flex min-h-screen w-full flex-col bg-background">
         <div className="flex flex-col sm:pl-[5.4rem]">
@@ -43,16 +42,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   }
   
   return (
-    <AppProvider>
-        <SidebarProvider>
-          <div className="flex min-h-screen w-full flex-col bg-background">
-            <AppSidebar />
-            <div className="flex flex-col sm:pl-[5.4rem]">
-              <AppHeader />
-              <main className="flex-1 p-4 sm:px-6 sm:py-4 md:p-6">{children}</main>
-            </div>
+      <SidebarProvider>
+        <div className="flex min-h-screen w-full flex-col bg-background">
+          <AppSidebar />
+          <div className="flex flex-col sm:pl-[5.4rem]">
+            <AppHeader />
+            <main className="flex-1 p-4 sm:px-6 sm:py-4 md:p-6">{children}</main>
           </div>
-        </SidebarProvider>
-    </AppProvider>
+        </div>
+      </SidebarProvider>
   )
 }
