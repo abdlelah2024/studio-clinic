@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuItem, DropdownMenuCheckboxItem } from "@/components/ui/dropdown-menu"
-import type { Appointment, Doctor, Patient } from "@/lib/types"
+import type { Appointment, Doctor, Patient, AppointmentStatus } from "@/lib/types"
 import { Badge } from "@/components/ui/badge"
 import { MoreHorizontal, PlusCircle, ListFilter, Clock, XCircle, CheckCircle2, Search, ArrowUpDown, Trash2 } from "lucide-react"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
@@ -20,7 +20,6 @@ type EnrichedAppointment = Appointment & {
   doctor: Doctor;
 };
 
-type AppointmentStatus = 'Scheduled' | 'Completed' | 'Canceled' | 'Waiting';
 type SortKey = 'date-asc' | 'date-desc';
 
 export default function AppointmentsPage() {
@@ -36,6 +35,10 @@ export default function AppointmentsPage() {
     if(appointmentToUpdate) {
         updateAppointment({ ...appointmentToUpdate, date: newDate, startTime: newStartTime, endTime: newEndTime });
     }
+  };
+
+  const handleUpdateStatus = (appointment: EnrichedAppointment, status: AppointmentStatus) => {
+    updateAppointment({ ...appointment, status });
   };
 
   const handleCancelAppointment = (appointmentId: string) => {
@@ -74,6 +77,8 @@ export default function AppointmentsPage() {
         }
     });
   }, [enrichedAppointments, filter, searchQuery, sortKey]);
+
+  const appointmentStatuses: AppointmentStatus[] = ['Scheduled', 'Waiting', 'Completed', 'Canceled'];
 
   return (
     <>
@@ -201,13 +206,27 @@ export default function AppointmentsPage() {
                   <TableCell>{appointment.date}</TableCell>
                   <TableCell>{appointment.startTime}</TableCell>
                   <TableCell>
-                    <Badge variant={appointment.status === 'Completed' ? 'default' : appointment.status === 'Canceled' ? 'destructive' : 'secondary'}
-                      className={cn({
-                        "bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300 border-blue-300 hover:bg-blue-200": appointment.status === 'Waiting',
-                      })}
-                    >
-                      {getStatusTranslation(appointment.status)}
-                    </Badge>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                             <Badge
+                                variant={appointment.status === 'Completed' ? 'default' : appointment.status === 'Canceled' ? 'destructive' : 'secondary'}
+                                className={cn("cursor-pointer", {
+                                    "bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300 border-blue-300 hover:bg-blue-200": appointment.status === 'Waiting',
+                                })}
+                                >
+                                {getStatusTranslation(appointment.status)}
+                            </Badge>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent>
+                            <DropdownMenuLabel>تغيير الحالة</DropdownMenuLabel>
+                            <DropdownMenuSeparator />
+                            {appointmentStatuses.map(status => (
+                                <DropdownMenuItem key={status} onSelect={() => handleUpdateStatus(appointment, status)}>
+                                    {getStatusTranslation(status)}
+                                </DropdownMenuItem>
+                            ))}
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                   </TableCell>
                   <TableCell className="text-right">
                     <DropdownMenu>
