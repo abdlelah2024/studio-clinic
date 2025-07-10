@@ -56,11 +56,11 @@ export default function DashboardPage() {
     if (!hydrated) {
         return { appointments: [], upcomingAppointments: [] };
     }
-    const now = startOfDay(new Date());
+    const now = new Date();
     let startDate: Date | null = null;
     
     if (timeRange === 'today') {
-      startDate = now;
+      startDate = startOfDay(now);
     } else if (timeRange === '7d') {
       startDate = addDays(now, -7);
     } else if (timeRange === '30d') {
@@ -68,16 +68,17 @@ export default function DashboardPage() {
     }
 
     const appointments = enrichedAppointments.filter(appointment => {
-      const appointmentDate = startOfDay(new Date(appointment.date));
+      const appointmentDate = new Date(appointment.date);
       if (timeRange === 'today') {
         return isToday(appointmentDate);
       }
-      if (!startDate) return true;
-      return appointmentDate >= startDate && appointmentDate <= now;
+      if (!startDate) return true; // 'all' time range
+      // For range filters, compare date part only
+      return startOfDay(appointmentDate) >= startOfDay(startDate) && startOfDay(appointmentDate) <= startOfDay(now);
     });
 
     const upcomingAppointments = enrichedAppointments
-      .filter(a => (a.status === 'Scheduled' || a.status === 'Waiting') && new Date(a.date) >= now)
+      .filter(a => (a.status === 'Scheduled' || a.status === 'Waiting') && new Date(a.date) >= startOfDay(now))
       .sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime())
       .slice(0, 5);
 
