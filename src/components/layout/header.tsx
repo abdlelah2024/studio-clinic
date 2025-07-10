@@ -23,6 +23,7 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
+  CommandSeparator,
 } from "@/components/ui/command"
 import { useAppContext } from "@/context/app-context"
 import { useRouter } from "next/navigation"
@@ -80,17 +81,17 @@ export function AppHeader() {
     setIsSearchFocused(false)
     setSearchQuery("")
   }
+  
+  const handleQuickAppointment = (patientName: string) => {
+      openNewAppointmentDialog({onAppointmentAdded: () => {}, initialPatientName: patientName});
+      resetSearch();
+  }
 
   const handlePatientSelect = (patientId: string) => {
     router.push(`/patients/${patientId}`);
     resetSearch();
   }
 
-  const handleNewAppointment = () => {
-    openNewAppointmentDialog({onAppointmentAdded: () => {}});
-    resetSearch();
-  }
-  
   const handleNewPatient = () => {
     openNewPatientDialog(()=>{});
     resetSearch();
@@ -124,41 +125,54 @@ export function AppHeader() {
                 {searchQuery && filteredPatients.length > 0 && (
                   <CommandGroup heading="المرضى">
                     {filteredPatients.map((patient) => (
-                      <CommandItem
-                        key={patient.id}
-                        onSelect={() => handlePatientSelect(patient.id)}
-                      >
-                         <Avatar className="mr-2 h-6 w-6">
-                            <AvatarImage src={patient.avatar} data-ai-hint="person face" />
-                            <AvatarFallback>{patient.name.charAt(0)}</AvatarFallback>
-                        </Avatar>
-                        <span>{patient.name}</span>
-                         <span className="text-xs text-muted-foreground ml-auto">{patient.phone}</span>
-                      </CommandItem>
+                      <div key={patient.id} className="p-2">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <Avatar className="h-8 w-8">
+                                    <AvatarImage src={patient.avatar} data-ai-hint="person face" />
+                                    <AvatarFallback>{patient.name.charAt(0)}</AvatarFallback>
+                                </Avatar>
+                                <div>
+                                    <p className="font-medium">{patient.name}</p>
+                                    <p className="text-xs text-muted-foreground">{patient.phone}</p>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                 <Button variant="secondary" size="sm" onClick={() => handleQuickAppointment(patient.name)}>
+                                    موعد سريع
+                                </Button>
+                                <Button variant="outline" size="sm" onClick={() => handlePatientSelect(patient.id)}>
+                                    عرض السجل
+                                </Button>
+                            </div>
+                        </div>
+                      </div>
                     ))}
                   </CommandGroup>
                 )}
                  {searchQuery && filteredPatients.length === 0 && (
                     <CommandEmpty>
-                        <div className="p-4 text-center text-sm">
-                            <p>لم يتم العثور على مريض بهذا الاسم/الرقم.</p>
-                             <Button variant="link" className="mt-2" onMouseDown={(e) => e.preventDefault()} onClick={handleNewPatient}>
+                        <CommandItem onSelect={handleNewPatient} className="flex-col items-center justify-center py-4">
+                             <p>لم يتم العثور على مريض. هل تريد إضافة واحد جديد؟</p>
+                             <div className="flex items-center text-primary mt-2">
                                 <UserPlus className="mr-2 h-4 w-4" /> إضافة مريض جديد
-                            </Button>
-                        </div>
+                            </div>
+                        </CommandItem>
                     </CommandEmpty>
                  )}
 
-                <CommandGroup heading="إجراءات سريعة">
-                  <CommandItem onSelect={handleNewAppointment}>
-                    <Calendar className="mr-2 h-4 w-4" />
-                    <span>حجز موعد جديد</span>
-                  </CommandItem>
-                   <CommandItem onSelect={handleViewAllAppointments}>
-                    <Calendar className="mr-2 h-4 w-4" />
-                    <span>عرض كل المواعيد</span>
-                  </CommandItem>
-                </CommandGroup>
+                {!searchQuery && (
+                    <CommandGroup heading="إجراءات سريعة">
+                        <CommandItem onSelect={handleNewAppointment}>
+                            <Calendar className="mr-2 h-4 w-4" />
+                            <span>حجز موعد جديد</span>
+                        </CommandItem>
+                        <CommandItem onSelect={handleNewPatient}>
+                            <UserPlus className="mr-2 h-4 w-4" />
+                            <span>إضافة مريض جديد</span>
+                        </CommandItem>
+                    </CommandGroup>
+                )}
               </CommandList>
             </Command>
           )}
