@@ -1,11 +1,10 @@
 
 "use client"
-import React, { useState } from "react"
+import React from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { mockUser, initialPermissions, otherUsers } from "@/lib/data"
 import type { User, UserRole, Permissions } from "@/lib/types"
 import { MoreHorizontal, PlusCircle, Edit, Trash2, ShieldCheck } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -13,61 +12,22 @@ import { Badge } from "@/components/ui/badge"
 import { AddUserDialog } from "@/components/users/add-user-dialog"
 import { EditUserDialog } from "@/components/users/edit-user-dialog"
 import { DeleteUserDialog } from "@/components/users/delete-user-dialog"
-import { useToast } from "@/hooks/use-toast"
 import { Separator } from "@/components/ui/separator"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
+import { useAppContext } from "@/context/app-context"
 
-const initialUsers: User[] = [mockUser, ...otherUsers];
 
 export default function UsersPage() {
-  const [users, setUsers] = useState<User[]>(initialUsers);
-  const [permissions, setPermissions] = useState<Record<UserRole, Permissions>>(initialPermissions);
-  const { toast } = useToast();
+  const {
+    users,
+    permissions,
+    addUser,
+    updateUser,
+    deleteUser,
+    updatePermission,
+  } = useAppContext();
 
-  const handleAddUser = (user: Omit<User, 'avatar' | 'status'>) => {
-    const newUser: User = {
-      ...user,
-      avatar: `https://placehold.co/100x100?text=${user.name.charAt(0)}`,
-      status: 'offline',
-    };
-    setUsers(prev => [newUser, ...prev]);
-    toast({
-      title: "تمت الإضافة بنجاح",
-      description: `تمت إضافة المستخدم ${user.name}.`,
-    });
-  };
-
-  const handleUpdateUser = (updatedUser: User) => {
-    setUsers(prev => prev.map(u => u.email === updatedUser.email ? updatedUser : u));
-     toast({
-      title: "تم التحديث بنجاح",
-      description: `تم تحديث بيانات المستخدم ${updatedUser.name}.`,
-    });
-  };
-
-  const handleDeleteUser = (email: string) => {
-    const userName = users.find(u => u.email === email)?.name;
-    setUsers(prev => prev.filter(u => u.email !== email));
-     toast({
-      title: "تم الحذف بنجاح",
-      description: `تم حذف المستخدم ${userName}.`,
-      variant: "destructive"
-    });
-  };
-
-  const handlePermissionChange = (role: UserRole, section: keyof Permissions, action: keyof Permissions[keyof Permissions], value: boolean) => {
-    setPermissions(prev => ({
-      ...prev,
-      [role]: {
-        ...prev[role],
-        [section]: {
-          ...prev[role][section],
-          [action]: value,
-        },
-      },
-    }));
-  };
   
   const permissionSections: { key: keyof Permissions, label: string }[] = [
       { key: 'patients', label: 'المرضى' },
@@ -91,7 +51,7 @@ export default function UsersPage() {
               <CardTitle>إدارة المستخدمين</CardTitle>
               <CardDescription>إدارة حسابات المستخدمين وأدوارهم الأساسية.</CardDescription>
             </div>
-            <AddUserDialog onUserAdded={handleAddUser}>
+            <AddUserDialog onUserAdded={addUser}>
               <Button size="sm" className="gap-1">
                 <PlusCircle className="h-3.5 w-3.5" />
                 <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
@@ -141,14 +101,14 @@ export default function UsersPage() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuLabel>الإجراءات</DropdownMenuLabel>
-                        <EditUserDialog user={user} onUserUpdated={handleUpdateUser}>
+                        <EditUserDialog user={user} onUserUpdated={updateUser}>
                           <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
                               <Edit className="mr-2 h-4 w-4" />
                               تعديل
                           </DropdownMenuItem>
                         </EditUserDialog>
                         <DropdownMenuSeparator />
-                        <DeleteUserDialog user={user} onDelete={() => handleDeleteUser(user.email)}>
+                        <DeleteUserDialog user={user} onDelete={() => deleteUser(user.email)}>
                           <DropdownMenuItem className="text-destructive" onSelect={(e) => e.preventDefault()} disabled={user.role === 'Admin'}>
                               <Trash2 className="mr-2 h-4 w-4" />
                               حذف
@@ -191,7 +151,7 @@ export default function UsersPage() {
                                 <Checkbox 
                                     id={`${role}-${section.key}-${action.key}`} 
                                     checked={permissions[role][section.key][action.key as keyof typeof permissions.Admin.patients]}
-                                    onCheckedChange={(checked) => handlePermissionChange(role, section.key, action.key as keyof typeof permissions.Admin.patients, !!checked)}
+                                    onCheckedChange={(checked) => updatePermission(role, section.key, action.key as keyof typeof permissions.Admin.patients, !!checked)}
                                     disabled={role === 'Admin'}
                                 />
                                 <Label htmlFor={`${role}-${section.key}-${action.key}`} className="text-sm font-normal">{action.label}</Label>
@@ -202,7 +162,7 @@ export default function UsersPage() {
                                 <Checkbox 
                                     id={`${role}-${section.key}-cancel`} 
                                     checked={permissions[role].appointments.cancel}
-                                    onCheckedChange={(checked) => handlePermissionChange(role, 'appointments', 'cancel', !!checked)}
+                                    onCheckedChange={(checked) => updatePermission(role, 'appointments', 'cancel', !!checked)}
                                     disabled={role === 'Admin'}
                                 />
                                 <Label htmlFor={`${role}-${section.key}-cancel`} className="text-sm font-normal">إلغاء</Label>

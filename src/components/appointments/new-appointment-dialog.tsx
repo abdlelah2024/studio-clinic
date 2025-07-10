@@ -20,17 +20,14 @@ import { useAppContext } from "@/context/app-context"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select"
 import { useToast } from "@/hooks/use-toast"
 
-type AddAppointmentFunction = (appointment: Omit<Appointment, 'id' >) => void;
-
 interface NewAppointmentDialogProps {
-  onAppointmentAdded: AddAppointmentFunction;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   initialPatientId?: string;
 }
 
-export function NewAppointmentDialog({ onAppointmentAdded, open, onOpenChange, initialPatientId }: NewAppointmentDialogProps) {
-  const { patients, doctors } = useAppContext();
+export function NewAppointmentDialog({ open, onOpenChange, initialPatientId }: NewAppointmentDialogProps) {
+  const { patients, doctors, addAppointment } = useAppContext();
   const { toast } = useToast();
   
   const [patientId, setPatientId] = useState("");
@@ -61,6 +58,13 @@ export function NewAppointmentDialog({ onAppointmentAdded, open, onOpenChange, i
     }
   }, [open, resetForm]);
 
+  useEffect(() => {
+    if (initialPatientId) {
+      setPatientId(initialPatientId);
+    }
+  }, [initialPatientId]);
+
+
   const handleSubmit = () => {
     if (!patientId || !doctorId || !date || !startTime || !endTime || !reason) {
        toast({
@@ -70,7 +74,7 @@ export function NewAppointmentDialog({ onAppointmentAdded, open, onOpenChange, i
       });
       return;
     }
-    onAppointmentAdded({ patientId, doctorId, date, startTime, endTime, reason, freeReturn, status });
+    addAppointment({ patientId, doctorId, date, startTime, endTime, reason, freeReturn, status });
     onOpenChange(false);
   };
   

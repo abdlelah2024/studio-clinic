@@ -1,4 +1,4 @@
-import type { User, Patient, Doctor, Appointment, UserRole, Permissions, Message, AuditLog } from './types';
+import type { User, Patient, Doctor, Appointment, UserRole, Permissions, Message, AuditLog, DataField } from './types';
 
 export const mockUser: User = {
   name: 'المسؤول',
@@ -116,4 +116,13 @@ export const mockAuditLogs: AuditLog[] = [
     details: 'إنشاء مسودة تقرير للمريض: خالد عبد الله',
     timestamp: '2025-07-08T10:30:00.000Z',
   },
+];
+
+
+export const initialDataFields: DataField[] = [
+  { id: 'system-name', label: 'الاسم', type: 'نظام', required: true },
+  { id: 'system-phone', label: 'الهاتف', type: 'نظام', required: true },
+  { id: 'system-age', label: 'العمر', type: 'نظام', required: true },
+  { id: 'custom-1', label: 'فصيلة الدم', type: 'مخصص', required: false },
+  { id: 'custom-2', label: 'جهة التأمين', type: 'مخصص', required: false },
 ];

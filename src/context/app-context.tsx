@@ -3,8 +3,8 @@
 import React, { createContext, useContext, useState, useCallback, ReactNode, useMemo } from "react"
 import { NewAppointmentDialog } from "@/components/appointments/new-appointment-dialog"
 import { AddPatientDialog } from "@/components/patients/add-patient-dialog"
-import type { Appointment, Patient, Doctor } from "@/lib/types"
-import { mockPatients, mockDoctors, mockAppointments } from "@/lib/data"
+import type { Appointment, Patient, Doctor, User, UserRole, Permissions, DataField } from "@/lib/types"
+import { mockPatients, mockDoctors, mockAppointments, allUsers, initialPermissions, initialDataFields } from "@/lib/data"
 import { useToast } from "@/hooks/use-toast"
 
 type AddAppointmentFunction = (appointment: Omit<Appointment, 'id'>) => void;
@@ -19,6 +19,17 @@ type AddDoctorFunction = (doctor: Omit<Doctor, 'id' | 'avatar'>) => void;
 type UpdateDoctorFunction = (doctor: Doctor) => void;
 type DeleteDoctorFunction = (doctorId: string) => void;
 
+type AddUserFunction = (user: Omit<User, 'avatar' | 'status'>) => void;
+type UpdateUserFunction = (user: User) => void;
+type DeleteUserFunction = (email: string) => void;
+
+type UpdatePermissionFunction = (role: UserRole, section: keyof Permissions['Admin'], action: keyof Permissions['Admin']['patients'], value: boolean) => void;
+
+
+type AddDataFieldFunction = (field: { label: string, required: boolean }) => void;
+type UpdateDataFieldFunction = (field: DataField) => void;
+type DeleteDataFieldFunction = (fieldId: string) => void;
+
 interface AppointmentDialogOptions {
     initialPatientId?: string;
 }
@@ -28,6 +39,9 @@ interface AppContextType {
   patients: Patient[];
   doctors: Doctor[];
   appointments: Appointment[];
+  users: User[];
+  permissions: Record<UserRole, Permissions>;
+  dataFields: DataField[];
   
   // Enriched Data
   enrichedAppointments: (Appointment & { patient: Patient; doctor: Doctor; })[];
@@ -48,6 +62,19 @@ interface AppContextType {
   addAppointment: AddAppointmentFunction;
   updateAppointment: UpdateAppointmentFunction;
   deleteAppointment: DeleteAppointmentFunction;
+
+  // User Actions
+  addUser: AddUserFunction;
+  updateUser: UpdateUserFunction;
+  deleteUser: DeleteUserFunction;
+
+  // Permission Actions
+  updatePermission: UpdatePermissionFunction;
+  
+  // Data Field Actions
+  addDataField: AddDataFieldFunction;
+  updateDataField: UpdateDataFieldFunction;
+  deleteDataField: DeleteDataFieldFunction;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -57,6 +84,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const [patients, setPatients] = useState<Patient[]>(mockPatients);
     const [doctors, setDoctors] = useState<Doctor[]>(mockDoctors);
     const [appointments, setAppointments] = useState<Appointment[]>(mockAppointments);
+    const [users, setUsers] = useState<User[]>(allUsers);
+    const [permissions, setPermissions] = useState<Record<UserRole, Permissions>>(initialPermissions);
+    const [dataFields, setDataFields] = useState<DataField[]>(initialDataFields);
 
     // Dialog States
     const [isAppointmentDialogOpen, setAppointmentDialogOpen] = useState(false);
@@ -179,10 +209,92 @@ export function AppProvider({ children }: { children: ReactNode }) {
         setAppointmentDialogOpen(true);
     }, []);
 
+    // User Actions
+    const addUser: AddUserFunction = useCallback((user) => {
+        const newUser: User = {
+        ...user,
+        avatar: `https://placehold.co/100x100?text=${user.name.charAt(0)}`,
+        status: 'offline',
+        };
+        setUsers(prev => [newUser, ...prev]);
+        toast({
+        title: "تمت الإضافة بنجاح",
+        description: `تمت إضافة المستخدم ${user.name}.`,
+        });
+    }, [toast]);
+
+    const updateUser: UpdateUserFunction = useCallback((updatedUser) => {
+        setUsers(prev => prev.map(u => u.email === updatedUser.email ? updatedUser : u));
+        toast({
+        title: "تم التحديث بنجاح",
+        description: `تم تحديث بيانات المستخدم ${updatedUser.name}.`,
+        });
+    }, [toast]);
+
+    const deleteUser: DeleteUserFunction = useCallback((email) => {
+        const userName = users.find(u => u.email === email)?.name;
+        setUsers(prev => prev.filter(u => u.email !== email));
+        toast({
+        title: "تم الحذف بنجاح",
+        description: `تم حذف المستخدم ${userName}.`,
+        variant: "destructive"
+        });
+    }, [users, toast]);
+
+    // Permission Actions
+    const updatePermission: UpdatePermissionFunction = useCallback((role, section, action, value) => {
+        setPermissions(prev => ({
+        ...prev,
+        [role]: {
+            ...prev[role],
+            [section]: {
+            ...prev[role][section],
+            [action]: value,
+            },
+        },
+        }));
+    }, []);
+
+    // Data Field Actions
+    const addDataField: AddDataFieldFunction = useCallback((field) => {
+        const newField: DataField = {
+        ...field,
+        id: `custom-${Date.now()}`,
+        type: 'مخصص',
+        };
+        setDataFields(prev => [...prev, newField]);
+        toast({
+        title: "تمت إضافة الحقل بنجاح",
+        description: `تمت إضافة حقل "${field.label}".`,
+        });
+    }, [toast]);
+
+    const updateDataField: UpdateDataFieldFunction = useCallback((updatedField) => {
+        setDataFields(prev => prev.map(f => f.id === updatedField.id ? updatedField : f));
+        toast({
+        title: "تم تحديث الحقل بنجاح",
+        description: `تم تحديث حقل "${updatedField.label}".`,
+        });
+    }, [toast]);
+
+    const deleteDataField: DeleteDataFieldFunction = useCallback((fieldId) => {
+        const fieldLabel = dataFields.find(f => f.id === fieldId)?.label;
+        setDataFields(prev => prev.filter(f => f.id !== fieldId));
+        toast({
+        title: "تم حذف الحقل بنجاح",
+        description: `تم حذف حقل "${fieldLabel}".`,
+        variant: "destructive"
+        });
+    }, [dataFields, toast]);
+
+
     const value: AppContextType = {
         patients,
         doctors,
         appointments,
+        users,
+        permissions,
+        dataFields,
         enrichedAppointments,
         openNewPatientDialog,
         addPatient,
@@ -195,6 +307,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
         addAppointment,
         updateAppointment,
         deleteAppointment,
+        addUser,
+        updateUser,
+        deleteUser,
+        updatePermission,
+        addDataField,
+        updateDataField,
+        deleteDataField,
     };
 
     return (
@@ -203,7 +322,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
             <NewAppointmentDialog
                 open={isAppointmentDialogOpen}
                 onOpenChange={setAppointmentDialogOpen}
-                onAppointmentAdded={addAppointment}
                 initialPatientId={appointmentDialogOptions?.initialPatientId}
             />
             <AddPatientDialog

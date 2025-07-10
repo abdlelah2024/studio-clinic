@@ -1,3 +1,4 @@
+
 export type Patient = {
   id: string;
   name: string;
@@ -16,6 +17,8 @@ export type Doctor = {
   freeReturnPeriod?: number; // in days
 };
 
+export type AppointmentStatus = 'Scheduled' | 'Completed' | 'Canceled' | 'Waiting';
+
 export type Appointment = {
   id: string;
   patientId: string;
@@ -23,7 +26,7 @@ export type Appointment = {
   date: string;
   startTime: string;
   endTime: string;
-  status: 'Scheduled' | 'Completed' | 'Canceled' | 'Waiting';
+  status: AppointmentStatus;
   reason: string;
   freeReturn?: boolean;
 };
@@ -67,4 +70,11 @@ export type AuditLog = {
   };
   details: string;
   timestamp: string; // ISO string for sorting
+};
+
+export type DataField = {
+  id: string;
+  label: string;
+  type: 'نظام' | 'مخصص';
+  required: boolean;
 };
