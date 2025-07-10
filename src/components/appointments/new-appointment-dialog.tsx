@@ -15,24 +15,24 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import type { Appointment, Patient, Doctor } from "@/lib/types"
-import { mockDoctors } from "@/lib/data"
 import { Combobox } from "../ui/combobox"
 import { Checkbox } from "../ui/checkbox"
+import { useAppContext } from "@/context/app-context"
 
-type AddAppointmentFunction = (appointment: Omit<Appointment, 'id' | 'patientId' | 'doctorId' > & { patientName: string, doctorName: string }) => void;
+type AddAppointmentFunction = (appointment: Omit<Appointment, 'id' >) => void;
 
 interface NewAppointmentDialogProps {
   children?: React.ReactNode;
   onAppointmentAdded: AddAppointmentFunction;
-  patients: Patient[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  initialPatientName?: string;
+  initialPatientId?: string;
 }
 
-export function NewAppointmentDialog({ children, onAppointmentAdded, patients, open, onOpenChange, initialPatientName }: NewAppointmentDialogProps) {
-  const [patientName, setPatientName] = useState("");
-  const [doctorName, setDoctorName] = useState("");
+export function NewAppointmentDialog({ children, onAppointmentAdded, open, onOpenChange, initialPatientId }: NewAppointmentDialogProps) {
+  const { patients, doctors } = useAppContext();
+  const [patientId, setPatientId] = useState("");
+  const [doctorId, setDoctorId] = useState("");
   const [date, setDate] = useState("");
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
@@ -41,37 +41,37 @@ export function NewAppointmentDialog({ children, onAppointmentAdded, patients, o
   const [selectedDoctor, setSelectedDoctor] = useState<Doctor | null>(null);
 
   const resetForm = useCallback(() => {
-    setPatientName(initialPatientName || "");
-    setDoctorName("");
+    setPatientId(initialPatientId || "");
+    setDoctorId("");
     setDate("");
     setStartTime("");
     setEndTime("");
     setReason("");
     setFreeReturn(false);
     setSelectedDoctor(null);
-  },[initialPatientName]);
+  },[initialPatientId]);
 
 
   useEffect(() => {
     if (open) {
        resetForm();
     }
-  }, [initialPatientName, open, resetForm]);
+  }, [initialPatientId, open, resetForm]);
 
   useEffect(() => {
-    const doctor = mockDoctors.find(d => d.name === doctorName) || null;
+    const doctor = doctors.find(d => d.id === doctorId) || null;
     setSelectedDoctor(doctor);
-  }, [doctorName]);
+  }, [doctorId, doctors]);
 
   const handleSubmit = () => {
-    if (patientName && doctorName && date && startTime && endTime && reason) {
-      onAppointmentAdded({ patientName, doctorName, date, startTime, endTime, reason, freeReturn, status: 'Scheduled' });
+    if (patientId && doctorId && date && startTime && endTime && reason) {
+      onAppointmentAdded({ patientId, doctorId, date, startTime, endTime, reason, freeReturn, status: 'Scheduled' });
       onOpenChange(false);
     }
   };
   
-  const patientOptions = patients.map(p => ({ value: p.name, label: p.name }));
-  const doctorOptions = mockDoctors.map(d => ({ value: d.name, label: d.name }));
+  const patientOptions = patients.map(p => ({ value: p.id, label: p.name }));
+  const doctorOptions = doctors.map(d => ({ value: d.id, label: d.name }));
 
 
   return (
@@ -91,8 +91,8 @@ export function NewAppointmentDialog({ children, onAppointmentAdded, patients, o
             </Label>
              <Combobox
                 options={patientOptions}
-                selectedValue={patientName}
-                onSelectedValueChange={setPatientName}
+                selectedValue={patientId}
+                onSelectedValueChange={setPatientId}
                 placeholder="اختر مريض..."
                 searchPlaceholder="ابحث عن مريض..."
                 noResultsText="لم يتم العثور على مريض."
@@ -105,8 +105,8 @@ export function NewAppointmentDialog({ children, onAppointmentAdded, patients, o
             </Label>
             <Combobox
                 options={doctorOptions}
-                selectedValue={doctorName}
-                onSelectedValueChange={setDoctorName}
+                selectedValue={doctorId}
+                onSelectedValueChange={setDoctorId}
                 placeholder="اختر طبيب..."
                 searchPlaceholder="ابحث عن طبيب..."
                 noResultsText="لم يتم العثور على طبيب."

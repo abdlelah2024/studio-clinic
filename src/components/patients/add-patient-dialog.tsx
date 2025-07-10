@@ -1,6 +1,6 @@
 
 "use client"
-import React, { useState, useEffect } from "react"
+import React, { useEffect } from "react"
 import {
   Dialog,
   DialogContent,
@@ -16,7 +16,6 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
-import { useToast } from "@/hooks/use-toast"
 
 const patientSchema = z.object({
   name: z.string().min(1, "الاسم مطلوب"),
@@ -34,8 +33,6 @@ interface AddPatientDialogProps {
 }
 
 export function AddPatientDialog({ onPatientAdded, open, onOpenChange }: AddPatientDialogProps) {
-  const { toast } = useToast();
-
   const form = useForm<PatientFormData>({
     resolver: zodResolver(patientSchema),
     defaultValues: {
@@ -55,10 +52,6 @@ export function AddPatientDialog({ onPatientAdded, open, onOpenChange }: AddPati
   const onSubmit = (data: PatientFormData) => {
     if (onPatientAdded) {
         onPatientAdded(data);
-        toast({
-            title: "تمت الإضافة بنجاح",
-            description: `تمت إضافة المريض ${data.name} إلى السجلات.`,
-        });
         onOpenChange(false);
     }
   };

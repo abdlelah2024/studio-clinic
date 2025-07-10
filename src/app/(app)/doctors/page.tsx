@@ -5,55 +5,22 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuItem, DropdownMenuCheckboxItem } from "@/components/ui/dropdown-menu"
-import { mockDoctors } from "@/lib/data"
 import type { Doctor } from "@/lib/types"
 import { MoreHorizontal, PlusCircle, Edit, Trash2, Calendar, Search, ArrowUpDown } from "lucide-react"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import { AddDoctorDialog } from "@/components/doctors/add-doctor-dialog"
 import { EditDoctorDialog } from "@/components/doctors/edit-doctor-dialog"
 import { DeleteDoctorDialog } from "@/components/doctors/delete-doctor-dialog"
-import { useToast } from "@/hooks/use-toast"
 import { Input } from "@/components/ui/input"
+import { useAppContext } from "@/context/app-context"
 
 type SortKey = 'name-asc' | 'name-desc' | 'specialty-asc' | 'specialty-desc';
 
 export default function DoctorsPage() {
-  const [doctors, setDoctors] = useState<Doctor[]>(mockDoctors);
+  const { doctors, addDoctor, updateDoctor, deleteDoctor } = useAppContext();
   const [searchQuery, setSearchQuery] = useState("");
   const [sortKey, setSortKey] = useState<SortKey>('name-asc');
-  const { toast } = useToast();
-
-  const handleAddDoctor = (doctor: Omit<Doctor, 'id' | 'avatar'>) => {
-    const newDoctor: Doctor = {
-      ...doctor,
-      id: `d${doctors.length + 1}`,
-      avatar: `https://placehold.co/100x100?text=${doctor.name.charAt(0)}`,
-    };
-    setDoctors(prev => [newDoctor, ...prev]);
-    toast({
-      title: "تمت الإضافة بنجاح",
-      description: `تمت إضافة الطبيب ${doctor.name}.`,
-    });
-  };
-
-  const handleUpdateDoctor = (updatedDoctor: Doctor) => {
-    setDoctors(prev => prev.map(d => d.id === updatedDoctor.id ? updatedDoctor : d));
-    toast({
-      title: "تم التحديث بنجاح",
-      description: `تم تحديث بيانات الطبيب ${updatedDoctor.name}.`,
-    });
-  };
-
-  const handleDeleteDoctor = (doctorId: string) => {
-    const doctorName = doctors.find(d => d.id === doctorId)?.name;
-    setDoctors(prev => prev.filter(d => d.id !== doctorId));
-    toast({
-      title: "تم الحذف بنجاح",
-      description: `تم حذف الطبيب ${doctorName}.`,
-      variant: "destructive",
-    });
-  };
-
+  
   const filteredAndSortedDoctors = useMemo(() => {
     const filtered = doctors.filter(doctor =>
         doctor.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -133,7 +100,7 @@ export default function DoctorsPage() {
                     </DropdownMenuCheckboxItem>
                 </DropdownMenuContent>
             </DropdownMenu>
-            <AddDoctorDialog onDoctorAdded={handleAddDoctor}>
+            <AddDoctorDialog onDoctorAdded={addDoctor}>
               <Button size="sm" className="gap-1">
                 <PlusCircle className="h-3.5 w-3.5" />
                 <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
@@ -184,14 +151,14 @@ export default function DoctorsPage() {
                         <Calendar className="mr-2 h-4 w-4" />
                         عرض الجدول
                       </DropdownMenuItem>
-                      <EditDoctorDialog doctor={doctor} onDoctorUpdated={handleUpdateDoctor}>
+                      <EditDoctorDialog doctor={doctor} onDoctorUpdated={updateDoctor}>
                         <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
                             <Edit className="mr-2 h-4 w-4" />
                             تعديل الملف الشخصي
                         </DropdownMenuItem>
                       </EditDoctorDialog>
                       <DropdownMenuSeparator />
-                      <DeleteDoctorDialog doctor={doctor} onDelete={() => handleDeleteDoctor(doctor.id)}>
+                      <DeleteDoctorDialog doctor={doctor} onDelete={() => deleteDoctor(doctor.id)}>
                         <DropdownMenuItem className="text-destructive" onSelect={(e) => e.preventDefault()}>
                             <Trash2 className="mr-2 h-4 w-4" />
                             إزالة

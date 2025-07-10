@@ -6,49 +6,21 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuItem, DropdownMenuCheckboxItem } from "@/components/ui/dropdown-menu"
-import { mockPatients } from "@/lib/data"
 import { PlusCircle, Search, MoreHorizontal, Edit, Trash2, ArrowUpDown } from "lucide-react"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import { Input } from "@/components/ui/input"
 import type { Patient } from "@/lib/types"
 import { EditPatientDialog } from "@/components/patients/edit-patient-dialog"
 import { DeletePatientDialog } from "@/components/patients/delete-patient-dialog"
-import { useToast } from "@/hooks/use-toast"
 import { useAppContext } from "@/context/app-context"
 
 type SortKey = 'name-asc' | 'name-desc' | 'visit-asc' | 'visit-desc';
 
 export default function PatientsPage() {
-  const [patients, setPatients] = useState<Patient[]>(mockPatients);
+  const { patients, openNewPatientDialog, updatePatient, deletePatient } = useAppContext();
   const [searchQuery, setSearchQuery] = useState("");
   const [sortKey, setSortKey] = useState<SortKey>('visit-desc');
-  const { toast } = useToast();
-  const { openNewPatientDialog } = useAppContext();
-
-  const handleAddPatient = (patient: Omit<Patient, 'id' | 'avatar' | 'lastVisit'>) => {
-    const newPatient: Patient = {
-      ...patient,
-      id: `p${patients.length + 1}`,
-      avatar: `https://placehold.co/100x100?text=${patient.name.charAt(0)}`,
-      lastVisit: new Date().toISOString().split('T')[0],
-    };
-    setPatients(prev => [newPatient, ...prev]);
-  };
-
-  const handleUpdatePatient = (updatedPatient: Patient) => {
-    setPatients(prev => prev.map(p => p.id === updatedPatient.id ? updatedPatient : p));
-  };
   
-  const handleDeletePatient = (patientId: string) => {
-    const patientName = patients.find(p => p.id === patientId)?.name;
-    setPatients(prev => prev.filter(p => p.id !== patientId));
-    toast({
-      title: "تم الحذف بنجاح",
-      description: `تم حذف المريض ${patientName}.`,
-      variant: "destructive"
-    });
-  };
-
   const filteredAndSortedPatients = useMemo(() => {
     const filtered = patients.filter(patient =>
         patient.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -127,7 +99,7 @@ export default function PatientsPage() {
                     </DropdownMenuCheckboxItem>
                 </DropdownMenuContent>
             </DropdownMenu>
-            <Button size="sm" className="gap-1 whitespace-nowrap" onClick={() => openNewPatientDialog(handleAddPatient)}>
+            <Button size="sm" className="gap-1 whitespace-nowrap" onClick={() => openNewPatientDialog()}>
               <PlusCircle className="h-3.5 w-3.5" />
               <span className="sr-only sm:not-sr-only">
                 إضافة مريض
@@ -177,14 +149,14 @@ export default function PatientsPage() {
                             عرض السجل
                           </Link>
                         </DropdownMenuItem>
-                        <EditPatientDialog patient={patient} onPatientUpdated={handleUpdatePatient}>
+                        <EditPatientDialog patient={patient} onPatientUpdated={updatePatient}>
                           <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
                             <Edit className="mr-2 h-4 w-4" />
                             تعديل
                           </DropdownMenuItem>
                         </EditPatientDialog>
                         <DropdownMenuSeparator />
-                        <DeletePatientDialog patient={patient} onDelete={() => handleDeletePatient(patient.id)}>
+                        <DeletePatientDialog patient={patient} onDelete={() => deletePatient(patient.id)}>
                           <DropdownMenuItem className="text-destructive" onSelect={(e) => e.preventDefault()}>
                             <Trash2 className="mr-2 h-4 w-4" />
                             حذف

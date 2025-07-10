@@ -13,9 +13,9 @@ import { Calendar } from "@/components/ui/calendar"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend } from "recharts"
-import { mockAppointments, mockDoctors, mockPatients } from "@/lib/data"
 import type { Appointment, Patient, Doctor } from "@/lib/types"
 import { cn } from "@/lib/utils"
+import { useAppContext } from "@/context/app-context"
 
 type AppointmentStatus = 'Scheduled' | 'Completed' | 'Canceled' | 'Waiting';
 
@@ -26,6 +26,7 @@ type EnrichedAppointment = Appointment & {
 
 
 export default function ReportsPage() {
+  const { doctors, enrichedAppointments } = useAppContext();
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
     from: startOfDay(addDays(new Date(), -30)),
     to: startOfDay(new Date()),
@@ -34,13 +35,7 @@ export default function ReportsPage() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
   const filteredAppointments = useMemo(() => {
-     const enriched = mockAppointments.map(appointment => {
-      const patient = mockPatients.find(p => p.id === appointment.patientId)!;
-      const doctor = mockDoctors.find(d => d.id === appointment.doctorId)!;
-      return { ...appointment, patient, doctor };
-    }).filter(Boolean) as EnrichedAppointment[];
-
-    return enriched.filter(appointment => {
+    return enrichedAppointments.filter(appointment => {
       const appointmentDate = startOfDay(new Date(appointment.date));
       
       const isDateInRange = dateRange?.from && dateRange?.to ? 
@@ -51,7 +46,7 @@ export default function ReportsPage() {
       
       return isDateInRange && isDoctorMatch && isStatusMatch;
     });
-  }, [dateRange, doctorFilter, statusFilter]);
+  }, [dateRange, doctorFilter, statusFilter, enrichedAppointments]);
 
   const stats = useMemo(() => {
     const totalAppointments = filteredAppointments.length;
@@ -142,7 +137,7 @@ export default function ReportsPage() {
                     </SelectTrigger>
                     <SelectContent>
                         <SelectItem value="all">كل الأطباء</SelectItem>
-                        {mockDoctors.map(doctor => (
+                        {doctors.map(doctor => (
                             <SelectItem key={doctor.id} value={doctor.id}>{doctor.name}</SelectItem>
                         ))}
                     </SelectContent>

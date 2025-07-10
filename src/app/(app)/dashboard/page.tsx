@@ -4,23 +4,19 @@ import React, { useState, useMemo, useEffect } from "react"
 import { StatsCards } from "@/components/dashboard/stats-cards"
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { mockAppointments, allUsers, mockPatients, mockDoctors } from "@/lib/data"
-import type { Appointment, Patient, Doctor } from "@/lib/types"
+import { allUsers } from "@/lib/data"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { addDays, startOfDay, isToday } from 'date-fns';
 import { Wifi, Users, RefreshCw } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { useAppContext } from "@/context/app-context"
 
 type TimeRange = 'all' | '30d' | '7d' | 'today';
 
-type EnrichedAppointment = Appointment & {
-  patient: Patient;
-  doctor: Doctor;
-};
-
 export default function DashboardPage() {
+  const { enrichedAppointments } = useAppContext();
   const [timeRange, setTimeRange] = useState<TimeRange>('30d');
   const [isOnline, setIsOnline] = useState(true);
   const [hydrated, setHydrated] = useState(false);
@@ -55,14 +51,6 @@ export default function DashboardPage() {
       default: return status;
     }
   }
-
-  const enrichedAppointments = useMemo(() => {
-    return mockAppointments.map(appointment => {
-      const patient = mockPatients.find(p => p.id === appointment.patientId)!;
-      const doctor = mockDoctors.find(d => d.id === appointment.doctorId)!;
-      return { ...appointment, patient, doctor };
-    }).filter(Boolean) as EnrichedAppointment[];
-  }, [])
 
   const filteredData = useMemo(() => {
     if (!hydrated) {

@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { SidebarTrigger } from "@/components/ui/sidebar"
-import { mockUser, mockPatients } from "@/lib/data"
+import { mockUser } from "@/lib/data"
 import {
   Command,
   CommandEmpty,
@@ -23,7 +23,6 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-  CommandSeparator,
 } from "@/components/ui/command"
 import { useAppContext } from "@/context/app-context"
 import { useRouter } from "next/navigation"
@@ -54,11 +53,11 @@ export function AppHeader() {
   const [searchQuery, setSearchQuery] = useState("")
   const [isSearchFocused, setIsSearchFocused] = useState(false)
   const searchRef = useRef<HTMLDivElement>(null)
-  const { openNewAppointmentDialog, openNewPatientDialog } = useAppContext()
+  const { patients, openNewAppointmentDialog, openNewPatientDialog } = useAppContext()
   const router = useRouter()
 
   const filteredPatients = searchQuery
-    ? mockPatients.filter(
+    ? patients.filter(
         (p) =>
           p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
           p.phone.includes(searchQuery)
@@ -82,8 +81,8 @@ export function AppHeader() {
     setSearchQuery("")
   }
   
-  const handleQuickAppointment = (patientName: string) => {
-      openNewAppointmentDialog({onAppointmentAdded: () => {}, initialPatientName: patientName});
+  const handleQuickAppointment = (patientId: string) => {
+      openNewAppointmentDialog({ initialPatientId: patientId });
       resetSearch();
   }
 
@@ -93,20 +92,14 @@ export function AppHeader() {
   }
   
   const handleNewAppointment = () => {
-    openNewAppointmentDialog({onAppointmentAdded: () => {}});
+    openNewAppointmentDialog();
     resetSearch();
   };
 
   const handleNewPatient = () => {
-    openNewPatientDialog(()=>{});
+    openNewPatientDialog();
     resetSearch();
   }
-
-  const handleViewAllAppointments = () => {
-    router.push('/appointments');
-    resetSearch();
-  }
-
 
   return (
     <header className="sticky top-0 z-40 flex h-16 items-center gap-4 border-b bg-card px-4 md:px-6">
@@ -143,7 +136,7 @@ export function AppHeader() {
                                 </div>
                             </div>
                             <div className="flex items-center gap-2">
-                                 <Button variant="secondary" size="sm" onClick={() => handleQuickAppointment(patient.name)}>
+                                 <Button variant="secondary" size="sm" onClick={() => handleQuickAppointment(patient.id)}>
                                     موعد سريع
                                 </Button>
                                 <Button variant="outline" size="sm" onClick={() => handlePatientSelect(patient.id)}>
@@ -157,7 +150,7 @@ export function AppHeader() {
                 )}
                  {searchQuery && filteredPatients.length === 0 && (
                     <CommandEmpty>
-                        <CommandItem onSelect={handleNewPatient} className="flex-col items-center justify-center py-4">
+                        <CommandItem onSelect={handleNewPatient} className="flex-col items-center justify-center py-4 cursor-pointer">
                              <p>لم يتم العثور على مريض. هل تريد إضافة واحد جديد؟</p>
                              <div className="flex items-center text-primary mt-2">
                                 <UserPlus className="mr-2 h-4 w-4" /> إضافة مريض جديد
@@ -168,11 +161,11 @@ export function AppHeader() {
 
                 {!searchQuery && (
                     <CommandGroup heading="إجراءات سريعة">
-                        <CommandItem onSelect={handleNewAppointment}>
+                        <CommandItem onSelect={handleNewAppointment} className="cursor-pointer">
                             <Calendar className="mr-2 h-4 w-4" />
                             <span>حجز موعد جديد</span>
                         </CommandItem>
-                        <CommandItem onSelect={handleNewPatient}>
+                        <CommandItem onSelect={handleNewPatient} className="cursor-pointer">
                             <UserPlus className="mr-2 h-4 w-4" />
                             <span>إضافة مريض جديد</span>
                         </CommandItem>

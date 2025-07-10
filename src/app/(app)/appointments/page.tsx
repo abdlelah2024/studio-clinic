@@ -5,13 +5,11 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuItem, DropdownMenuCheckboxItem } from "@/components/ui/dropdown-menu"
-import { mockAppointments, mockPatients, mockDoctors } from "@/lib/data"
 import type { Appointment, Doctor, Patient } from "@/lib/types"
 import { Badge } from "@/components/ui/badge"
-import { MoreHorizontal, PlusCircle, ListFilter, Edit, Trash2, Clock, XCircle, CheckCircle2, Search, ArrowUpDown } from "lucide-react"
+import { MoreHorizontal, PlusCircle, ListFilter, Clock, XCircle, CheckCircle2, Search, ArrowUpDown, Trash2 } from "lucide-react"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import { RescheduleAppointmentDialog } from "@/components/appointments/reschedule-appointment-dialog"
-import { useToast } from "@/hooks/use-toast"
 import { useAppContext } from "@/context/app-context"
 import { cn } from "@/lib/utils"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
@@ -26,71 +24,26 @@ type AppointmentStatus = 'Scheduled' | 'Completed' | 'Canceled' | 'Waiting';
 type SortKey = 'date-asc' | 'date-desc';
 
 export default function AppointmentsPage() {
-  const [appointments, setAppointments] = useState<Appointment[]>(mockAppointments);
+  const { enrichedAppointments, updateAppointment, deleteAppointment, openNewAppointmentDialog } = useAppContext();
   const [filter, setFilter] = useState<AppointmentStatus | 'All'>('All');
   const [searchQuery, setSearchQuery] = useState("");
   const [sortKey, setSortKey] = useState<SortKey>('date-desc');
   const [isRescheduleDialogOpen, setIsRescheduleDialogOpen] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState<EnrichedAppointment | undefined>(undefined);
-  const { toast } = useToast();
-  const { openNewAppointmentDialog } = useAppContext();
-
-  const handleAddAppointment = (newAppointmentData: Omit<Appointment, 'id' | 'patientId' | 'doctorId' > & { patientName: string, doctorName: string }) => {
-    const patient = mockPatients.find(p => p.name === newAppointmentData.patientName);
-    const doctor = mockDoctors.find(d => d.name === newAppointmentData.doctorName);
-
-    if (!patient || !doctor) {
-        toast({ title: "خطأ", description: "لم يتم العثور على المريض أو الطبيب.", variant: "destructive" });
-        return;
-    }
-
-    const newAppointment: Appointment = {
-      id: `a${appointments.length + 1}`,
-      patientId: patient.id,
-      doctorId: doctor.id,
-      date: newAppointmentData.date,
-      startTime: newAppointmentData.startTime,
-      endTime: newAppointmentData.endTime,
-      reason: newAppointmentData.reason,
-      status: 'Scheduled',
-      freeReturn: newAppointmentData.freeReturn,
-    };
-    setAppointments(prev => [newAppointment, ...prev]);
-    toast({
-        title: "تمت جدولة الموعد بنجاح",
-        description: `تم حجز موعد لـ ${patient.name} مع ${doctor.name}.`,
-    });
-  };
   
   const handleRescheduleAppointment = (appointmentId: string, newDate: string, newStartTime: string, newEndTime: string) => {
-    setAppointments(prev => prev.map(app => 
-      app.id === appointmentId 
-        ? { ...app, date: newDate, startTime: newStartTime, endTime: newEndTime } 
-        : app
-    ));
-    toast({
-        title: "تمت إعادة الجدولة بنجاح",
-        description: `تم تحديث الموعد.`,
-    });
+    const appointmentToUpdate = enrichedAppointments.find(app => app.id === appointmentId);
+    if(appointmentToUpdate) {
+        updateAppointment({ ...appointmentToUpdate, date: newDate, startTime: newStartTime, endTime: newEndTime });
+    }
   };
 
   const handleCancelAppointment = (appointmentId: string) => {
-    setAppointments(prev => prev.map(app => 
-        app.id === appointmentId ? { ...app, status: 'Canceled' } : app
-    ));
-    toast({
-      title: "تم إلغاء الموعد",
-      variant: "destructive"
-    });
+    const appointmentToUpdate = enrichedAppointments.find(app => app.id === appointmentId);
+     if(appointmentToUpdate) {
+        updateAppointment({ ...appointmentToUpdate, status: 'Canceled' });
+    }
   };
-
-  const handleDeleteAppointment = (appointmentId: string) => {
-     setAppointments(prev => prev.filter(app => app.id !== appointmentId));
-     toast({
-      title: "تم حذف الموعد",
-      variant: "destructive"
-    });
-  }
 
   const getStatusTranslation = (status: AppointmentStatus) => {
     switch (status) {
@@ -103,12 +56,6 @@ export default function AppointmentsPage() {
   }
 
   const filteredAndSortedAppointments = useMemo(() => {
-    const enrichedAppointments: EnrichedAppointment[] = appointments.map(appointment => {
-      const patient = mockPatients.find(p => p.id === appointment.patientId)!;
-      const doctor = mockDoctors.find(d => d.id === appointment.doctorId)!;
-      return { ...appointment, patient, doctor };
-    }).filter(Boolean) as EnrichedAppointment[];
-
     const filtered = enrichedAppointments.filter(appointment => {
         const statusFilterMatch = filter === 'All' || appointment.status === filter;
         const searchFilterMatch = 
@@ -126,7 +73,7 @@ export default function AppointmentsPage() {
                 return new Date(b.date).getTime() - new Date(a.date).getTime();
         }
     });
-  }, [appointments, filter, searchQuery, sortKey]);
+  }, [enrichedAppointments, filter, searchQuery, sortKey]);
 
   return (
     <>
@@ -193,7 +140,7 @@ export default function AppointmentsPage() {
                     </DropdownMenuCheckboxItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-              <Button size="sm" className="gap-1" onClick={() => openNewAppointmentDialog({onAppointmentAdded: handleAddAppointment})}>
+              <Button size="sm" className="gap-1" onClick={() => openNewAppointmentDialog()}>
                 <PlusCircle className="h-3.5 w-3.5" />
                 <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
                   موعد جديد
@@ -284,7 +231,7 @@ export default function AppointmentsPage() {
                             إلغاء
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem className="text-destructive" onSelect={() => handleDeleteAppointment(appointment.id)}>
+                        <DropdownMenuItem className="text-destructive" onSelect={() => deleteAppointment(appointment.id)}>
                             <Trash2 className="mr-2 h-4 w-4" />
                             حذف
                         </DropdownMenuItem>
