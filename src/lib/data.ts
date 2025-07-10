@@ -20,10 +20,10 @@ export const mockPatients: Patient[] = [
 ];
 
 export const mockDoctors: Doctor[] = [
-  { id: 'd1', name: 'د. إميلي كارتر', specialty: 'أمراض القلب', avatar: 'https://placehold.co/100x100/F0E68C/000000.png?text=E', servicePrice: 250, freeReturnPeriod: 14 },
   { id: 'd2', name: 'د. بن هانسون', specialty: 'طب الأطفال', avatar: 'https://placehold.co/100x100/ADD8E6/000000.png?text=B', servicePrice: 150, freeReturnPeriod: 7 },
+  { id: 'd1', name: 'د. إميلي كارتر', specialty: 'أمراض القلب', avatar: 'https://placehold.co/100x100/F0E68C/000000.png?text=E', servicePrice: 250, freeReturnPeriod: 14 },
   { id: 'd3', name: 'د. أوليفيا تشين', specialty: 'الأمراض الجلدية', avatar: 'https://placehold.co/100x100/90EE90/000000.png?text=O', servicePrice: 200 },
-];
+].sort((a, b) => a.name.localeCompare(b.name));
 
 const getISODate = (year: number, month: number, day: number) => {
     const date = new Date(Date.UTC(year, month - 1, day));

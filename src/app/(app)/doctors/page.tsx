@@ -14,18 +14,23 @@ import { DeleteDoctorDialog } from "@/components/doctors/delete-doctor-dialog"
 import { Input } from "@/components/ui/input"
 import { useAppContext } from "@/context/app-context"
 
-type SortKey = 'name-asc' | 'name-desc' | 'specialty-asc' | 'specialty-desc';
+type SortKey = 'default' | 'name-asc' | 'name-desc' | 'specialty-asc' | 'specialty-desc';
 
 export default function DoctorsPage() {
   const { doctors, addDoctor, updateDoctor, deleteDoctor } = useAppContext();
   const [searchQuery, setSearchQuery] = useState("");
-  const [sortKey, setSortKey] = useState<SortKey>('name-asc');
+  const [sortKey, setSortKey] = useState<SortKey>('default');
   
   const filteredAndSortedDoctors = useMemo(() => {
-    const filtered = doctors.filter(doctor =>
+    let sortedDoctors = [...doctors];
+    const filtered = sortedDoctors.filter(doctor =>
         doctor.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         doctor.specialty.toLowerCase().includes(searchQuery.toLowerCase())
     );
+
+    if (sortKey === 'default') {
+      return filtered;
+    }
 
     return filtered.sort((a, b) => {
         switch (sortKey) {
