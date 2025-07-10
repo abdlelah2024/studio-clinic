@@ -149,7 +149,7 @@ export function AppHeader() {
                 )}
                  {searchQuery && filteredPatients.length === 0 && (
                     <CommandEmpty>
-                        <CommandItem onSelect={handleNewPatient} className="flex-col items-center justify-center py-4 cursor-pointer">
+                        <CommandItem onSelect={() => handleNewPatient()} className="flex-col items-center justify-center py-4 cursor-pointer">
                              <p>لم يتم العثور على مريض. هل تريد إضافة واحد جديد؟</p>
                              <div className="flex items-center text-primary mt-2">
                                 <UserPlus className="mr-2 h-4 w-4" /> إضافة مريض جديد
@@ -160,11 +160,11 @@ export function AppHeader() {
 
                 {!searchQuery && (
                     <CommandGroup heading="إجراءات سريعة">
-                        <CommandItem onSelect={handleNewAppointment} className="cursor-pointer">
+                        <CommandItem onSelect={() => handleNewAppointment()} className="cursor-pointer">
                             <Calendar className="mr-2 h-4 w-4" />
                             <span>حجز موعد جديد</span>
                         </CommandItem>
-                        <CommandItem onSelect={handleNewPatient} className="cursor-pointer">
+                        <CommandItem onSelect={() => handleNewPatient()} className="cursor-pointer">
                             <UserPlus className="mr-2 h-4 w-4" />
                             <span>إضافة مريض جديد</span>
                         </CommandItem>
