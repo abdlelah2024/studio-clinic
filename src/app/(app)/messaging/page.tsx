@@ -10,19 +10,16 @@ import type { User, Message } from "@/lib/types";
 import { cn } from '@/lib/utils';
 import { useAppContext } from '@/context/app-context';
 import { Skeleton } from '@/components/ui/skeleton';
-
-// TODO: Replace with real data from Firestore later
-const mockUser: User = { name: "You", email: "you@clinicflow.demo", avatar: "", role: "Admin", status: "online" };
-const mockMessages: Message[] = [];
+import { useAuth } from '@/context/auth-context';
 
 export default function MessagingPage() {
-    const { users, loading } = useAppContext();
+    const { users, messages, loading, addMessage } = useAppContext();
+    const { currentUser } = useAuth();
     const [selectedUser, setSelectedUser] = useState<User | null>(null);
-    const [messages, setMessages] = useState<Message[]>(mockMessages);
     const [newMessage, setNewMessage] = useState("");
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
-    const otherUsers = users.filter(u => u.email !== mockUser.email);
+    const otherUsers = users.filter(u => u.email !== currentUser?.email);
     
     useEffect(() => {
         if (!selectedUser && otherUsers.length > 0) {
@@ -38,22 +35,19 @@ export default function MessagingPage() {
 
     const handleSendMessage = (e: React.FormEvent) => {
         e.preventDefault();
-        if (newMessage.trim() && selectedUser) {
-            const message: Message = {
-                id: `m${messages.length + 1}`,
-                senderEmail: mockUser.email,
+        if (newMessage.trim() && selectedUser && currentUser) {
+            addMessage({
+                senderEmail: currentUser.email,
                 receiverEmail: selectedUser.email,
                 text: newMessage,
-                timestamp: new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }),
-            };
-            setMessages(prev => [...prev, message]);
+            });
             setNewMessage("");
         }
     };
 
     const conversation = selectedUser ? messages.filter(
-        m => (m.senderEmail === mockUser.email && m.receiverEmail === selectedUser.email) ||
-             (m.senderEmail === selectedUser.email && m.receiverEmail === mockUser.email)
+        m => (m.senderEmail === currentUser?.email && m.receiverEmail === selectedUser.email) ||
+             (m.senderEmail === selectedUser.email && m.receiverEmail === currentUser?.email)
     ).sort((a,b) => a.timestamp.localeCompare(b.timestamp)) : [];
 
     if (loading) {
@@ -109,7 +103,7 @@ export default function MessagingPage() {
             </div>
 
             <div className="w-2/3 flex flex-col">
-                {selectedUser ? (
+                {selectedUser && currentUser ? (
                     <>
                         <div className="p-4 border-b flex items-center gap-3">
                              <div className="relative">
@@ -130,7 +124,7 @@ export default function MessagingPage() {
                         <div className="flex-1 overflow-y-auto p-6 space-y-4">
                            {conversation.length === 0 && (
                                 <div className="text-center text-muted-foreground pt-10">
-                                    لا توجد رسائل. ابدأ المحادثة. (ميزة قيد التطوير)
+                                    لا توجد رسائل. ابدأ المحادثة.
                                 </div>
                            )}
                             {conversation.map(message => (
@@ -138,10 +132,10 @@ export default function MessagingPage() {
                                     key={message.id}
                                     className={cn(
                                         "flex items-end gap-2",
-                                        message.senderEmail === mockUser.email ? "justify-end" : "justify-start"
+                                        message.senderEmail === currentUser.email ? "justify-end" : "justify-start"
                                     )}
                                 >
-                                    {message.senderEmail !== mockUser.email && (
+                                    {message.senderEmail !== currentUser.email && (
                                         <Avatar className="h-8 w-8">
                                             <AvatarImage src={selectedUser.avatar} data-ai-hint="person face" />
                                             <AvatarFallback>{selectedUser.name.charAt(0)}</AvatarFallback>
@@ -150,18 +144,18 @@ export default function MessagingPage() {
                                     <div
                                         className={cn(
                                             "max-w-xs rounded-lg p-3",
-                                            message.senderEmail === mockUser.email
+                                            message.senderEmail === currentUser.email
                                                 ? "bg-primary text-primary-foreground rounded-br-none"
                                                 : "bg-muted rounded-bl-none"
                                         )}
                                     >
                                         <p>{message.text}</p>
-                                        <p className="text-xs opacity-70 mt-1 text-right">{message.timestamp}</p>
+                                        <p className="text-xs opacity-70 mt-1 text-right">{new Date(message.timestamp).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })}</p>
                                     </div>
-                                    {message.senderEmail === mockUser.email && (
+                                    {message.senderEmail === currentUser.email && (
                                         <Avatar className="h-8 w-8">
-                                            <AvatarImage src={mockUser.avatar} data-ai-hint="person face" />
-                                            <AvatarFallback>{mockUser.name.charAt(0)}</AvatarFallback>
+                                            <AvatarImage src={currentUser.avatar} data-ai-hint="person face" />
+                                            <AvatarFallback>{currentUser.name.charAt(0)}</AvatarFallback>
                                         </Avatar>
                                     )}
                                 </div>
@@ -175,9 +169,8 @@ export default function MessagingPage() {
                                     className="flex-1"
                                     value={newMessage}
                                     onChange={(e) => setNewMessage(e.target.value)}
-                                    disabled
                                 />
-                                <Button type="submit" size="icon" disabled>
+                                <Button type="submit" size="icon">
                                     <Send className="h-4 w-4" />
                                 </Button>
                             </form>

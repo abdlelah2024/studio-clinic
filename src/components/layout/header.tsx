@@ -26,33 +26,11 @@ import { useAppContext } from "@/context/app-context"
 import { Badge } from "../ui/badge"
 import { useAuth } from "@/context/auth-context"
 
-const mockNotifications = [
-    {
-        icon: <CalendarCheck className="h-4 w-4 text-green-500" />,
-        title: "تم تأكيد الموعد",
-        description: "تم تأكيد موعد أحمد محمود.",
-        time: "قبل 5 دقائق",
-    },
-    {
-        icon: <CalendarX2 className="h-4 w-4 text-red-500" />,
-        title: "تم إلغاء الموعد",
-        description: "تم إلغاء موعد فاطمة علي.",
-        time: "قبل ساعة",
-    },
-    {
-        icon: <CircleUser className="h-4 w-4 text-blue-500" />,
-        title: "مريض جديد مسجل",
-        description: "تم تسجيل خالد عبد الله كمريض جديد.",
-        time: "أمس",
-    },
-];
-
-
 export function AppHeader() {
   const [searchQuery, setSearchQuery] = useState("")
   const [isSearchFocused, setIsSearchFocused] = useState(false)
   const searchRef = useRef<HTMLDivElement>(null)
-  const { patients, doctors, enrichedAppointments, openNewAppointmentDialog, openNewPatientDialog } = useAppContext()
+  const { patients, doctors, enrichedAppointments, openNewAppointmentDialog, openNewPatientDialog, notifications } = useAppContext()
   const { currentUser, logout } = useAuth();
   const router = useRouter()
 
@@ -125,7 +103,15 @@ export function AppHeader() {
       document.removeEventListener("mousedown", handleClickOutside)
     }
   }, [resetSearch])
-  
+
+  const getNotificationIcon = (type: string) => {
+    switch (type) {
+      case 'appointment_confirmed': return <CalendarCheck className="h-4 w-4 text-green-500" />;
+      case 'appointment_canceled': return <CalendarX2 className="h-4 w-4 text-red-500" />;
+      case 'new_patient': return <CircleUser className="h-4 w-4 text-blue-500" />;
+      default: return <Bell className="h-4 w-4" />;
+    }
+  }
 
   return (
     <header className="sticky top-0 z-40 flex h-16 items-center gap-4 border-b bg-card px-4 md:px-6">
@@ -237,16 +223,21 @@ export function AppHeader() {
             <DropdownMenuContent align="end" className="w-[350px]">
                 <DropdownMenuLabel>الإشعارات</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                {mockNotifications.map((notification, index) => (
-                    <DropdownMenuItem key={index} className="flex items-start gap-3">
-                        <div className="mt-1">{notification.icon}</div>
+                {notifications.slice(0, 5).map((notification) => (
+                    <DropdownMenuItem key={notification.id} className="flex items-start gap-3">
+                        <div className="mt-1">{getNotificationIcon(notification.type)}</div>
                         <div className="flex-1">
                             <p className="font-semibold">{notification.title}</p>
                             <p className="text-xs text-muted-foreground">{notification.description}</p>
-                             <p className="text-xs text-muted-foreground mt-1">{notification.time}</p>
+                             <p className="text-xs text-muted-foreground mt-1">{new Date(notification.timestamp).toLocaleString()}</p>
                         </div>
                     </DropdownMenuItem>
                 ))}
+                 {notifications.length === 0 && (
+                    <DropdownMenuItem>
+                        <p className="text-sm text-muted-foreground text-center w-full">لا توجد إشعارات جديدة.</p>
+                    </DropdownMenuItem>
+                )}
                  <DropdownMenuSeparator />
                  <DropdownMenuItem className="justify-center text-primary">
                     عرض جميع الإشعارات

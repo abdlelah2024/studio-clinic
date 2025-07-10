@@ -7,7 +7,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-// import { mockAuditLogs } from "@/lib/data"; // We will replace this with real data later
 import type { AuditLog, AuditLogAction, AuditLogCategory } from "@/lib/types";
 import { format, formatDistanceToNow } from 'date-fns';
 import { ar } from 'date-fns/locale';
@@ -19,9 +18,6 @@ import { useAppContext } from '@/context/app-context';
 import { Skeleton } from '@/components/ui/skeleton';
 
 type SortKey = 'date-asc' | 'date-desc';
-
-// TODO: Replace this with real audit logs from Firestore later
-const mockAuditLogs: AuditLog[] = [];
 
 const getCategoryTranslation = (category: AuditLogCategory) => {
     switch (category) {
@@ -70,14 +66,14 @@ const getCategoryIcon = (category: AuditLogCategory) => {
 }
 
 export default function AuditLogPage() {
-    const { loading } = useAppContext();
+    const { loading, auditLogs } = useAppContext();
     const [searchQuery, setSearchQuery] = useState("");
     const [actionFilter, setActionFilter] = useState<AuditLogAction | 'all'>('all');
     const [categoryFilter, setCategoryFilter] = useState<AuditLogCategory | 'all'>('all');
     const [sortKey, setSortKey] = useState<SortKey>('date-desc');
 
     const filteredAndSortedLogs = useMemo(() => {
-        const filtered = mockAuditLogs.filter(log => {
+        const filtered = auditLogs.filter(log => {
             const searchMatch = log.user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 log.details.toLowerCase().includes(searchQuery.toLowerCase());
             const actionMatch = actionFilter === 'all' || log.action === actionFilter;
@@ -95,7 +91,7 @@ export default function AuditLogPage() {
                     return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
             }
         });
-    }, [searchQuery, actionFilter, categoryFilter, sortKey]);
+    }, [searchQuery, actionFilter, categoryFilter, sortKey, auditLogs]);
 
     if (loading) {
         return (
@@ -222,7 +218,7 @@ export default function AuditLogPage() {
                         ) : (
                             <TableRow>
                                 <TableCell colSpan={5} className="h-24 text-center">
-                                    لا توجد سجلات. سيتم تفعيل هذه الميزة قريباً.
+                                    لا توجد سجلات.
                                 </TableCell>
                             </TableRow>
                         )}

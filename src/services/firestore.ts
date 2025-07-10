@@ -1,5 +1,5 @@
 import { db } from "@/lib/firebase";
-import type { Patient, Doctor, Appointment, User, DataField, Permissions, UserRole } from "@/lib/types";
+import type { Patient, Doctor, Appointment, User, DataField, Permissions, UserRole, Message, AuditLog, Notification } from "@/lib/types";
 import {
   collection,
   getDocs,
@@ -15,6 +15,7 @@ import {
   onSnapshot,
   Query,
   DocumentData,
+  serverTimestamp,
 } from "firebase/firestore";
 
 // Generic function to listen to a collection with optional ordering
@@ -91,6 +92,22 @@ export const deleteUser = (email: string) => deleteDocument('users', email);
 export const addDataField = (field: Omit<DataField, 'id'>) => addDocument('dataFields', field);
 export const updateDataField = (id: string, field: Partial<DataField>) => updateDocument('dataFields', id, field);
 export const deleteDataField = (id: string) => deleteDocument('dataFields', id);
+
+export const addMessage = (message: Omit<Message, 'id'|'timestamp'> & { timestamp?: any }) => {
+    message.timestamp = serverTimestamp();
+    return addDocument('messages', message);
+};
+
+export const addAuditLog = (log: Omit<AuditLog, 'id'|'timestamp'> & { timestamp?: any }) => {
+    log.timestamp = serverTimestamp();
+    return addDocument('auditLogs', log);
+}
+
+export const addNotification = (notification: Omit<Notification, 'id'|'timestamp'> & { timestamp?: any }) => {
+    notification.timestamp = serverTimestamp();
+    return addDocument('notifications', notification);
+};
+
 
 export const getPermissions = async (): Promise<Record<UserRole, Permissions>> => {
     const docRef = doc(db, 'system', 'permissions');

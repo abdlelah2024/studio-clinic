@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useState, useCallback, ReactNode, useMemo, useEffect } from "react"
 import { NewAppointmentDialog } from "@/components/appointments/new-appointment-dialog"
 import { AddPatientDialog } from "@/components/patients/add-patient-dialog"
-import type { Appointment, Patient, Doctor, User, UserRole, Permissions, DataField } from "@/lib/types"
+import type { Appointment, Patient, Doctor, User, UserRole, Permissions, DataField, Message, AuditLog, Notification } from "@/lib/types"
 import { useToast } from "@/hooks/use-toast"
 import * as firestoreService from "@/services/firestore"
 import { useAuth } from "./auth-context"
@@ -30,6 +30,8 @@ type AddDataFieldFunction = (field: { label: string, required: boolean }) => voi
 type UpdateDataFieldFunction = (field: DataField) => void;
 type DeleteDataFieldFunction = (fieldId: string) => void;
 
+type AddMessageFunction = (message: Omit<Message, 'id' | 'timestamp'>) => void;
+
 interface AppointmentDialogOptions {
     initialPatientId?: string;
 }
@@ -47,6 +49,9 @@ interface AppContextType {
   users: User[];
   permissions: Record<UserRole, Permissions>;
   dataFields: DataField[];
+  messages: Message[];
+  auditLogs: AuditLog[];
+  notifications: Notification[];
   
   // Enriched Data
   enrichedAppointments: (Appointment & { patient: Patient; doctor: Doctor; })[];
@@ -80,6 +85,9 @@ interface AppContextType {
   addDataField: AddDataFieldFunction;
   updateDataField: UpdateDataFieldFunction;
   deleteDataField: DeleteDataFieldFunction;
+
+  // Message Actions
+  addMessage: AddMessageFunction;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -94,6 +102,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const [users, setUsers] = useState<User[]>([]);
     const [permissions, setPermissions] = useState<Record<UserRole, Permissions>>({} as Record<UserRole, Permissions>);
     const [dataFields, setDataFields] = useState<DataField[]>([]);
+    const [messages, setMessages] = useState<Message[]>([]);
+    const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
+    const [notifications, setNotifications] = useState<Notification[]>([]);
 
     // Dialog States
     const [isAppointmentDialogOpen, setAppointmentDialogOpen] = useState(false);
@@ -129,15 +140,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
                 unsubscribers.push(firestoreService.listenToCollection('appointments', setAppointments, { orderBy: 'date', direction: 'desc' }));
                 unsubscribers.push(firestoreService.listenToCollection('users', (data) => {
                    if (!isCancelled) {
-                        // Enrich user data with online status (mocked for now)
                         const enrichedUsers = data.map(u => ({
                             ...u,
-                            status: (u.email === currentUser.email) ? 'online' : 'offline'
+                            status: (u.email === currentUser.email) ? 'online' : u.status || 'offline'
                         }))
                         setUsers(enrichedUsers);
                     }
                 }, { idField: 'email' }));
                 unsubscribers.push(firestoreService.listenToCollection('dataFields', setDataFields, {}));
+                unsubscribers.push(firestoreService.listenToCollection('messages', setMessages, { orderBy: 'timestamp', direction: 'asc' }));
+                unsubscribers.push(firestoreService.listenToCollection('auditLogs', setAuditLogs, { orderBy: 'timestamp', direction: 'desc' }));
+                unsubscribers.push(firestoreService.listenToCollection('notifications', setNotifications, { orderBy: 'timestamp', direction: 'desc' }));
 
             } catch (error) {
                 console.error("Failed to fetch data from Firestore:", error);
@@ -419,6 +432,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
              toast({ title: "خطأ", description: "فشل حذف الحقل.", variant: "destructive" });
         }
     }, [dataFields, toast]);
+    
+    // Message Actions
+    const addMessage: AddMessageFunction = useCallback(async (message) => {
+        try {
+            const newMessageData = {
+                ...message,
+                timestamp: new Date().toISOString(),
+            };
+            await firestoreService.addMessage(newMessageData);
+        } catch (e) {
+            toast({ title: "خطأ", description: "فشل إرسال الرسالة.", variant: "destructive" });
+        }
+    }, [toast]);
 
 
     const value: AppContextType = {
@@ -429,6 +455,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
         users,
         permissions,
         dataFields,
+        messages,
+        auditLogs,
+        notifications,
         enrichedAppointments,
         openNewPatientDialog,
         addPatient,
@@ -448,6 +477,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         addDataField,
         updateDataField,
         deleteDataField,
+        addMessage,
     };
 
     return (

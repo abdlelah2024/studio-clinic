@@ -54,7 +54,7 @@ export type Message = {
     senderEmail: string;
     receiverEmail: string;
     text: string;
-    timestamp: string;
+    timestamp: string; // ISO string
 };
 
 export type AuditLogAction = 'Create' | 'Update' | 'Delete' | 'Cancel' | 'Login';
@@ -69,7 +69,7 @@ export type AuditLog = {
     avatar: string;
   };
   details: string;
-  timestamp: string; // ISO string for sorting
+  timestamp: string; // ISO string
 };
 
 export type DataField = {
@@ -77,4 +77,13 @@ export type DataField = {
   label: string;
   type: 'نظام' | 'مخصص';
   required: boolean;
+};
+
+export type Notification = {
+  id: string;
+  title: string;
+  description: string;
+  type: 'appointment_confirmed' | 'appointment_canceled' | 'new_patient' | 'system_alert';
+  read: boolean;
+  timestamp: string; // ISO string
 };
