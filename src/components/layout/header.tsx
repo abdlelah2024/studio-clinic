@@ -2,7 +2,7 @@
 "use client"
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react"
 import { useRouter } from "next/navigation"
-import { Bell, Search, Calendar, UserPlus, CircleUser, CalendarCheck, CalendarX2, Stethoscope, User, ArrowRight } from "lucide-react"
+import { Bell, Search, Calendar, UserPlus, CircleUser, CalendarCheck, CalendarX2, Stethoscope, User, ArrowRight, LogOut } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -24,10 +24,7 @@ import {
 } from "@/components/ui/command"
 import { useAppContext } from "@/context/app-context"
 import { Badge } from "../ui/badge"
-import type { User as UserType } from "@/lib/types"
-
-// TODO: Replace with real user data from auth later
-const mockUser: UserType = { name: "You", email: "you@clinicflow.demo", avatar: "", role: "Admin", status: "online" };
+import { useAuth } from "@/context/auth-context"
 
 const mockNotifications = [
     {
@@ -56,6 +53,7 @@ export function AppHeader() {
   const [isSearchFocused, setIsSearchFocused] = useState(false)
   const searchRef = useRef<HTMLDivElement>(null)
   const { patients, doctors, enrichedAppointments, openNewAppointmentDialog, openNewPatientDialog } = useAppContext()
+  const { currentUser, logout } = useAuth();
   const router = useRouter()
 
   const searchResults = useMemo(() => {
@@ -110,6 +108,11 @@ export function AppHeader() {
     openNewPatientDialog({ initialName: searchQuery });
     resetSearch();
   }, [openNewPatientDialog, resetSearch, searchQuery]);
+
+  const handleLogout = async () => {
+    await logout();
+    router.push('/login');
+  }
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -255,24 +258,27 @@ export function AppHeader() {
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="rounded-full">
               <Avatar className="h-8 w-8">
-                <AvatarImage src={mockUser.avatar} alt={mockUser.name} data-ai-hint="doctor person" />
+                <AvatarImage src={currentUser?.avatar} alt={currentUser?.name} data-ai-hint="doctor person" />
                 <AvatarFallback>
-                  {mockUser.name.charAt(0).toUpperCase()}
+                  {currentUser?.name?.charAt(0).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>
-              <div className="font-bold">{mockUser.name}</div>
-              <div className="text-xs text-muted-foreground">{mockUser.email}</div>
+              <div className="font-bold">{currentUser?.name}</div>
+              <div className="text-xs text-muted-foreground">{currentUser?.email}</div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem onSelect={() => handleNavigation('/settings')}>الملف الشخصي</DropdownMenuItem>
             <DropdownMenuItem>الفواتير</DropdownMenuItem>
             <DropdownMenuItem onSelect={() => handleNavigation('/settings')}>الإعدادات</DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>تسجيل الخروج</DropdownMenuItem>
+            <DropdownMenuItem onSelect={handleLogout}>
+              <LogOut className="mr-2 h-4 w-4" />
+              تسجيل الخروج
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>

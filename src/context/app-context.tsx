@@ -6,6 +6,7 @@ import { AddPatientDialog } from "@/components/patients/add-patient-dialog"
 import type { Appointment, Patient, Doctor, User, UserRole, Permissions, DataField } from "@/lib/types"
 import { useToast } from "@/hooks/use-toast"
 import * as firestoreService from "@/services/firestore"
+import { useAuth } from "./auth-context"
 
 type AddAppointmentFunction = (appointment: Omit<Appointment, 'id'>) => void;
 type UpdateAppointmentFunction = (appointment: Appointment) => void;
@@ -84,6 +85,7 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export function AppProvider({ children }: { children: ReactNode }) {
+    const { currentUser } = useAuth();
     const [loading, setLoading] = useState(true);
     // Main Data State
     const [patients, setPatients] = useState<Patient[]>([]);
@@ -104,10 +106,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     // --- Real-time Data Fetching ---
     useEffect(() => {
+        if (!currentUser) {
+            setLoading(false);
+            return;
+        };
+
         const unsubscribers: (() => void)[] = [];
         let isCancelled = false;
         
         const fetchData = async () => {
+            setLoading(true);
             try {
                 // One-time fetches
                 const permissionsData = await firestoreService.getPermissions();
@@ -119,7 +127,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
                 unsubscribers.push(firestoreService.listenToCollection('patients', setPatients, { orderBy: 'lastVisit', direction: 'desc' }));
                 unsubscribers.push(firestoreService.listenToCollection('doctors', setDoctors, { orderBy: 'name' }));
                 unsubscribers.push(firestoreService.listenToCollection('appointments', setAppointments, { orderBy: 'date', direction: 'desc' }));
-                unsubscribers.push(firestoreService.listenToCollection('users', setUsers, { idField: 'email' }));
+                unsubscribers.push(firestoreService.listenToCollection('users', (data) => {
+                   if (!isCancelled) {
+                        // Enrich user data with online status (mocked for now)
+                        const enrichedUsers = data.map(u => ({
+                            ...u,
+                            status: (u.email === currentUser.email) ? 'online' : 'offline'
+                        }))
+                        setUsers(enrichedUsers);
+                    }
+                }, { idField: 'email' }));
                 unsubscribers.push(firestoreService.listenToCollection('dataFields', setDataFields, {}));
 
             } catch (error) {
@@ -144,7 +161,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
             isCancelled = true;
             unsubscribers.forEach(unsubscribe => unsubscribe());
         };
-    }, [toast]);
+    }, [toast, currentUser]);
 
 
     // --- Memoized Enriched Data ---
