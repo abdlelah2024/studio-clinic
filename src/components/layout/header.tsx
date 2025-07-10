@@ -2,7 +2,7 @@
 "use client"
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react"
 import { useRouter } from "next/navigation"
-import { Bell, Search, Calendar, UserPlus, CircleUser, CalendarCheck, CalendarX2, Stethoscope, User } from "lucide-react"
+import { Bell, Search, Calendar, UserPlus, CircleUser, CalendarCheck, CalendarX2, Stethoscope, User, ArrowRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -88,16 +88,16 @@ export function AppHeader() {
     setSearchQuery("")
   }, []);
 
-  const handleQuickAppointment = (patientId: string) => {
-      openNewAppointmentDialog({ initialPatientId: patientId });
-      resetSearch();
-  };
-  
-  const handleItemSelect = (path: string) => {
+  const handleNavigation = useCallback((path: string) => {
     router.push(path);
     resetSearch();
-  };
-
+  }, [router, resetSearch]);
+  
+  const handleQuickAppointment = useCallback((patientId: string) => {
+      openNewAppointmentDialog({ initialPatientId: patientId });
+      resetSearch();
+  }, [openNewAppointmentDialog, resetSearch]);
+  
   const handleNewAppointment = useCallback(() => {
     openNewAppointmentDialog();
     resetSearch();
@@ -145,13 +145,20 @@ export function AppHeader() {
                     {searchResults.patients.length > 0 && (
                         <CommandGroup heading="المرضى">
                             {searchResults.patients.map((patient) => (
-                            <CommandItem key={`p-${patient.id}`} onSelect={() => handleItemSelect(`/patients/${patient.id}`)} className="p-2 cursor-pointer">
-                                <User className="mr-2 h-4 w-4" />
-                                <div className="flex-1">
-                                    <p className="font-medium">{patient.name}</p>
-                                    <p className="text-xs text-muted-foreground">{patient.phone}</p>
+                            <CommandItem key={`p-${patient.id}`} value={`patient-${patient.id}`} className="p-2 cursor-pointer flex justify-between items-center" onSelect={() => handleNavigation(`/patients/${patient.id}`)}>
+                                <div className="flex items-center gap-2">
+                                    <User className="h-4 w-4" />
+                                    <div>
+                                        <p className="font-medium">{patient.name}</p>
+                                        <p className="text-xs text-muted-foreground">{patient.phone}</p>
+                                    </div>
                                 </div>
-                                <Button variant="secondary" size="sm" onClick={(e) => { e.stopPropagation(); handleQuickAppointment(patient.id); }}>موعد سريع</Button>
+                                <div className="flex items-center gap-2">
+                                    <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); handleNavigation(`/patients/${patient.id}`); }}>
+                                        عرض السجل
+                                    </Button>
+                                    <Button variant="secondary" size="sm" onClick={(e) => { e.stopPropagation(); handleQuickAppointment(patient.id); }}>موعد سريع</Button>
+                                </div>
                             </CommandItem>
                             ))}
                         </CommandGroup>
@@ -159,7 +166,7 @@ export function AppHeader() {
                     {searchResults.doctors.length > 0 && (
                         <CommandGroup heading="الأطباء">
                             {searchResults.doctors.map((doctor) => (
-                            <CommandItem key={`d-${doctor.id}`} onSelect={() => handleItemSelect(`/doctors`)} className="p-2 cursor-pointer">
+                            <CommandItem key={`d-${doctor.id}`} value={`doctor-${doctor.id}`} onSelect={() => handleNavigation(`/doctors`)} className="p-2 cursor-pointer">
                                 <Stethoscope className="mr-2 h-4 w-4" />
                                 <div>
                                     <p className="font-medium">{doctor.name}</p>
@@ -172,7 +179,7 @@ export function AppHeader() {
                     {searchResults.appointments.length > 0 && (
                         <CommandGroup heading="المواعيد">
                             {searchResults.appointments.map((appointment) => (
-                            <CommandItem key={`a-${appointment.id}`} onSelect={() => handleItemSelect('/appointments')} className="p-2 cursor-pointer">
+                            <CommandItem key={`a-${appointment.id}`} value={`appointment-${appointment.id}`} onSelect={() => handleNavigation('/appointments')} className="p-2 cursor-pointer">
                                 <Calendar className="mr-2 h-4 w-4" />
                                 <div className="flex-1">
                                     <p className="font-medium">{appointment.patient.name}</p>
@@ -189,7 +196,7 @@ export function AppHeader() {
                     <CommandEmpty>
                         <div onClick={handleNewPatient} className="flex-col items-center justify-center py-4 cursor-pointer">
                              <p>لم يتم العثور على مريض. هل تريد إضافة واحد جديد؟</p>
-                             <div className="flex items-center text-primary mt-2">
+                             <div className="flex items-center justify-center text-primary mt-2">
                                 <UserPlus className="mr-2 h-4 w-4" /> إضافة مريض جديد
                             </div>
                         </div>
@@ -258,9 +265,9 @@ export function AppHeader() {
               <div className="text-xs text-muted-foreground">{mockUser.email}</div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onSelect={() => handleItemSelect('/settings')}>الملف الشخصي</DropdownMenuItem>
+            <DropdownMenuItem onSelect={() => handleNavigation('/settings')}>الملف الشخصي</DropdownMenuItem>
             <DropdownMenuItem>الفواتير</DropdownMenuItem>
-            <DropdownMenuItem onSelect={() => handleItemSelect('/settings')}>الإعدادات</DropdownMenuItem>
+            <DropdownMenuItem onSelect={() => handleNavigation('/settings')}>الإعدادات</DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem>تسجيل الخروج</DropdownMenuItem>
           </DropdownMenuContent>
