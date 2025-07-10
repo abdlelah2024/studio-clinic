@@ -9,9 +9,10 @@ import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { addDays, startOfDay, isToday } from 'date-fns';
-import { Wifi, Users, RefreshCw } from "lucide-react"
+import { Wifi, Users, RefreshCw, Calendar } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useAppContext } from "@/context/app-context"
+import type { AppointmentStatus } from "@/lib/types"
 
 type TimeRange = 'all' | '30d' | '7d' | 'today';
 
@@ -21,7 +22,6 @@ export default function DashboardPage() {
   const [isOnline, setIsOnline] = useState(true);
   const [hydrated, setHydrated] = useState(false);
   
-  // Mock browser online status
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
     const handleOffline = () => setIsOnline(false);
@@ -42,7 +42,7 @@ export default function DashboardPage() {
   }, []);
 
 
-  const getStatusTranslation = (status: 'Scheduled' | 'Completed' | 'Canceled' | 'Waiting') => {
+  const getStatusTranslation = (status: AppointmentStatus) => {
     switch (status) {
       case 'Completed': return 'مكتمل';
       case 'Canceled': return 'ملغى';
@@ -54,7 +54,7 @@ export default function DashboardPage() {
 
   const filteredData = useMemo(() => {
     if (!hydrated) {
-        return { appointments: [], upcomingAppointments: [] };
+        return { appointments: [], todayAppointments: [] };
     }
     const now = new Date();
     let startDate: Date | null = null;
@@ -73,16 +73,14 @@ export default function DashboardPage() {
         return isToday(appointmentDate);
       }
       if (!startDate) return true; // 'all' time range
-      // For range filters, compare date part only
       return startOfDay(appointmentDate) >= startOfDay(startDate) && startOfDay(appointmentDate) <= startOfDay(now);
     });
 
-    const upcomingAppointments = enrichedAppointments
-      .filter(a => (a.status === 'Scheduled' || a.status === 'Waiting') && new Date(a.date) >= startOfDay(now))
-      .sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-      .slice(0, 5);
+    const todayAppointments = enrichedAppointments
+      .filter(a => isToday(new Date(a.date)))
+      .sort((a,b) => a.startTime.localeCompare(b.startTime));
 
-    return { appointments, upcomingAppointments };
+    return { appointments, todayAppointments };
   }, [timeRange, hydrated, enrichedAppointments]);
   
   if (!hydrated) {
@@ -109,6 +107,59 @@ export default function DashboardPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
+          <Card>
+            <CardHeader>
+              <CardTitle>مواعيد اليوم</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>المريض</TableHead>
+                    <TableHead>الطبيب</TableHead>
+                    <TableHead>الوقت</TableHead>
+                    <TableHead>الحالة</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredData.todayAppointments.length > 0 ? filteredData.todayAppointments.map((appointment) => (
+                    <TableRow key={appointment.id}>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Avatar className="h-8 w-8">
+                            <AvatarImage src={appointment.patient.avatar} data-ai-hint="person face" />
+                            <AvatarFallback>{appointment.patient.name.charAt(0)}</AvatarFallback>
+                          </Avatar>
+                          <span className="font-medium">{appointment.patient.name}</span>
+                        </div>
+                      </TableCell>
+                       <TableCell>
+                        <span className="font-medium">{appointment.doctor.name}</span>
+                      </TableCell>
+                      <TableCell>{appointment.startTime}</TableCell>
+                      <TableCell>
+                         <Badge variant={appointment.status === 'Completed' ? 'default' : appointment.status === 'Canceled' ? 'destructive' : 'secondary'}
+                            className={cn({
+                                "bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300 border-blue-300 hover:bg-blue-200": appointment.status === 'Waiting',
+                            })}
+                            >
+                            {getStatusTranslation(appointment.status)}
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                  )) : (
+                     <TableRow>
+                        <TableCell colSpan={4} className="h-24 text-center">
+                            لا توجد مواعيد لهذا اليوم.
+                        </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </div>
+        <div className="lg:col-span-1">
             <Card>
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
@@ -159,49 +210,6 @@ export default function DashboardPage() {
                     </div>
                 </CardFooter>
             </Card>
-        </div>
-        <div className="lg:col-span-1">
-          <Card>
-            <CardHeader>
-              <CardTitle>المواعيد القادمة</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>المريض</TableHead>
-                    <TableHead>الوقت</TableHead>
-                    <TableHead>الحالة</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredData.upcomingAppointments.length > 0 ? filteredData.upcomingAppointments.map((appointment) => (
-                    <TableRow key={appointment.id}>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Avatar className="h-8 w-8">
-                            <AvatarImage src={appointment.patient.avatar} data-ai-hint="person face" />
-                            <AvatarFallback>{appointment.patient.name.charAt(0)}</AvatarFallback>
-                          </Avatar>
-                          <span className="font-medium">{appointment.patient.name}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell>{appointment.startTime}</TableCell>
-                      <TableCell>
-                        <Badge variant="secondary">{getStatusTranslation(appointment.status)}</Badge>
-                      </TableCell>
-                    </TableRow>
-                  )) : (
-                     <TableRow>
-                        <TableCell colSpan={3} className="h-24 text-center">
-                            لا توجد مواعيد قادمة.
-                        </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
         </div>
       </div>
     </div>
