@@ -34,5 +34,4 @@ if (typeof window !== 'undefined') {
     }
 }
 
-
 export { db, auth };
