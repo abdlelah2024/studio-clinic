@@ -14,10 +14,11 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import type { Appointment, Patient, Doctor } from "@/lib/types"
+import type { Appointment, Patient, Doctor, AppointmentStatus } from "@/lib/types"
 import { Combobox } from "../ui/combobox"
 import { Checkbox } from "../ui/checkbox"
 import { useAppContext } from "@/context/app-context"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select"
 
 type AddAppointmentFunction = (appointment: Omit<Appointment, 'id' >) => void;
 
@@ -37,6 +38,7 @@ export function NewAppointmentDialog({ children, onAppointmentAdded, open, onOpe
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
   const [reason, setReason] = useState("");
+  const [status, setStatus] = useState<AppointmentStatus>('Scheduled');
   const [freeReturn, setFreeReturn] = useState(false);
   const [selectedDoctor, setSelectedDoctor] = useState<Doctor | null>(null);
 
@@ -47,6 +49,7 @@ export function NewAppointmentDialog({ children, onAppointmentAdded, open, onOpe
     setStartTime("");
     setEndTime("");
     setReason("");
+    setStatus('Scheduled');
     setFreeReturn(false);
     setSelectedDoctor(null);
   },[initialPatientId]);
@@ -65,7 +68,7 @@ export function NewAppointmentDialog({ children, onAppointmentAdded, open, onOpe
 
   const handleSubmit = () => {
     if (patientId && doctorId && date && startTime && endTime && reason) {
-      onAppointmentAdded({ patientId, doctorId, date, startTime, endTime, reason, freeReturn, status: 'Scheduled' });
+      onAppointmentAdded({ patientId, doctorId, date, startTime, endTime, reason, freeReturn, status });
       onOpenChange(false);
     }
   };
@@ -134,9 +137,24 @@ export function NewAppointmentDialog({ children, onAppointmentAdded, open, onOpe
             </Label>
             <Textarea id="reason" placeholder="سبب الزيارة..." className="col-span-3" value={reason} onChange={(e) => setReason(e.target.value)} />
           </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="status" className="text-right">
+                الحالة
+            </Label>
+            <Select value={status} onValueChange={(v) => setStatus(v as AppointmentStatus)}>
+                <SelectTrigger className="col-span-3">
+                    <SelectValue placeholder="اختر حالة" />
+                </SelectTrigger>
+                <SelectContent>
+                    <SelectItem value="Scheduled">مجدول</SelectItem>
+                    <SelectItem value="Waiting">منتظر</SelectItem>
+                    <SelectItem value="Completed">مكتمل</SelectItem>
+                </SelectContent>
+            </Select>
+          </div>
            {selectedDoctor?.freeReturnPeriod && (
             <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="free-return" className="text-right col-span-1">العودة</Label>
+                <Label htmlFor="free-return" className="text-right col-span-1"></Label>
                 <div className="col-span-3 flex items-center space-x-2 space-x-reverse">
                     <Checkbox id="free-return" checked={freeReturn} onCheckedChange={(checked) => setFreeReturn(!!checked)} />
                     <Label htmlFor="free-return" className="text-sm font-normal text-muted-foreground">
