@@ -5,21 +5,9 @@ import { NewAppointmentDialog } from "@/components/appointments/new-appointment-
 import { AddPatientDialog } from "@/components/patients/add-patient-dialog"
 import type { Appointment, Patient, Doctor, User, UserRole, Permissions, DataField, Message, AuditLog, Notification } from "@/lib/types"
 import { useToast } from "@/hooks/use-toast"
-import { initializeApp, getApps, getApp, FirebaseApp } from "firebase/app"
-import { getFirestore, onSnapshot, collection, query, orderBy, addDoc, updateDoc, deleteDoc, doc, setDoc, getDoc, Firestore, serverTimestamp } from "firebase/firestore"
-import { getAuth, createUserWithEmailAndPassword, onAuthStateChanged, signInWithEmailAndPassword, signOut, User as FirebaseUser, Auth } from 'firebase/auth';
-import { Skeleton } from "@/components/ui/skeleton"
-import { useAuth } from "@/context/auth-context"
-
-
-const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
-};
+import { db, auth } from "@/services/firestore"
+import { onSnapshot, collection, query, orderBy, addDoc, updateDoc, deleteDoc, doc, setDoc, getDoc, serverTimestamp } from "firebase/firestore"
+import { createUserWithEmailAndPassword, onAuthStateChanged, signInWithEmailAndPassword, signOut, User as FirebaseUser } from 'firebase/auth';
 
 // --- AppContext Types ---
 type AddAppointmentFunction = (appointment: Omit<Appointment, 'id'>) => void;
@@ -87,22 +75,7 @@ interface AppContextType {
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
-// --- Firebase Initialization and Helpers ---
-let app: FirebaseApp;
-let auth: Auth;
-let db: Firestore;
-
-if (typeof window !== 'undefined' && getApps().length === 0) {
-    app = initializeApp(firebaseConfig);
-    auth = getAuth(app);
-    db = getFirestore(app);
-} else if (typeof window !== 'undefined') {
-    app = getApp();
-    auth = getAuth(app);
-    db = getFirestore(app);
-}
-
-// Generic function to listen to a collection
+// --- Firebase Helpers ---
 const listenToCollection = <T>(collectionName: string, callback: (data: T[]) => void, options: { idField?: string; orderBy?: string; direction?: 'asc' | 'desc'; }) => {
   const { idField = 'id', orderBy: orderByField, direction = 'asc' } = options;
   let q: any = collection(db, collectionName);
