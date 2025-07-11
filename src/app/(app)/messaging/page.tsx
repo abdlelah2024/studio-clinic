@@ -10,11 +10,9 @@ import type { User, Message } from "@/lib/types";
 import { cn } from '@/lib/utils';
 import { useAppContext } from '@/context/app-context';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useAuth } from '@/context/auth-context';
 
 export default function MessagingPage() {
-    const { users, messages, loading, addMessage } = useAppContext();
-    const { currentUser } = useAuth();
+    const { users, messages, loading, addMessage, currentUser } = useAppContext();
     const [selectedUser, setSelectedUser] = useState<User | null>(null);
     const [newMessage, setNewMessage] = useState("");
     const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -48,7 +46,8 @@ export default function MessagingPage() {
     const conversation = selectedUser ? messages.filter(
         m => (m.senderEmail === currentUser?.email && m.receiverEmail === selectedUser.email) ||
              (m.senderEmail === selectedUser.email && m.receiverEmail === currentUser?.email)
-    ).sort((a,b) => a.timestamp.localeCompare(b.timestamp)) : [];
+    ).sort((a,b) => (a.timestamp && b.timestamp) ? (new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()) : 0) : [];
+
 
     if (loading) {
         return (
@@ -187,3 +186,5 @@ export default function MessagingPage() {
         </Card>
     );
 }
+
+    

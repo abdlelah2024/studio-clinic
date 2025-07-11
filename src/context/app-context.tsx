@@ -9,6 +9,7 @@ import { initializeApp, getApps, getApp, FirebaseApp } from "firebase/app"
 import { getFirestore, onSnapshot, collection, query, orderBy, addDoc, updateDoc, deleteDoc, doc, setDoc, getDoc, Firestore, serverTimestamp } from "firebase/firestore"
 import { getAuth, createUserWithEmailAndPassword, onAuthStateChanged, signInWithEmailAndPassword, signOut, User as FirebaseUser, Auth } from 'firebase/auth';
 import { Skeleton } from "@/components/ui/skeleton"
+import { useAuth } from "@/context/auth-context"
 
 
 const firebaseConfig = {
@@ -91,13 +92,15 @@ let app: FirebaseApp;
 let auth: Auth;
 let db: Firestore;
 
-if (getApps().length === 0) {
+if (typeof window !== 'undefined' && getApps().length === 0) {
     app = initializeApp(firebaseConfig);
-} else {
+    auth = getAuth(app);
+    db = getFirestore(app);
+} else if (typeof window !== 'undefined') {
     app = getApp();
+    auth = getAuth(app);
+    db = getFirestore(app);
 }
-auth = getAuth(app);
-db = getFirestore(app);
 
 // Generic function to listen to a collection
 const listenToCollection = <T>(collectionName: string, callback: (data: T[]) => void, options: { idField?: string; orderBy?: string; direction?: 'asc' | 'desc'; }) => {
@@ -168,6 +171,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     // --- Auth Logic ---
     useEffect(() => {
+        if (!auth) return;
         const unsubscribe = onAuthStateChanged(auth, async (user) => {
             setLoading(true);
             if (user) {
@@ -175,7 +179,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
                 try {
                     const userDoc = await getDoc(doc(db, 'users', user.email!));
                     if (userDoc.exists()) {
-                        setCurrentUser({ ...userDoc.data() } as User);
+                        setCurrentUser({ id: user.uid, ...userDoc.data() } as User);
                     } else {
                         setCurrentUser(null);
                     }
@@ -201,7 +205,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     };
 
     // --- Data Seeding ---
-    const seedAdminUser = useCallback(async () => {
+    const seedInitialData = useCallback(async () => {
+        // Seed Admin User
         const adminEmail = "asd19082@gmail.com";
         const adminPassword = "159632Asd";
         try {
@@ -215,15 +220,45 @@ export function AppProvider({ children }: { children: ReactNode }) {
                 await addUserDoc({ name: "Admin User", email: adminEmail, role: 'Admin', avatar: `https://placehold.co/100x100?text=A`, status: 'offline' });
             }
         } catch (error) { console.error("Error seeding admin user:", error); }
+
+        // Seed Permissions
+        const permsDoc = await getDoc(doc(db, "system", "permissions"));
+        if (!permsDoc.exists()) {
+            console.log("Permissions not set, seeding default permissions...");
+            const defaultPermissions: Record<UserRole, Permissions> = {
+                Admin: {
+                    patients: { add: true, edit: true, delete: true },
+                    doctors: { add: true, edit: true, delete: true },
+                    appointments: { add: true, edit: true, delete: true, cancel: true },
+                    users: { add: true, edit: true, delete: true },
+                },
+                Doctor: {
+                    patients: { add: true, edit: true, delete: false },
+                    doctors: { add: false, edit: false, delete: false },
+                    appointments: { add: true, edit: true, delete: false, cancel: true },
+                    users: { add: false, edit: false, delete: false },
+                },
+                Receptionist: {
+                    patients: { add: true, edit: true, delete: false },
+                    doctors: { add: false, edit: false, delete: false },
+                    appointments: { add: true, edit: true, delete: true, cancel: true },
+                    users: { add: false, edit: false, delete: false },
+                },
+            };
+            await setDocument("system", "permissions", defaultPermissions);
+        }
     }, []);
 
     useEffect(() => {
-        seedAdminUser();
-    }, [seedAdminUser]);
+        if(db) {
+            seedInitialData();
+        }
+    }, [seedInitialData]);
+
 
     // --- Real-time Data Fetching ---
     useEffect(() => {
-        if (!currentUser) return;
+        if (!currentUser || !db) return;
         const unsubscribers: (() => void)[] = [
             listenToCollection('patients', setPatients, { orderBy: 'lastVisit', direction: 'desc' }),
             listenToCollection('doctors', setDoctors, { orderBy: 'name' }),
@@ -348,14 +383,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
         addUser, updateUser, deleteUser, updatePermission,
         addDataField, updateDataField, deleteDataField, addMessage,
     };
-
-    if (loading) {
-        return (
-            <div className="flex min-h-screen items-center justify-center">
-                <Skeleton className="h-screen w-screen" />
-            </div>
-        );
-    }
     
     return (
         <AppContext.Provider value={value}>
@@ -373,3 +400,5 @@ export function useAppContext() {
     }
     return context;
 }
+
+    
