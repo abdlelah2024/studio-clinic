@@ -135,21 +135,16 @@ export function AppHeader() {
                     {searchResults.patients.length > 0 && (
                         <CommandGroup heading="المرضى">
                             {searchResults.patients.map((patient) => (
-                            <CommandItem key={`p-${patient.id}`} value={`patient-${patient.id}`} className="p-2 flex justify-between items-center" onSelect={() => setIsSearchFocused(false)}>
-                                <div className="flex items-center gap-2 cursor-pointer" onClick={() => handleNavigation(`/patients/${patient.id}`)}>
-                                    <User className="h-4 w-4" />
-                                    <div>
-                                        <p className="font-medium">{patient.name}</p>
-                                        <p className="text-xs text-muted-foreground">{patient.phone}</p>
+                                <CommandItem key={`p-${patient.id}`} value={`patient-${patient.id}`} onSelect={() => handleNavigation(`/patients/${patient.id}`)} className="p-2 flex justify-between items-center cursor-pointer">
+                                    <div className="flex items-center gap-2">
+                                        <User className="h-4 w-4" />
+                                        <div>
+                                            <p className="font-medium">{patient.name}</p>
+                                            <p className="text-xs text-muted-foreground">{patient.phone}</p>
+                                        </div>
                                     </div>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <Button variant="ghost" size="sm" onClick={() => handleNavigation(`/patients/${patient.id}`)}>
-                                        عرض السجل
-                                    </Button>
-                                    <Button variant="secondary" size="sm" onClick={() => handleQuickAppointment(patient.id)}>موعد سريع</Button>
-                                </div>
-                            </CommandItem>
+                                    <Button variant="secondary" size="sm" onClick={(e) => { e.stopPropagation(); handleQuickAppointment(patient.id); }}>موعد سريع</Button>
+                                </CommandItem>
                             ))}
                         </CommandGroup>
                     )}
@@ -183,14 +178,14 @@ export function AppHeader() {
                     </>
                 )}
                  {searchQuery && !hasResults && (
-                    <CommandEmpty>
-                        <div onClick={handleNewPatient} className="flex-col items-center justify-center py-4 cursor-pointer">
+                    <CommandItem onSelect={handleNewPatient} className="cursor-pointer">
+                        <div className="flex-col items-center justify-center py-4 text-center w-full">
                              <p>لم يتم العثور على مريض. هل تريد إضافة واحد جديد؟</p>
                              <div className="flex items-center justify-center text-primary mt-2">
                                 <UserPlus className="mr-2 h-4 w-4" /> إضافة مريض جديد
                             </div>
                         </div>
-                    </CommandEmpty>
+                    </CommandItem>
                  )}
 
                 {!searchQuery && (
