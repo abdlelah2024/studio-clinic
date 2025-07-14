@@ -19,7 +19,7 @@ type DeletePatientFunction = (patientId: string) => void;
 type AddDoctorFunction = (doctor: Omit<Doctor, 'id' | 'avatar'>) => void;
 type UpdateDoctorFunction = (doctor: Doctor) => void;
 type DeleteDoctorFunction = (doctorId: string) => void;
-type AddUserFunction = (user: Omit<User, 'avatar' | 'status'>) => void;
+type AddUserFunction = (user: Omit<User, 'avatar' | 'status'>) => Promise<void>;
 type UpdateUserFunction = (user: User) => void;
 type DeleteUserFunction = (email: string) => void;
 type UpdatePermissionFunction = (role: UserRole, section: keyof Permissions['Admin'], action: keyof Permissions['Admin']['patients'], value: boolean) => void;
@@ -76,14 +76,14 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 // --- Firebase Helpers ---
-const listenToCollection = <T>(collectionName: string, callback: (data: T[]) => void, options: { idField?: string; orderBy?: string; direction?: 'asc' | 'desc'; }) => {
+const listenToCollection = <T,>(collectionName: string, callback: (data: T[]) => void, options: { idField?: string; orderBy?: string; direction?: 'asc' | 'desc'; }) => {
   const { idField = 'id', orderBy: orderByField, direction = 'asc' } = options;
   let q: any = collection(db, collectionName);
   if (orderByField) {
     q = query(q, orderBy(orderByField, direction));
   }
   return onSnapshot(q, (snapshot) => {
-    const data = snapshot.docs.map((doc) => ({ [idField]: doc.id, ...doc.data() })) as T[];
+    const data = snapshot.docs.map((doc) => ({ ...doc.data(), [idField]: doc.id })) as T[];
     callback(data);
   }, (error) => console.error(`Error listening to ${collectionName}:`, error));
 };
@@ -92,6 +92,8 @@ const addDocument = async <T extends object>(collectionName: string, data: T) =>
 const updateDocument = async (collectionName: string, id: string, data: any) => updateDoc(doc(db, collectionName, id), data);
 const deleteDocument = async (collectionName: string, id: string) => deleteDoc(doc(db, collectionName, id));
 const setDocument = async (collectionName: string, id: string, data: any, merge = true) => setDoc(doc(db, collectionName, id), data, { merge });
+const getDocument = async (collectionName: string, id: string) => getDoc(doc(db, collectionName, id));
+
 
 const addPatientDoc = (patient: Omit<Patient, 'id'>) => addDocument('patients', patient);
 const updatePatientDoc = (id: string, patient: Partial<Patient>) => updateDocument('patients', id, patient);
@@ -110,11 +112,11 @@ const updateDataFieldDoc = (id: string, field: Partial<DataField>) => updateDocu
 const deleteDataFieldDoc = (id: string) => deleteDocument('dataFields', id);
 const addMessageDoc = (message: Omit<Message, 'id'|'timestamp'>) => addDocument('messages', { ...message, timestamp: serverTimestamp() });
 const getPermissions = async (): Promise<Record<UserRole, Permissions>> => {
-    const docSnap = await getDoc(doc(db, 'system', 'permissions'));
+    const docSnap = await getDocument('system', 'permissions');
     return docSnap.exists() ? docSnap.data() as Record<UserRole, Permissions> : {} as Record<UserRole, Permissions>;
 };
 const updatePermissions = async (permissions: Partial<Record<UserRole, Permissions>>) => setDocument('system', 'permissions', permissions);
-const checkUserExists = async (email: string): Promise<boolean> => (await getDoc(doc(db, 'users', email))).exists();
+const checkUserExists = async (email: string): Promise<boolean> => (await getDocument('users', email)).exists();
 
 
 export function AppProvider({ children }: { children: ReactNode }) {
@@ -150,11 +152,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
             if (user) {
                 setFirebaseUser(user);
                 try {
-                    const userDoc = await getDoc(doc(db, 'users', user.email!));
+                    const userDoc = await getDocument('users', user.email!);
                     if (userDoc.exists()) {
-                        setCurrentUser({ id: user.uid, ...userDoc.data() } as User);
+                        setCurrentUser({ email: user.email!, ...userDoc.data() } as User);
                     } else {
                         setCurrentUser(null);
+                        await signOut(auth); // Log out if user doc doesn't exist
                     }
                 } catch (error) {
                     console.error("Error fetching user document:", error);
@@ -179,27 +182,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     // --- Data Seeding ---
     const seedInitialData = useCallback(async () => {
-        // Seed Admin User
         const adminEmail = "asd19082@gmail.com";
         const adminPassword = "159632Asd";
         try {
             if (!(await checkUserExists(adminEmail))) {
                 console.log("Admin user does not exist, creating...");
-                try {
-                    await createUserWithEmailAndPassword(auth, adminEmail, adminPassword);
-                } catch (error: any) {
-                    if (error.code !== 'auth/email-already-in-use') {
-                        console.error("Error creating user in Auth:", error);
-                        return; // Stop if Auth user creation fails
-                    }
-                }
-                await addUserDoc({ name: "Admin", email: adminEmail, role: 'Admin', avatar: `https://placehold.co/100x100?text=A`, status: 'offline' });
+                await addUser({ name: "Admin", email: adminEmail, role: 'Admin', password: adminPassword });
                 console.log("Admin user created successfully.");
             }
         } catch (error) { console.error("Error seeding admin user:", error); }
 
-        // Seed Permissions
-        const permsDoc = await getDoc(doc(db, "system", "permissions"));
+        const permsDoc = await getDocument("system", "permissions");
         if (!permsDoc.exists()) {
             console.log("Permissions not set, seeding default permissions...");
             const defaultPermissions: Record<UserRole, Permissions> = {
@@ -277,7 +270,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         catch(e) { toast({ title: "خطأ", description: "فشل تحديث المريض.", variant: "destructive" }); }
     }, [toast]);
     const deletePatient: DeletePatientFunction = useCallback(async (id) => {
-        try { await deletePatientDoc(id); toast({ title: "تم الحذف بنجاح", variant: "destructive" }); }
+        try { await deletePatientDoc(id); toast({ title: "تم الحذف بنجاح", variant: "default" }); }
         catch(e) { toast({ title: "خطأ", description: "فشل حذف المريض.", variant: "destructive" }); }
     }, [toast]);
 
@@ -290,7 +283,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         catch(e) { toast({ title: "خطأ", description: "فشل تحديث الطبيب.", variant: "destructive" }); }
     }, [toast]);
     const deleteDoctor: DeleteDoctorFunction = useCallback(async (id) => {
-        try { await deleteDoctorDoc(id); toast({ title: "تم الحذف بنجاح", variant: "destructive" }); }
+        try { await deleteDoctorDoc(id); toast({ title: "تم الحذف بنجاح", variant: "default" }); }
         catch(e) { toast({ title: "خطأ", description: "فشل حذف الطبيب.", variant: "destructive" }); }
     }, [toast]);
 
@@ -303,7 +296,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         catch(e) { toast({ title: "خطأ", description: "فشل تحديث الموعد.", variant: "destructive" }); }
     }, [toast]);
     const deleteAppointment: DeleteAppointmentFunction = useCallback(async (id) => {
-        try { await deleteAppointmentDoc(id); toast({ title: "تم حذف الموعد", variant: "destructive" }); }
+        try { await deleteAppointmentDoc(id); toast({ title: "تم حذف الموعد", variant: "default" }); }
         catch(e) { toast({ title: "خطأ", description: "فشل حذف الموعد.", variant: "destructive" }); }
     }, [toast]);
 
@@ -315,9 +308,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
         }
         catch(e: any) { 
             if (e.code === 'auth/email-already-in-use') {
-                toast({ title: "خطأ", description: "هذا البريد الإلكتروني مسجل بالفعل.", variant: "destructive" });
+                await addUserDoc({ ...user, avatar: `https://placehold.co/100x100?text=${user.name.charAt(0)}`, status: 'offline' }); 
             } else {
-                toast({ title: "خطأ", description: "فشل إضافة المستخدم.", variant: "destructive" }); 
+                 toast({ title: "خطأ", description: "فشل إضافة المستخدم.", variant: "destructive" }); 
+                 throw e;
             }
         }
     }, [toast]);
@@ -326,7 +320,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         catch (e) { toast({ title: "خطأ", description: "فشل تحديث المستخدم.", variant: "destructive" }); }
     }, [toast]);
     const deleteUser: DeleteUserFunction = useCallback(async (email) => {
-        try { await deleteUserDoc(email); toast({ title: "تم الحذف بنجاح", variant: "destructive" }); }
+        try { await deleteUserDoc(email); toast({ title: "تم الحذف بنجاح", variant: "default" }); }
         catch (e) { toast({ title: "خطأ", description: "فشل حذف المستخدم.", variant: "destructive" }); }
     }, [toast]);
 
@@ -346,7 +340,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         catch(e) { toast({ title: "خطأ", description: "فشل تحديث الحقل.", variant: "destructive" }); }
     }, [toast]);
     const deleteDataField: DeleteDataFieldFunction = useCallback(async (id) => {
-        try { await deleteDataFieldDoc(id); toast({ title: "تم حذف الحقل بنجاح", variant: "destructive" }); }
+        try { await deleteDataFieldDoc(id); toast({ title: "تم حذف الحقل بنجاح", variant: "default" }); }
         catch(e) { toast({ title: "خطأ", description: "فشل حذف الحقل.", variant: "destructive" }); }
     }, [toast]);
     

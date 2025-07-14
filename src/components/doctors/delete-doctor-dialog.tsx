@@ -13,6 +13,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import type { Doctor } from '@/lib/types'
+import { Button } from '../ui/button'
 
 interface DeleteDoctorDialogProps {
     children: React.ReactNode;
@@ -32,9 +33,11 @@ export function DeleteDoctorDialog({ children, doctor, onDelete }: DeleteDoctorD
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>إلغاء</AlertDialogCancel>
-          <AlertDialogAction onClick={onDelete} className="bg-destructive hover:bg-destructive/90">
-            نعم، احذف الطبيب
+          <AlertDialogCancel asChild>
+             <Button variant="outline">إلغاء</Button>
+          </AlertDialogCancel>
+          <AlertDialogAction onClick={onDelete} asChild>
+             <Button variant="destructive">نعم، احذف الطبيب</Button>
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
