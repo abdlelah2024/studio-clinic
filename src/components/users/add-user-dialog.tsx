@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import type { User, UserRole } from "@/lib/types"
+import { useToast } from "@/hooks/use-toast"
 
 interface AddUserDialogProps {
   children: React.ReactNode;
@@ -27,6 +28,7 @@ export function AddUserDialog({ children, onUserAdded }: AddUserDialogProps) {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [role, setRole] = useState<UserRole | ''>('')
+  const { toast } = useToast()
 
   const handleSubmit = () => {
     if (name && email && role && password) {
@@ -36,6 +38,12 @@ export function AddUserDialog({ children, onUserAdded }: AddUserDialogProps) {
       setEmail('');
       setPassword('');
       setRole('');
+    } else {
+      toast({
+        title: "بيانات ناقصة",
+        description: "يرجى ملء جميع الحقول المطلوبة.",
+        variant: "destructive"
+      })
     }
   }
 

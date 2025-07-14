@@ -188,9 +188,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
                 try {
                     await createUserWithEmailAndPassword(auth, adminEmail, adminPassword);
                 } catch (error: any) {
-                    if (error.code !== 'auth/email-already-in-use') throw error;
+                    if (error.code !== 'auth/email-already-in-use') {
+                        console.error("Error creating user in Auth:", error);
+                        return; // Stop if Auth user creation fails
+                    }
                 }
-                await addUserDoc({ name: "Admin User", email: adminEmail, role: 'Admin', avatar: `https://placehold.co/100x100?text=A`, status: 'offline' });
+                await addUserDoc({ name: "Admin", email: adminEmail, role: 'Admin', avatar: `https://placehold.co/100x100?text=A`, status: 'offline' });
+                console.log("Admin user created successfully.");
             }
         } catch (error) { console.error("Error seeding admin user:", error); }
 
@@ -223,7 +227,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }, []);
 
     useEffect(() => {
-        if(db) {
+        if(db && auth) {
             seedInitialData();
         }
     }, [seedInitialData]);
@@ -304,8 +308,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }, [toast]);
 
     const addUser: AddUserFunction = useCallback(async (user) => {
-        try { await addUserDoc({ ...user, avatar: `https://placehold.co/100x100?text=${user.name.charAt(0)}`, status: 'offline' }); toast({ title: "تمت الإضافة بنجاح" }); }
-        catch(e) { toast({ title: "خطأ", description: "فشل إضافة المستخدم.", variant: "destructive" }); }
+        try {
+            await createUserWithEmailAndPassword(auth, user.email, user.password!);
+            await addUserDoc({ ...user, avatar: `https://placehold.co/100x100?text=${user.name.charAt(0)}`, status: 'offline' }); 
+            toast({ title: "تمت الإضافة بنجاح" });
+        }
+        catch(e: any) { 
+            if (e.code === 'auth/email-already-in-use') {
+                toast({ title: "خطأ", description: "هذا البريد الإلكتروني مسجل بالفعل.", variant: "destructive" });
+            } else {
+                toast({ title: "خطأ", description: "فشل إضافة المستخدم.", variant: "destructive" }); 
+            }
+        }
     }, [toast]);
     const updateUser: UpdateUserFunction = useCallback(async (u) => {
         try { await updateUserDoc(u.email, u); toast({ title: "تم التحديث بنجاح" }); }
@@ -373,5 +387,3 @@ export function useAppContext() {
     }
     return context;
 }
-
-    
