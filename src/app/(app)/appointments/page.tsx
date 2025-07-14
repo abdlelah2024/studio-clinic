@@ -41,10 +41,9 @@ export default function AppointmentsPage() {
     updateAppointment({ ...appointment, status });
   };
 
-  const handleCancelAppointment = (appointmentId: string) => {
-    const appointmentToUpdate = enrichedAppointments.find(app => app.id === appointmentId);
-     if(appointmentToUpdate) {
-        updateAppointment({ ...appointmentToUpdate, status: 'Canceled' });
+  const handleCancelAppointment = (appointment: EnrichedAppointment) => {
+     if(appointment) {
+        updateAppointment({ ...appointment, status: 'Canceled' });
     }
   };
 
@@ -245,7 +244,7 @@ export default function AppointmentsPage() {
                           <Clock className="mr-2 h-4 w-4" />
                           إعادة جدولة
                         </DropdownMenuItem>
-                        <DropdownMenuItem onSelect={() => handleCancelAppointment(appointment.id)}>
+                        <DropdownMenuItem onSelect={() => handleCancelAppointment(appointment)}>
                             <XCircle className="mr-2 h-4 w-4" />
                             إلغاء
                         </DropdownMenuItem>

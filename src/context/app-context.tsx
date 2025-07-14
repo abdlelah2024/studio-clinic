@@ -203,7 +203,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
         const adminEmail = "Asd19082@gmail.com";
         const adminPassword = "159632Asd";
         try {
-            if (!(await checkUserExists(adminEmail))) {
+            const userInAuth = auth.currentUser; // A bit of a hack, but on initial load it might be there.
+            const userInDb = await checkUserExists(adminEmail);
+            if (!userInAuth && !userInDb) {
                 console.log("Admin user does not exist, creating...");
                 await addUser({ name: "Admin", email: adminEmail, role: 'Admin', password: adminPassword });
                 console.log("Admin user created successfully.");
@@ -388,7 +390,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     
     const updateUser: UpdateUserFunction = useCallback(async (u) => {
         try { 
-            await updateUserDoc(u.email, u); 
+            const { password, ...userData } = u;
+            await updateUserDoc(u.email, userData);
             toast({ title: "تم التحديث بنجاح" }); 
             await addAuditLog('Update', 'User', `Updated user: ${u.name}`);
         }

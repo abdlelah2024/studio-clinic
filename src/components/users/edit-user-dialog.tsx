@@ -37,7 +37,15 @@ export function EditUserDialog({ children, user, onUserUpdated }: EditUserDialog
   }, [open, user]);
   
   const handleSubmit = () => {
-    onUserUpdated({ ...user, name, role, password: password || user.password });
+    const updatedUser = { ...user, name, role };
+    if (password) {
+      // In a real app, you would handle password changes more securely,
+      // potentially requiring re-authentication and using a backend function.
+      // For this demo, we'll just update it in the context.
+      console.warn("Password is being updated on the client-side for demo purposes. This is not secure.");
+      (updatedUser as any).password = password;
+    }
+    onUserUpdated(updatedUser);
     setOpen(false);
   }
 
