@@ -140,9 +140,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     // Dialog States
     const [isAppointmentDialogOpen, setAppointmentDialogOpen] = useState(false);
-    const [appointmentDialogOptions, setAppointmentDialogOptions] = useState<AppointmentDialogOptions | null>(null);
+    const [appointmentDialogOptions, setAppointmentDialogOptions] = useState<AppointmentDialogOptions | undefined>();
     const [isPatientDialogOpen, setPatientDialogOpen] = useState(false);
-    const [patientDialogOptions, setPatientDialogOptions] = useState<PatientDialogOptions | null>(null);
+    const [patientDialogOptions, setPatientDialogOptions] = useState<PatientDialogOptions | undefined>();
 
     const { toast } = useToast();
 
@@ -453,8 +453,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }, [toast]);
 
     // --- Dialog Triggers ---
-    const openNewPatientDialog = useCallback((options?: PatientDialogOptions) => { setPatientDialogOptions(options || {}); setPatientDialogOpen(true); }, []);
-    const openNewAppointmentDialog = useCallback((options?: AppointmentDialogOptions) => { setAppointmentDialogOptions(options || {}); setAppointmentDialogOpen(true); }, []);
+    const openNewPatientDialog = useCallback((options?: PatientDialogOptions) => { setPatientDialogOptions(options); setPatientDialogOpen(true); }, []);
+    const openNewAppointmentDialog = useCallback((options?: AppointmentDialogOptions) => { setAppointmentDialogOptions(options); setAppointmentDialogOpen(true); }, []);
 
     // --- Context Value ---
     const value: AppContextType = {
@@ -472,7 +472,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         <AppContext.Provider value={value}>
             {children}
             <NewAppointmentDialog open={isAppointmentDialogOpen} onOpenChange={setAppointmentDialogOpen} initialPatientId={appointmentDialogOptions?.initialPatientId} />
-            <AddPatientDialog open={isPatientDialogOpen} onOpenChange={setPatientDialogOpen} onPatientAdded={addPatient} initialName={patientDialogOptions?.initialName} />
+            <AddPatientDialog open={isPatientDialogOpen} onOpenChange={setPatientDialogOpen} initialName={patientDialogOptions?.initialName} />
         </AppContext.Provider>
     );
 }

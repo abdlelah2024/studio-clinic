@@ -32,6 +32,12 @@ export function AppHeader() {
   const { patients, doctors, enrichedAppointments, openNewAppointmentDialog, openNewPatientDialog, notifications, currentUser, logout } = useAppContext()
   const router = useRouter()
 
+  const handleAction = (action: () => void) => {
+    action();
+    setSearchQuery("");
+    setIsSearchFocused(false);
+  }
+
   const searchResults = useMemo(() => {
     if (!searchQuery) return { patients: [], doctors: [], appointments: [] };
 
@@ -60,31 +66,6 @@ export function AppHeader() {
 
   const hasResults = searchResults.patients.length > 0 || searchResults.doctors.length > 0 || searchResults.appointments.length > 0;
 
-  const resetSearch = useCallback(() => {
-    setIsSearchFocused(false)
-    setSearchQuery("")
-  }, []);
-
-  const handleNavigation = useCallback((path: string) => {
-    router.push(path);
-    resetSearch();
-  }, [router, resetSearch]);
-  
-  const handleQuickAppointment = useCallback((patientId: string) => {
-      openNewAppointmentDialog({ initialPatientId: patientId });
-      resetSearch();
-  }, [openNewAppointmentDialog, resetSearch]);
-  
-  const handleNewAppointment = useCallback(() => {
-    openNewAppointmentDialog();
-    resetSearch();
-  }, [openNewAppointmentDialog, resetSearch]);
-
-  const handleNewPatient = useCallback(() => {
-    openNewPatientDialog({ initialName: searchQuery });
-    resetSearch();
-  }, [openNewPatientDialog, resetSearch, searchQuery]);
-
   const handleLogout = async () => {
     await logout();
     router.push('/login');
@@ -93,14 +74,14 @@ export function AppHeader() {
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
-        resetSearch()
+        setIsSearchFocused(false);
       }
     }
     document.addEventListener("mousedown", handleClickOutside)
     return () => {
       document.removeEventListener("mousedown", handleClickOutside)
     }
-  }, [resetSearch])
+  }, [])
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
@@ -135,7 +116,7 @@ export function AppHeader() {
                     {searchResults.patients.length > 0 && (
                         <CommandGroup heading="المرضى">
                             {searchResults.patients.map((patient) => (
-                                <CommandItem key={`p-${patient.id}`} value={`patient-${patient.id}`} onSelect={() => handleNavigation(`/patients/${patient.id}`)} className="p-2 flex justify-between items-center cursor-pointer">
+                                <CommandItem key={`p-${patient.id}`} onSelect={() => handleAction(() => router.push(`/patients/${patient.id}`))} className="p-2 flex justify-between items-center cursor-pointer">
                                     <div className="flex items-center gap-2">
                                         <User className="h-4 w-4" />
                                         <div>
@@ -143,7 +124,7 @@ export function AppHeader() {
                                             <p className="text-xs text-muted-foreground">{patient.phone}</p>
                                         </div>
                                     </div>
-                                    <Button variant="secondary" size="sm" onClick={(e) => { e.stopPropagation(); handleQuickAppointment(patient.id); }}>موعد سريع</Button>
+                                    <Button variant="secondary" size="sm" onSelect={(e) => { e.preventDefault(); handleAction(() => openNewAppointmentDialog({ initialPatientId: patient.id })); }}>موعد سريع</Button>
                                 </CommandItem>
                             ))}
                         </CommandGroup>
@@ -151,7 +132,7 @@ export function AppHeader() {
                     {searchResults.doctors.length > 0 && (
                         <CommandGroup heading="الأطباء">
                             {searchResults.doctors.map((doctor) => (
-                            <CommandItem key={`d-${doctor.id}`} value={`doctor-${doctor.id}`} onSelect={() => handleNavigation(`/doctors`)} className="p-2 cursor-pointer">
+                            <CommandItem key={`d-${doctor.id}`} onSelect={() => handleAction(() => router.push('/doctors'))} className="p-2 cursor-pointer">
                                 <Stethoscope className="mr-2 h-4 w-4" />
                                 <div>
                                     <p className="font-medium">{doctor.name}</p>
@@ -164,7 +145,7 @@ export function AppHeader() {
                     {searchResults.appointments.length > 0 && (
                         <CommandGroup heading="المواعيد">
                             {searchResults.appointments.map((appointment) => (
-                            <CommandItem key={`a-${appointment.id}`} value={`appointment-${appointment.id}`} onSelect={() => handleNavigation('/appointments')} className="p-2 cursor-pointer">
+                            <CommandItem key={`a-${appointment.id}`} onSelect={() => handleAction(() => router.push('/appointments'))} className="p-2 cursor-pointer">
                                 <Calendar className="mr-2 h-4 w-4" />
                                 <div className="flex-1">
                                     <p className="font-medium">{appointment.patient.name}</p>
@@ -178,11 +159,11 @@ export function AppHeader() {
                     </>
                 )}
                  {searchQuery && !hasResults && (
-                    <CommandItem onSelect={handleNewPatient} className="cursor-pointer">
+                    <CommandItem onSelect={() => handleAction(() => openNewPatientDialog({ initialName: searchQuery }))} className="cursor-pointer">
                         <div className="flex-col items-center justify-center py-4 text-center w-full">
                              <p>لم يتم العثور على مريض. هل تريد إضافة واحد جديد؟</p>
                              <div className="flex items-center justify-center text-primary mt-2">
-                                <UserPlus className="mr-2 h-4 w-4" /> إضافة مريض جديد
+                                <UserPlus className="mr-2 h-4 w-4" /> إضافة مريض جديد باسم "{searchQuery}"
                             </div>
                         </div>
                     </CommandItem>
@@ -190,11 +171,11 @@ export function AppHeader() {
 
                 {!searchQuery && (
                     <CommandGroup heading="إجراءات سريعة">
-                        <CommandItem onSelect={handleNewAppointment} className="cursor-pointer">
+                        <CommandItem onSelect={() => handleAction(openNewAppointmentDialog)} className="cursor-pointer">
                             <Calendar className="mr-2 h-4 w-4" />
                             <span>حجز موعد جديد</span>
                         </CommandItem>
-                        <CommandItem onSelect={handleNewPatient} className="cursor-pointer">
+                        <CommandItem onSelect={() => handleAction(openNewPatientDialog)} className="cursor-pointer">
                             <UserPlus className="mr-2 h-4 w-4" />
                             <span>إضافة مريض جديد</span>
                         </CommandItem>
@@ -255,9 +236,9 @@ export function AppHeader() {
               <div className="text-xs text-muted-foreground">{currentUser?.email}</div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onSelect={() => handleNavigation('/settings')}>الملف الشخصي</DropdownMenuItem>
+            <DropdownMenuItem onSelect={() => router.push('/settings')}>الملف الشخصي</DropdownMenuItem>
             <DropdownMenuItem>الفواتير</DropdownMenuItem>
-            <DropdownMenuItem onSelect={() => handleNavigation('/settings')}>الإعدادات</DropdownMenuItem>
+            <DropdownMenuItem onSelect={() => router.push('/settings')}>الإعدادات</DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onSelect={handleLogout}>
               <LogOut className="mr-2 h-4 w-4" />

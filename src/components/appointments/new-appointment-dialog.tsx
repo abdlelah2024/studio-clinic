@@ -30,7 +30,7 @@ export function NewAppointmentDialog({ open, onOpenChange, initialPatientId }: N
   const { patients, doctors, addAppointment } = useAppContext();
   const { toast } = useToast();
   
-  const [patientId, setPatientId] = useState(initialPatientId || "");
+  const [patientId, setPatientId] = useState("");
   const [doctorId, setDoctorId] = useState("");
   const [date, setDate] = useState("");
   const [startTime, setStartTime] = useState("");
@@ -57,14 +57,7 @@ export function NewAppointmentDialog({ open, onOpenChange, initialPatientId }: N
        resetForm();
     }
   }, [open, resetForm]);
-
-  useEffect(() => {
-    if (initialPatientId) {
-      setPatientId(initialPatientId);
-    }
-  }, [initialPatientId]);
-
-
+  
   const handleSubmit = () => {
     if (!patientId || !doctorId || !date || !startTime || !endTime || !reason) {
        toast({

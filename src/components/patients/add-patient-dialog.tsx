@@ -16,6 +16,7 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
+import { useAppContext } from "@/context/app-context"
 
 const patientSchema = z.object({
   name: z.string().min(1, "الاسم مطلوب"),
@@ -24,20 +25,20 @@ const patientSchema = z.object({
 });
 
 type PatientFormData = z.infer<typeof patientSchema>;
-type AddPatientFunction = (patient: Omit<Patient, 'id' | 'avatar' | 'lastVisit'>) => void;
 
 interface AddPatientDialogProps {
-  onPatientAdded?: AddPatientFunction;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   initialName?: string;
 }
 
-export function AddPatientDialog({ onPatientAdded, open, onOpenChange, initialName }: AddPatientDialogProps) {
+export function AddPatientDialog({ open, onOpenChange, initialName }: AddPatientDialogProps) {
+  const { addPatient } = useAppContext();
+
   const form = useForm<PatientFormData>({
     resolver: zodResolver(patientSchema),
     defaultValues: {
-      name: initialName || "",
+      name: "",
       phone: "",
       age: 0,
     },
@@ -54,10 +55,8 @@ export function AddPatientDialog({ onPatientAdded, open, onOpenChange, initialNa
   }, [open, initialName, form]);
 
   const onSubmit = (data: PatientFormData) => {
-    if (onPatientAdded) {
-        onPatientAdded(data);
-        onOpenChange(false);
-    }
+    addPatient(data);
+    onOpenChange(false);
   };
 
   return (
