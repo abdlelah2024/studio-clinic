@@ -30,7 +30,7 @@ export function NewAppointmentDialog({ open, onOpenChange, initialPatientId }: N
   const { patients, doctors, addAppointment } = useAppContext();
   const { toast } = useToast();
   
-  const [patientId, setPatientId] = useState("");
+  const [patientId, setPatientId] = useState(initialPatientId || "");
   const [doctorId, setDoctorId] = useState("");
   const [date, setDate] = useState("");
   const [startTime, setStartTime] = useState("");
@@ -39,7 +39,7 @@ export function NewAppointmentDialog({ open, onOpenChange, initialPatientId }: N
   const [status, setStatus] = useState<AppointmentStatus>('Scheduled');
   const [freeReturn, setFreeReturn] = useState(false);
   
-  const selectedDoctor = doctors.find(d => d.id === doctorId) || null;
+  const selectedDoctor = doctors.find(d => d.id === doctorId);
 
   const resetForm = useCallback(() => {
     setPatientId(initialPatientId || "");
@@ -158,7 +158,7 @@ export function NewAppointmentDialog({ open, onOpenChange, initialPatientId }: N
           </div>
            {selectedDoctor?.freeReturnPeriod && (
             <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="free-return" className="text-right col-span-1"></Label>
+                <div className="col-span-1" />
                 <div className="col-span-3 flex items-center space-x-2 space-x-reverse">
                     <Checkbox id="free-return" checked={freeReturn} onCheckedChange={(checked) => setFreeReturn(!!checked)} />
                     <Label htmlFor="free-return" className="text-sm font-normal text-muted-foreground">

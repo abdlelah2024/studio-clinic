@@ -203,9 +203,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
         const adminEmail = "Asd19082@gmail.com";
         const adminPassword = "159632Asd";
         try {
-            const userInAuth = auth.currentUser; // A bit of a hack, but on initial load it might be there.
             const userInDb = await checkUserExists(adminEmail);
-            if (!userInAuth && !userInDb) {
+            if (!userInDb) {
                 console.log("Admin user does not exist, creating...");
                 await addUser({ name: "Admin", email: adminEmail, role: 'Admin', password: adminPassword });
                 console.log("Admin user created successfully.");
@@ -341,12 +340,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     const addAppointment: AddAppointmentFunction = useCallback(async (app) => {
         try { 
-            await addAppointmentDoc(app); 
+            await addAppointmentDoc(app);
+            await updatePatientDoc(app.patientId, { lastVisit: app.date });
             toast({ title: "تمت جدولة الموعد بنجاح" });
             const patientName = patients.find(p => p.id === app.patientId)?.name || 'Unknown Patient';
             await addAuditLog('Create', 'Appointment', `Created appointment for ${patientName} on ${app.date}`);
         }
-        catch(e) { toast({ title: "خطأ", description: "فشل إضافة الموعد.", variant: "destructive" }); }
+        catch(e) { console.error(e); toast({ title: "خطأ", description: "فشل إضافة الموعد.", variant: "destructive" }); }
     }, [toast, addAuditLog, patients]);
 
     const updateAppointment: UpdateAppointmentFunction = useCallback(async (app) => {

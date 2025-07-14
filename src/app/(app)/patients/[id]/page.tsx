@@ -1,29 +1,30 @@
 
 "use client"
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { useAppContext } from "@/context/app-context";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { Patient } from "@/lib/types";
+import type { Patient, AppointmentStatus } from "@/lib/types";
 
 export default function PatientDetailPage({ params }: { params: { id: string } }) {
   const { enrichedAppointments, patients, loading } = useAppContext();
-  const [patient, setPatient] = useState<Patient | undefined>(undefined);
   const { id } = params;
 
-  useEffect(() => {
-    if (!loading) {
-      const foundPatient = patients.find(p => p.id === id);
-      setPatient(foundPatient);
-    }
+  const patient = useMemo(() => {
+      if (loading) return undefined;
+      return patients.find(p => p.id === id);
   }, [id, patients, loading]);
   
-  const patientAppointments = enrichedAppointments
-    .filter(a => a.patientId === patient?.id)
-    .sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  const patientAppointments = useMemo(() => {
+    if (!patient) return [];
+    return enrichedAppointments
+      .filter(a => a.patientId === patient.id)
+      .sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  }, [patient, enrichedAppointments]);
+
 
   if (loading || !patient) {
     return (
@@ -52,7 +53,7 @@ export default function PatientDetailPage({ params }: { params: { id: string } }
     )
   }
   
-  const getStatusTranslation = (status: 'Scheduled' | 'Completed' | 'Canceled' | 'Waiting') => {
+  const getStatusTranslation = (status: AppointmentStatus) => {
     switch (status) {
       case 'Completed': return 'مكتمل';
       case 'Canceled': return 'ملغى';
