@@ -12,13 +12,14 @@ import type { Patient } from "@/lib/types";
 export default function PatientDetailPage({ params }: { params: { id: string } }) {
   const { enrichedAppointments, patients, loading } = useAppContext();
   const [patient, setPatient] = useState<Patient | undefined>(undefined);
+  const { id } = params;
 
   useEffect(() => {
     if (!loading) {
-      const foundPatient = patients.find(p => p.id === params.id);
+      const foundPatient = patients.find(p => p.id === id);
       setPatient(foundPatient);
     }
-  }, [params.id, patients, loading]);
+  }, [id, patients, loading]);
   
   const patientAppointments = enrichedAppointments
     .filter(a => a.patientId === patient?.id)
