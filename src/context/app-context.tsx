@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useState, useCallback, ReactNode, useMemo, useEffect } from "react"
 import { NewAppointmentDialog } from "@/components/appointments/new-appointment-dialog"
 import { AddPatientDialog } from "@/components/patients/add-patient-dialog"
-import type { Appointment, Patient, Doctor, User, UserRole, Permissions, DataField, Message, AuditLog, Notification } from "@/lib/types"
+import type { Appointment, Patient, Doctor, User, UserRole, Permissions, DataField, Message, AuditLog, Notification, AuditLogAction, AuditLogCategory } from "@/lib/types"
 import { useToast } from "@/hooks/use-toast"
 import { db, auth } from "@/services/firestore"
 import { onSnapshot, collection, query, orderBy, addDoc, updateDoc, deleteDoc, doc, setDoc, getDoc, serverTimestamp } from "firebase/firestore"
@@ -111,6 +111,8 @@ const addDataFieldDoc = (field: Omit<DataField, 'id'>) => addDocument('dataField
 const updateDataFieldDoc = (id: string, field: Partial<DataField>) => updateDocument('dataFields', id, field);
 const deleteDataFieldDoc = (id: string) => deleteDocument('dataFields', id);
 const addMessageDoc = (message: Omit<Message, 'id'|'timestamp'>) => addDocument('messages', { ...message, timestamp: serverTimestamp() });
+const addAuditLogDoc = (log: Omit<AuditLog, 'id'>) => addDocument('auditLogs', log);
+const addNotificationDoc = (notification: Omit<Notification, 'id'>) => addDocument('notifications', notification);
 const getPermissions = async (): Promise<Record<UserRole, Permissions>> => {
     const docSnap = await getDocument('system', 'permissions');
     return docSnap.exists() ? docSnap.data() as Record<UserRole, Permissions> : {} as Record<UserRole, Permissions>;
@@ -144,6 +146,22 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     const { toast } = useToast();
 
+    // --- Audit Log Helper ---
+    const addAuditLog = useCallback(async (action: AuditLogAction, category: AuditLogCategory, details: string) => {
+        if (!currentUser) return;
+        try {
+            await addAuditLogDoc({
+                action,
+                category,
+                details,
+                user: { name: currentUser.name, avatar: currentUser.avatar },
+                timestamp: new Date().toISOString()
+            });
+        } catch (error) {
+            console.error("Failed to add audit log:", error);
+        }
+    }, [currentUser]);
+    
     // --- Auth Logic ---
     useEffect(() => {
         if (!auth) return;
@@ -154,7 +172,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
                 try {
                     const userDoc = await getDocument('users', user.email!);
                     if (userDoc.exists()) {
-                        setCurrentUser({ email: user.email!, ...userDoc.data() } as User);
+                        const userData = { email: user.email!, ...userDoc.data() } as User;
+                        setCurrentUser(userData);
+                        if (userData.status !== 'online') {
+                           await updateUserDoc(userData.email, { status: 'online' });
+                        }
                     } else {
                         setCurrentUser(null);
                         await signOut(auth); // Log out if user doc doesn't exist
@@ -174,9 +196,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     const login = async (email: string, pass: string) => {
       await signInWithEmailAndPassword(auth, email, pass);
+      await addAuditLog('Login', 'User', `User ${email} logged in.`);
     };
   
     const logout = async () => {
+      if(currentUser) {
+        await updateUserDoc(currentUser.email, { status: 'offline' });
+      }
       await signOut(auth);
     };
 
@@ -234,7 +260,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
             listenToCollection('doctors', setDoctors, { orderBy: 'name' }),
             listenToCollection('appointments', setAppointments, { orderBy: 'date', direction: 'desc' }),
             listenToCollection('users', (data: User[]) => {
-                setUsers(data.map(u => ({ ...u, status: (u.email === currentUser.email) ? 'online' : u.status || 'offline' })));
+                setUsers(data);
             }, { idField: 'email' }),
             listenToCollection('dataFields', setDataFields, {}),
             listenToCollection('messages', setMessages, { orderBy: 'timestamp', direction: 'asc' }),
@@ -250,7 +276,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     // --- Memoized Enriched Data ---
     const enrichedAppointments = useMemo(() => {
-        if (loading) return [];
+        if (loading || !patients.length || !doctors.length) return [];
         return appointments.map(appointment => {
             const patient = patients.find(p => p.id === appointment.patientId);
             const doctor = doctors.find(d => d.id === appointment.doctorId);
@@ -263,86 +289,170 @@ export function AppProvider({ children }: { children: ReactNode }) {
         try {
             await addPatientDoc({ ...patient, avatar: `https://placehold.co/100x100?text=${patient.name.charAt(0)}`, lastVisit: new Date().toISOString().split('T')[0] });
             toast({ title: "تمت الإضافة بنجاح", description: `تمت إضافة المريض ${patient.name}.` });
+            await addAuditLog('Create', 'Patient', `Created patient: ${patient.name}`);
+            await addNotificationDoc({
+                title: 'مريض جديد',
+                description: `تم إضافة المريض ${patient.name} إلى النظام.`,
+                type: 'new_patient',
+                read: false,
+                timestamp: new Date().toISOString()
+            });
         } catch(e) { toast({ title: "خطأ", description: "فشل إضافة المريض.", variant: "destructive" }); }
-    }, [toast]);
+    }, [toast, addAuditLog]);
+
     const updatePatient: UpdatePatientFunction = useCallback(async (p) => {
-        try { await updatePatientDoc(p.id, p); toast({ title: "تم التحديث بنجاح", description: `تم تحديث بيانات المريض ${p.name}.` }); }
+        try { 
+            await updatePatientDoc(p.id, p); 
+            toast({ title: "تم التحديث بنجاح", description: `تم تحديث بيانات المريض ${p.name}.` });
+            await addAuditLog('Update', 'Patient', `Updated patient: ${p.name}`);
+        }
         catch(e) { toast({ title: "خطأ", description: "فشل تحديث المريض.", variant: "destructive" }); }
-    }, [toast]);
+    }, [toast, addAuditLog]);
+    
     const deletePatient: DeletePatientFunction = useCallback(async (id) => {
-        try { await deletePatientDoc(id); toast({ title: "تم الحذف بنجاح", variant: "default" }); }
+        const patientName = patients.find(p => p.id === id)?.name || `ID: ${id}`;
+        try { 
+            await deletePatientDoc(id); 
+            toast({ title: "تم الحذف بنجاح", variant: "default" }); 
+            await addAuditLog('Delete', 'Patient', `Deleted patient: ${patientName}`);
+        }
         catch(e) { toast({ title: "خطأ", description: "فشل حذف المريض.", variant: "destructive" }); }
-    }, [toast]);
+    }, [toast, addAuditLog, patients]);
 
     const addDoctor: AddDoctorFunction = useCallback(async (doctor) => {
-        try { await addDoctorDoc({ ...doctor, avatar: `https://placehold.co/100x100?text=${doctor.name.charAt(0)}` }); toast({ title: "تمت الإضافة بنجاح", description: `تمت إضافة الطبيب ${doctor.name}.` }); }
+        try { 
+            await addDoctorDoc({ ...doctor, avatar: `https://placehold.co/100x100?text=${doctor.name.charAt(0)}` }); 
+            toast({ title: "تمت الإضافة بنجاح", description: `تمت إضافة الطبيب ${doctor.name}.` });
+            await addAuditLog('Create', 'Doctor', `Created doctor: ${doctor.name}`);
+        }
         catch(e) { toast({ title: "خطأ", description: "فشل إضافة الطبيب.", variant: "destructive" }); }
-    }, [toast]);
+    }, [toast, addAuditLog]);
+
     const updateDoctor: UpdateDoctorFunction = useCallback(async (d) => {
-        try { await updateDoctorDoc(d.id, d); toast({ title: "تم التحديث بنجاح", description: `تم تحديث بيانات الطبيب ${d.name}.` }); }
+        try { 
+            await updateDoctorDoc(d.id, d); 
+            toast({ title: "تم التحديث بنجاح", description: `تم تحديث بيانات الطبيب ${d.name}.` });
+            await addAuditLog('Update', 'Doctor', `Updated doctor: ${d.name}`);
+        }
         catch(e) { toast({ title: "خطأ", description: "فشل تحديث الطبيب.", variant: "destructive" }); }
-    }, [toast]);
+    }, [toast, addAuditLog]);
+
     const deleteDoctor: DeleteDoctorFunction = useCallback(async (id) => {
-        try { await deleteDoctorDoc(id); toast({ title: "تم الحذف بنجاح", variant: "default" }); }
+        const doctorName = doctors.find(d => d.id === id)?.name || `ID: ${id}`;
+        try { 
+            await deleteDoctorDoc(id); 
+            toast({ title: "تم الحذف بنجاح", variant: "default" }); 
+            await addAuditLog('Delete', 'Doctor', `Deleted doctor: ${doctorName}`);
+        }
         catch(e) { toast({ title: "خطأ", description: "فشل حذف الطبيب.", variant: "destructive" }); }
-    }, [toast]);
+    }, [toast, addAuditLog, doctors]);
 
     const addAppointment: AddAppointmentFunction = useCallback(async (app) => {
-        try { await addAppointmentDoc(app); toast({ title: "تمت جدولة الموعد بنجاح" }); }
+        try { 
+            await addAppointmentDoc(app); 
+            toast({ title: "تمت جدولة الموعد بنجاح" });
+            const patientName = patients.find(p => p.id === app.patientId)?.name || 'Unknown Patient';
+            await addAuditLog('Create', 'Appointment', `Created appointment for ${patientName} on ${app.date}`);
+        }
         catch(e) { toast({ title: "خطأ", description: "فشل إضافة الموعد.", variant: "destructive" }); }
-    }, [toast]);
+    }, [toast, addAuditLog, patients]);
+
     const updateAppointment: UpdateAppointmentFunction = useCallback(async (app) => {
-        try { await updateAppointmentDoc(app.id, app); toast({ title: "تم تحديث الموعد بنجاح" }); }
+        try { 
+            await updateAppointmentDoc(app.id, app); 
+            toast({ title: "تم تحديث الموعد بنجاح" }); 
+            const patientName = patients.find(p => p.id === app.patientId)?.name || 'Unknown Patient';
+            await addAuditLog('Update', 'Appointment', `Updated appointment for ${patientName} on ${app.date} to status ${app.status}`);
+        }
         catch(e) { toast({ title: "خطأ", description: "فشل تحديث الموعد.", variant: "destructive" }); }
-    }, [toast]);
+    }, [toast, addAuditLog, patients]);
+
     const deleteAppointment: DeleteAppointmentFunction = useCallback(async (id) => {
-        try { await deleteAppointmentDoc(id); toast({ title: "تم حذف الموعد", variant: "default" }); }
+        const app = enrichedAppointments.find(a => a.id === id);
+        try { 
+            await deleteAppointmentDoc(id); 
+            toast({ title: "تم حذف الموعد", variant: "default" });
+            if (app) {
+                await addAuditLog('Delete', 'Appointment', `Deleted appointment for ${app.patient.name} on ${app.date}`);
+            }
+        }
         catch(e) { toast({ title: "خطأ", description: "فشل حذف الموعد.", variant: "destructive" }); }
-    }, [toast]);
+    }, [toast, addAuditLog, enrichedAppointments]);
 
     const addUser: AddUserFunction = useCallback(async (user) => {
         try {
             await createUserWithEmailAndPassword(auth, user.email, user.password!);
             await addUserDoc({ ...user, avatar: `https://placehold.co/100x100?text=${user.name.charAt(0)}`, status: 'offline' }); 
             toast({ title: "تمت الإضافة بنجاح" });
+            await addAuditLog('Create', 'User', `Created user: ${user.name} (${user.email})`);
         }
         catch(e: any) { 
             if (e.code === 'auth/email-already-in-use') {
-                await addUserDoc({ ...user, avatar: `https://placehold.co/100x100?text=${user.name.charAt(0)}`, status: 'offline' }); 
+                 toast({ title: "خطأ", description: "هذا البريد الإلكتروني مستخدم بالفعل.", variant: "destructive" }); 
             } else {
                  toast({ title: "خطأ", description: "فشل إضافة المستخدم.", variant: "destructive" }); 
                  throw e;
             }
         }
-    }, [toast]);
+    }, [toast, addAuditLog]);
+    
     const updateUser: UpdateUserFunction = useCallback(async (u) => {
-        try { await updateUserDoc(u.email, u); toast({ title: "تم التحديث بنجاح" }); }
+        try { 
+            await updateUserDoc(u.email, u); 
+            toast({ title: "تم التحديث بنجاح" }); 
+            await addAuditLog('Update', 'User', `Updated user: ${u.name}`);
+        }
         catch (e) { toast({ title: "خطأ", description: "فشل تحديث المستخدم.", variant: "destructive" }); }
-    }, [toast]);
+    }, [toast, addAuditLog]);
+
     const deleteUser: DeleteUserFunction = useCallback(async (email) => {
-        try { await deleteUserDoc(email); toast({ title: "تم الحذف بنجاح", variant: "default" }); }
-        catch (e) { toast({ title: "خطأ", description: "فشل حذف المستخدم.", variant: "destructive" }); }
-    }, [toast]);
+        const userName = users.find(u => u.email === email)?.name || email;
+        try { 
+            await deleteUserDoc(email); 
+            toast({ title: "تم الحذف بنجاح", variant: "default" });
+            await addAuditLog('Delete', 'User', `Deleted user: ${userName}`);
+        }
+        catch (e) { toast({ title: "خطأ", description: "فشل حذف المستخدم. (قد يتطلب حذف المصادقة يدوياً)", variant: "destructive" }); }
+    }, [toast, addAuditLog, users]);
 
     const updatePermission: UpdatePermissionFunction = useCallback(async (role, section, action, value) => {
         const newPerms = { ...permissions, [role]: { ...permissions[role], [section]: { ...permissions[role][section], [action]: value } } };
+        const oldPermissions = { ...permissions };
         setPermissions(newPerms);
-        try { await updatePermissions({ [role]: newPerms[role] }); }
-        catch(e) { setPermissions(permissions); toast({ title: "خطأ", description: "فشل تحديث الصلاحيات.", variant: "destructive" }); }
-    }, [permissions, toast]);
+        try { 
+            await updatePermissions({ [role]: newPerms[role] }); 
+            await addAuditLog('Update', 'System', `Updated permissions for role ${role}: ${section}.${String(action)} to ${value}`);
+        }
+        catch(e) { setPermissions(oldPermissions); toast({ title: "خطأ", description: "فشل تحديث الصلاحيات.", variant: "destructive" }); }
+    }, [permissions, toast, addAuditLog]);
 
     const addDataField: AddDataFieldFunction = useCallback(async (field) => {
-        try { await addDataFieldDoc({ ...field, type: 'مخصص' as const }); toast({ title: "تمت إضافة الحقل بنجاح" }); }
+        try { 
+            await addDataFieldDoc({ ...field, type: 'مخصص' as const }); 
+            toast({ title: "تمت إضافة الحقل بنجاح" }); 
+            await addAuditLog('Create', 'System', `Created data field: ${field.label}`);
+        }
         catch(e) { toast({ title: "خطأ", description: "فشل إضافة الحقل.", variant: "destructive" }); }
-    }, [toast]);
+    }, [toast, addAuditLog]);
+
     const updateDataField: UpdateDataFieldFunction = useCallback(async (field) => {
-        try { await updateDataFieldDoc(field.id, field); toast({ title: "تم تحديث الحقل بنجاح" }); }
+        try { 
+            await updateDataFieldDoc(field.id, field); 
+            toast({ title: "تم تحديث الحقل بنجاح" }); 
+            await addAuditLog('Update', 'System', `Updated data field: ${field.label}`);
+        }
         catch(e) { toast({ title: "خطأ", description: "فشل تحديث الحقل.", variant: "destructive" }); }
-    }, [toast]);
+    }, [toast, addAuditLog]);
+
     const deleteDataField: DeleteDataFieldFunction = useCallback(async (id) => {
-        try { await deleteDataFieldDoc(id); toast({ title: "تم حذف الحقل بنجاح", variant: "default" }); }
+        const fieldLabel = dataFields.find(f => f.id === id)?.label || `ID: ${id}`;
+        try { 
+            await deleteDataFieldDoc(id); 
+            toast({ title: "تم حذف الحقل بنجاح", variant: "default" });
+            await addAuditLog('Delete', 'System', `Deleted data field: ${fieldLabel}`);
+        }
         catch(e) { toast({ title: "خطأ", description: "فشل حذف الحقل.", variant: "destructive" }); }
-    }, [toast]);
+    }, [toast, addAuditLog, dataFields]);
     
     const addMessage: AddMessageFunction = useCallback(async (message) => {
         try { await addMessageDoc(message); }
@@ -381,3 +491,5 @@ export function useAppContext() {
     }
     return context;
 }
+
+    
