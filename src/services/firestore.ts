@@ -4,12 +4,13 @@ import { getFirestore, Firestore } from "firebase/firestore";
 import { getAuth, Auth } from "firebase/auth";
 
 const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  apiKey: "AIzaSyBBT5rf5jIvIsSH2tw0I_S7HMjiJD7xkPE",
+  authDomain: "clinicflow-mqtu7.firebaseapp.com",
+  databaseURL: "https://clinicflow-mqtu7-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "clinicflow-mqtu7",
+  storageBucket: "clinicflow-mqtu7.appspot.com",
+  messagingSenderId: "917305168918",
+  appId: "1:917305168918:web:4190e91e303581e8a9d137"
 };
 
 let app: FirebaseApp;
@@ -31,5 +32,3 @@ if (typeof window !== 'undefined' && !getApps().length) {
 }
 
 export { app, auth, db };
-
-    
