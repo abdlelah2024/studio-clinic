@@ -6,7 +6,7 @@ import { AddPatientDialog } from "@/components/patients/add-patient-dialog"
 import type { Appointment, Patient, Doctor, User, UserRole, Permissions, DataField, Message, AuditLog, Notification, AuditLogAction, AuditLogCategory } from "@/lib/types"
 import { useToast } from "@/hooks/use-toast"
 import { db, auth } from "@/services/firestore"
-import { onSnapshot, collection, query, orderBy, addDoc, updateDoc, deleteDoc, doc, setDoc, getDoc, serverTimestamp } from "firebase/firestore"
+import { onSnapshot, collection, query, orderBy, addDoc, updateDoc, deleteDoc, doc, setDoc, getDoc } from "firebase/firestore"
 import { createUserWithEmailAndPassword, onAuthStateChanged, signInWithEmailAndPassword, signOut, User as FirebaseUser } from 'firebase/auth';
 
 // --- AppContext Types ---
@@ -110,7 +110,7 @@ const deleteUserDoc = (email: string) => deleteDocument('users', email);
 const addDataFieldDoc = (field: Omit<DataField, 'id'>) => addDocument('dataFields', field);
 const updateDataFieldDoc = (id: string, field: Partial<DataField>) => updateDocument('dataFields', id, field);
 const deleteDataFieldDoc = (id: string) => deleteDocument('dataFields', id);
-const addMessageDoc = (message: Omit<Message, 'id'|'timestamp'>) => addDocument('messages', { ...message, timestamp: serverTimestamp() });
+const addMessageDoc = (message: Omit<Message, 'id'|'timestamp'>) => addDocument('messages', { ...message, timestamp: new Date().toISOString() });
 const addAuditLogDoc = (log: Omit<AuditLog, 'id'>) => addDocument('auditLogs', log);
 const addNotificationDoc = (notification: Omit<Notification, 'id'>) => addDocument('notifications', notification);
 const getPermissions = async (): Promise<Record<UserRole, Permissions>> => {
@@ -164,7 +164,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     
     // --- Auth Logic ---
     useEffect(() => {
-        if (!auth) return;
         const unsubscribe = onAuthStateChanged(auth, async (user) => {
             setLoading(true);
             if (user) {
@@ -172,11 +171,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
                 try {
                     const userDoc = await getDocument('users', user.email!);
                     if (userDoc.exists()) {
-                        const userData = { email: user.email!, ...userDoc.data() } as User;
-                        setCurrentUser(userData);
-                        if (userData.status !== 'online') {
-                           await updateUserDoc(userData.email, { status: 'online' });
-                        }
+                        setCurrentUser({ email: user.email!, ...userDoc.data() } as User);
                     } else {
                         setCurrentUser(null);
                         await signOut(auth); // Log out if user doc doesn't exist
@@ -200,15 +195,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
     };
   
     const logout = async () => {
-      if(currentUser) {
-        await updateUserDoc(currentUser.email, { status: 'offline' });
-      }
       await signOut(auth);
     };
 
     // --- Data Seeding ---
     const seedInitialData = useCallback(async () => {
-        const adminEmail = "asd19082@gmail.com";
+        const adminEmail = "Asd19082@gmail.com";
         const adminPassword = "159632Asd";
         try {
             if (!(await checkUserExists(adminEmail))) {
@@ -246,21 +238,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }, []);
 
     useEffect(() => {
-        if(db && auth) {
-            seedInitialData();
-        }
+        seedInitialData();
     }, [seedInitialData]);
 
 
     // --- Real-time Data Fetching ---
     useEffect(() => {
-        if (!currentUser || !db) return;
-        const unsubscribers: (() => void)[] = [
+        if (!currentUser) return;
+        const unsubscribers = [
             listenToCollection('patients', setPatients, { orderBy: 'lastVisit', direction: 'desc' }),
             listenToCollection('doctors', setDoctors, { orderBy: 'name' }),
             listenToCollection('appointments', setAppointments, { orderBy: 'date', direction: 'desc' }),
             listenToCollection('users', (data: User[]) => {
-                setUsers(data);
+                setUsers(data.map(u => ({ id: u.email, ...u })));
             }, { idField: 'email' }),
             listenToCollection('dataFields', setDataFields, {}),
             listenToCollection('messages', setMessages, { orderBy: 'timestamp', direction: 'asc' }),
