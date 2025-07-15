@@ -350,8 +350,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }, [toast, addAuditLog, patients]);
 
     const updateAppointment: UpdateAppointmentFunction = useCallback(async (app) => {
+        const { id, ...appData } = app;
         try { 
-            await updateAppointmentDoc(app.id, app); 
+            await updateAppointmentDoc(id, appData); 
             toast({ title: "تم تحديث الموعد بنجاح" }); 
             const patientName = patients.find(p => p.id === app.patientId)?.name || 'Unknown Patient';
             await addAuditLog('Update', 'Appointment', `Updated appointment for ${patientName} on ${app.date} to status ${app.status}`);
@@ -484,3 +485,5 @@ export function useAppContext() {
     }
     return context;
 }
+
+    

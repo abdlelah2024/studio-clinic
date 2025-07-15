@@ -169,3 +169,5 @@ export function NewAppointmentDialog({ open, onOpenChange, initialPatientId }: N
     </Dialog>
   )
 }
+
+    

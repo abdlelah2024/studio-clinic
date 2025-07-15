@@ -30,10 +30,15 @@ export default function AppointmentsPage() {
   const [isRescheduleDialogOpen, setIsRescheduleDialogOpen] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState<EnrichedAppointment | undefined>(undefined);
   
+  const handleRescheduleClick = (appointment: EnrichedAppointment) => {
+    setSelectedAppointment(appointment);
+    setIsRescheduleDialogOpen(true);
+  };
+
   const handleRescheduleAppointment = (appointmentId: string, newDate: string, newStartTime: string, newEndTime: string) => {
     const appointmentToUpdate = enrichedAppointments.find(app => app.id === appointmentId);
     if(appointmentToUpdate) {
-        updateAppointment({ ...appointmentToUpdate, date: newDate, startTime: newStartTime, endTime: newEndTime });
+        updateAppointment({ ...appointmentToUpdate, date: newDate, startTime: newStartTime, endTime: newEndTime, status: 'Scheduled' });
     }
   };
 
@@ -59,6 +64,7 @@ export default function AppointmentsPage() {
 
   const filteredAndSortedAppointments = useMemo(() => {
     const filtered = enrichedAppointments.filter(appointment => {
+        if (!appointment.patient || !appointment.doctor) return false;
         const statusFilterMatch = filter === 'All' || appointment.status === filter;
         const searchFilterMatch = 
             appointment.patient.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -112,10 +118,9 @@ export default function AppointmentsPage() {
                   <DropdownMenuLabel>فلترة حسب الحالة</DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onSelect={() => setFilter('All')}>الكل</DropdownMenuItem>
-                  <DropdownMenuItem onSelect={() => setFilter('Scheduled')}>مجدول</DropdownMenuItem>
-                  <DropdownMenuItem onSelect={() => setFilter('Waiting')}>منتظر</DropdownMenuItem>
-                  <DropdownMenuItem onSelect={() => setFilter('Completed')}>مكتمل</DropdownMenuItem>
-                  <DropdownMenuItem onSelect={() => setFilter('Canceled')}>ملغى</DropdownMenuItem>
+                  {appointmentStatuses.map(status => (
+                     <DropdownMenuItem key={status} onSelect={() => setFilter(status)}>{getStatusTranslation(status)}</DropdownMenuItem>
+                  ))}
                 </DropdownMenuContent>
               </DropdownMenu>
               <DropdownMenu>
@@ -237,10 +242,7 @@ export default function AppointmentsPage() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuLabel>الإجراءات</DropdownMenuLabel>
-                        <DropdownMenuItem onSelect={() => {
-                          setSelectedAppointment(appointment);
-                          setIsRescheduleDialogOpen(true);
-                        }}>
+                        <DropdownMenuItem onSelect={() => handleRescheduleClick(appointment)}>
                           <Clock className="mr-2 h-4 w-4" />
                           إعادة جدولة
                         </DropdownMenuItem>
@@ -274,3 +276,5 @@ export default function AppointmentsPage() {
     </>
   )
 }
+
+    

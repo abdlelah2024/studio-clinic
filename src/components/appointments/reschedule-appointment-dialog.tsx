@@ -32,12 +32,12 @@ export function RescheduleAppointmentDialog({ open, onOpenChange, appointment, o
   const [endTime, setEndTime] = useState("");
 
   useEffect(() => {
-    if (appointment) {
+    if (appointment && open) {
       setDate(appointment.date);
       setStartTime(appointment.startTime);
       setEndTime(appointment.endTime);
     }
-  }, [appointment]);
+  }, [appointment, open]);
 
   const handleSubmit = () => {
     if (appointment && date && startTime && endTime) {
@@ -82,3 +82,5 @@ export function RescheduleAppointmentDialog({ open, onOpenChange, appointment, o
     </Dialog>
   )
 }
+
+    
