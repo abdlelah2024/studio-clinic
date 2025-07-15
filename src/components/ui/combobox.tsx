@@ -70,7 +70,7 @@ export function Combobox({
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-full p-0" style={{minWidth: "var(--radix-popover-trigger-width)"}}>
-        <Command>
+        <Command shouldFilter={false}>
           <CommandInput 
             placeholder={searchPlaceholder} 
             value={search} 
@@ -91,12 +91,13 @@ export function Combobox({
                 )}
             </CommandEmpty>
             <CommandGroup>
-              {options.map((option) => (
+              {options.filter(opt => opt.label.toLowerCase().includes(search.toLowerCase())).map((option) => (
                 <CommandItem
                   key={option.value}
-                  value={option.label} // Search by label
-                  onSelect={(currentLabel) => {
-                    const selectedOption = options.find(opt => opt.label.toLowerCase() === currentLabel.toLowerCase());
+                  value={option.label} // Use label for display and keyboard navigation
+                  onSelect={(currentValue) => {
+                     // Find option by the original value (ID) based on the selected label
+                    const selectedOption = options.find(opt => opt.label.toLowerCase() === currentValue.toLowerCase());
                     if (selectedOption) {
                       onSelectedValueChange(selectedOption.value === selectedValue ? "" : selectedOption.value)
                     }
