@@ -91,25 +91,3 @@ export function RescheduleAppointmentDialog({ children, appointment, onAppointme
     </Dialog>
   )
 }
-
-// Add a new component for deleting appointments
-export function DeleteAppointmentDialog({ children, appointment, onDelete }: { children: React.ReactNode, appointment: Appointment, onDelete: () => void }) {
-    return (
-        <Dialog>
-            <DialogTrigger asChild>{children}</DialogTrigger>
-            <DialogContent>
-                <DialogHeader>
-                    <DialogTitle>هل أنت متأكد؟</DialogTitle>
-                    <DialogDescription>
-                        سيتم حذف هذا الموعد بشكل دائم. لا يمكن التراجع عن هذا الإجراء.
-                    </DialogDescription>
-                </DialogHeader>
-                <DialogFooter>
-                    <DialogTrigger asChild><Button variant="outline">إلغاء</Button></DialogTrigger>
-                    <Button variant="destructive" onClick={onDelete}>نعم، احذف الموعد</Button>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
-    )
-}
-
