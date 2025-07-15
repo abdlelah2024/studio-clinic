@@ -54,7 +54,7 @@ export function Combobox({
     }
   }
   
-  const displayValue = options.find((option) => option.value === selectedValue)?.label || placeholder;
+  const displayValue = options.find((option) => option.value === selectedValue)?.label || "";
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -63,9 +63,9 @@ export function Combobox({
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className={cn("w-full justify-between", className)}
+          className={cn("w-full justify-between", className, !selectedValue && "text-muted-foreground")}
         >
-          <span className="truncate">{displayValue}</span>
+          <span className="truncate">{selectedValue ? displayValue : placeholder}</span>
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
@@ -94,13 +94,9 @@ export function Combobox({
               {options.filter(opt => opt.label.toLowerCase().includes(search.toLowerCase())).map((option) => (
                 <CommandItem
                   key={option.value}
-                  value={option.label} // Use label for display and keyboard navigation
+                  value={option.value}
                   onSelect={(currentValue) => {
-                     // Find option by the original value (ID) based on the selected label
-                    const selectedOption = options.find(opt => opt.label.toLowerCase() === currentValue.toLowerCase());
-                    if (selectedOption) {
-                      onSelectedValueChange(selectedOption.value === selectedValue ? "" : selectedOption.value)
-                    }
+                    onSelectedValueChange(currentValue === selectedValue ? "" : currentValue)
                     setOpen(false)
                     setSearch('')
                   }}
