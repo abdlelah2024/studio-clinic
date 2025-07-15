@@ -13,6 +13,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { CalendarIcon } from "lucide-react"
 import { Calendar } from "@/components/ui/calendar"
 import { format } from "date-fns"
+import { arSA } from "date-fns/locale"
 import { cn } from "@/lib/utils"
 import { Combobox } from "../ui/combobox"
 
@@ -150,7 +151,7 @@ export function NewAppointmentDialog({ children, patients, doctors, onAppointmen
                             )}
                           >
                             {field.value ? (
-                              format(field.value, "PPP", { locale: require('date-fns/locale/ar-SA') })
+                              format(field.value, "PPP", { locale: arSA })
                             ) : (
                               <span>اختر تاريخاً</span>
                             )}
