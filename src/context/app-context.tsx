@@ -338,7 +338,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const addAppointment: AddAppointmentFunction = useCallback(async (appointment) => {
         try {
             await addAppointmentDoc({ ...appointment, status: 'Scheduled' });
-            await updatePatientDoc(appointment.patientId, { lastVisit: appointment.date });
+            await updatePatientDoc(appointment.patientId, { lastVisit: new Date(appointment.date).toISOString().split('T')[0] });
             toast({ title: "تم حجز الموعد بنجاح" });
             await addAuditLog('Create', 'Appointment', `Created appointment for patient ID ${appointment.patientId} with doctor ID ${appointment.doctorId}`);
         } catch (e) {

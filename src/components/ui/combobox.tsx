@@ -53,6 +53,12 @@ export function Combobox({
         onSearchChange(value);
     }
   }
+
+  const handleSelect = (currentValue: string) => {
+    onSelectedValueChange(currentValue === selectedValue ? "" : currentValue)
+    setOpen(false)
+    setSearch('')
+  }
   
   const displayValue = options.find((option) => option.value === selectedValue)?.label || "";
 
@@ -70,10 +76,10 @@ export function Combobox({
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-full p-0" style={{minWidth: "var(--radix-popover-trigger-width)"}}>
-        <Command shouldFilter={false}>
+        <Command>
           <CommandInput 
             placeholder={searchPlaceholder} 
-            value={search} 
+            value={search}
             onValueChange={handleSearchChange}
           />
           <CommandList>
@@ -94,12 +100,8 @@ export function Combobox({
               {options.filter(opt => opt.label.toLowerCase().includes(search.toLowerCase())).map((option) => (
                 <CommandItem
                   key={option.value}
-                  value={option.value}
-                  onSelect={(currentValue) => {
-                    onSelectedValueChange(currentValue === selectedValue ? "" : currentValue)
-                    setOpen(false)
-                    setSearch('')
-                  }}
+                  value={option.label} // Use label for filtering and display in CMDK
+                  onSelect={() => handleSelect(option.value)}
                 >
                   <Check
                     className={cn(
