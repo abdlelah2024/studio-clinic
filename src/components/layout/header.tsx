@@ -1,8 +1,9 @@
 
 "use client"
-import React from "react"
+import React, { useState, useMemo } from "react"
+import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { Bell, CircleUser, LogOut } from "lucide-react"
+import { Bell, CircleUser, LogOut, Search, User, Stethoscope, Calendar, PlusCircle, FileText } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -12,13 +13,15 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { Command, CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 import { useAppContext } from "@/context/app-context"
 
 export function AppHeader() {
-  const { notifications, currentUser, logout } = useAppContext()
+  const { notifications, currentUser, logout, patients, doctors, openNewAppointmentDialog, openNewPatientDialog } = useAppContext()
   const router = useRouter()
+  const [openCommand, setOpenCommand] = useState(false)
 
   const handleLogout = async () => {
     await logout();
@@ -32,13 +35,23 @@ export function AppHeader() {
     }
   }
 
+  const handleQuickAction = (action: () => void) => {
+    action();
+    setOpenCommand(false);
+  }
+
+
   return (
+    <>
     <header className="sticky top-0 z-40 flex h-16 items-center gap-4 border-b bg-card px-4 md:px-6">
       <div className="md:hidden">
         <SidebarTrigger />
       </div>
       <div className="flex-1">
-        {/* Search bar removed */}
+         <Button variant="outline" className="w-full justify-start text-muted-foreground" onClick={() => setOpenCommand(true)}>
+            <Search className="h-4 w-4 mr-2" />
+            بحث سريع... (Ctrl+B)
+        </Button>
       </div>
       <div className="flex items-center gap-4">
         <DropdownMenu>
@@ -102,5 +115,49 @@ export function AppHeader() {
         </DropdownMenu>
       </div>
     </header>
+
+    <CommandDialog open={openCommand} onOpenChange={setOpenCommand}>
+        <CommandInput placeholder="ابحث عن مريض، طبيب، أو إجراء..."/>
+        <CommandList>
+            <CommandEmpty>لا توجد نتائج.</CommandEmpty>
+            <CommandGroup heading="المرضى">
+                {patients.slice(0, 5).map(patient => (
+                    <CommandItem key={patient.id} value={`patient ${patient.name}`} className="flex justify-between items-center">
+                        <div className="flex items-center gap-2">
+                           <User className="h-4 w-4" />
+                           <span>{patient.name}</span>
+                        </div>
+                        <div className="flex gap-2">
+                            <Button variant="ghost" size="sm" onClick={() => handleQuickAction(() => router.push(`/patients/${patient.id}`))}>
+                                <FileText className="h-4 w-4 mr-1"/> عرض السجل
+                            </Button>
+                            <Button variant="ghost" size="sm" onClick={() => handleQuickAction(() => openNewAppointmentDialog({initialPatientId: patient.id}))}>
+                                <Calendar className="h-4 w-4 mr-1"/> موعد سريع
+                            </Button>
+                        </div>
+                    </CommandItem>
+                ))}
+            </CommandGroup>
+            <CommandGroup heading="الأطباء">
+                 {doctors.slice(0,5).map(doctor => (
+                     <CommandItem key={doctor.id} value={`doctor ${doctor.name}`} onSelect={() => handleQuickAction(() => router.push('/doctors'))}>
+                        <Stethoscope className="h-4 w-4" />
+                        <span>{doctor.name}</span>
+                    </CommandItem>
+                 ))}
+            </CommandGroup>
+             <CommandGroup heading="الإجراءات">
+                <CommandItem onSelect={() => handleQuickAction(() => openNewAppointmentDialog())}>
+                    <Calendar className="mr-2 h-4 w-4" />
+                    <span>موعد جديد</span>
+                </CommandItem>
+                <CommandItem onSelect={() => handleQuickAction(() => openNewPatientDialog())}>
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    <span>إضافة مريض جديد</span>
+                </CommandItem>
+            </CommandGroup>
+        </CommandList>
+    </CommandDialog>
+    </>
   )
 }

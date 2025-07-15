@@ -57,10 +57,17 @@ export function Combobox({
   const handleSelect = (currentValue: string) => {
     onSelectedValueChange(currentValue === selectedValue ? "" : currentValue)
     setOpen(false)
-    setSearch('')
   }
   
   const displayValue = options.find((option) => option.value === selectedValue)?.label || "";
+
+  // Reset search when the popover closes
+  React.useEffect(() => {
+    if (!open) {
+      setSearch("");
+      if(onSearchChange) onSearchChange("");
+    }
+  }, [open, onSearchChange]);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>

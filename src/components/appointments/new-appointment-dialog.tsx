@@ -16,6 +16,7 @@ import { format } from "date-fns"
 import { arSA } from "date-fns/locale"
 import { cn } from "@/lib/utils"
 import { Combobox } from "../ui/combobox"
+import { useAppContext } from "@/context/app-context"
 
 const appointmentSchema = z.object({
   patientId: z.string().min(1, "يجب اختيار المريض"),
@@ -29,18 +30,24 @@ const appointmentSchema = z.object({
 type AppointmentFormData = z.infer<typeof appointmentSchema>;
 
 interface NewAppointmentDialogProps {
-  children: React.ReactNode;
-  patients: Patient[];
-  doctors: Doctor[];
-  onAppointmentAdded: (data: Omit<Appointment, 'id' | 'status'>) => void;
-  openNewPatientDialog: (options: { initialName?: string }) => void;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
   initialPatientId?: string;
 }
 
-export function NewAppointmentDialog({ children, patients, doctors, onAppointmentAdded, openNewPatientDialog, initialPatientId }: NewAppointmentDialogProps) {
-  const [open, setOpen] = useState(false);
+export function NewAppointmentDialog({ open, onOpenChange, initialPatientId }: NewAppointmentDialogProps) {
+  const { patients, doctors, addAppointment, openNewPatientDialog } = useAppContext();
+  
   const form = useForm<AppointmentFormData>({
     resolver: zodResolver(appointmentSchema),
+    defaultValues: {
+        patientId: '',
+        doctorId: '',
+        date: new Date(),
+        startTime: '',
+        endTime: '',
+        reason: '',
+    }
   });
   
   const [patientSearch, setPatientSearch] = useState('');
@@ -60,11 +67,11 @@ export function NewAppointmentDialog({ children, patients, doctors, onAppointmen
   }, [open, initialPatientId, form]);
 
   const onSubmit = (data: AppointmentFormData) => {
-    onAppointmentAdded({
+    addAppointment({
       ...data,
       date: format(data.date, 'yyyy-MM-dd'),
     });
-    setOpen(false);
+    onOpenChange(false);
   };
 
   const patientOptions = patients.map(p => ({ value: p.id, label: p.name }));
@@ -74,8 +81,7 @@ export function NewAppointmentDialog({ children, patients, doctors, onAppointmen
   const selectedDoctor = doctors.find(d => d.id === selectedDoctorId);
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>{children}</DialogTrigger>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>حجز موعد جديد</DialogTitle>
@@ -102,7 +108,7 @@ export function NewAppointmentDialog({ children, patients, doctors, onAppointmen
                     addNew={{
                       label: `إضافة مريض جديد باسم "${patientSearch}"`,
                       action: () => {
-                        setOpen(false);
+                        onOpenChange(false);
                         openNewPatientDialog({ initialName: patientSearch });
                       }
                     }}
@@ -218,7 +224,7 @@ export function NewAppointmentDialog({ children, patients, doctors, onAppointmen
             />
             <DialogFooter>
                 <Button type="submit">حفظ الموعد</Button>
-                <Button variant="outline" type="button" onClick={() => setOpen(false)}>إلغاء</Button>
+                <Button variant="outline" type="button" onClick={() => onOpenChange(false)}>إلغاء</Button>
             </DialogFooter>
           </form>
         </Form>

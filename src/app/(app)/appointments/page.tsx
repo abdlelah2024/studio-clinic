@@ -52,7 +52,8 @@ export default function AppointmentsPage() {
     addAppointment,
     updateAppointment,
     deleteAppointment,
-    openNewPatientDialog
+    openNewPatientDialog,
+    openNewAppointmentDialog
   } = useAppContext();
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -102,19 +103,12 @@ export default function AppointmentsPage() {
             <CardDescription>عرض وجدولة وإدارة جميع المواعيد.</CardDescription>
           </div>
           <div className="flex items-center gap-2">
-             <NewAppointmentDialog
-              patients={patients}
-              doctors={doctors}
-              onAppointmentAdded={addAppointment}
-              openNewPatientDialog={openNewPatientDialog}
-            >
-              <Button size="sm" className="gap-1">
-                <PlusCircle className="h-3.5 w-3.5" />
-                <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
-                  موعد جديد
-                </span>
-              </Button>
-            </NewAppointmentDialog>
+            <Button size="sm" className="gap-1" onClick={() => openNewAppointmentDialog()}>
+              <PlusCircle className="h-3.5 w-3.5" />
+              <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
+                موعد جديد
+              </span>
+            </Button>
           </div>
         </div>
          <div className="mt-4 flex flex-col md:flex-row items-center gap-2">

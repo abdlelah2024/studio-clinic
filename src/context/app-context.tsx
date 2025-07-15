@@ -2,6 +2,7 @@
 "use client"
 import React, { createContext, useContext, useState, useCallback, ReactNode, useMemo, useEffect } from "react"
 import { AddPatientDialog } from "@/components/patients/add-patient-dialog"
+import { NewAppointmentDialog } from "@/components/appointments/new-appointment-dialog"
 import type { Appointment, Patient, Doctor, User, UserRole, Permissions, DataField, Message, AuditLog, Notification, AuditLogAction, AuditLogCategory, AppointmentWithDetails, AppointmentStatus } from "@/lib/types"
 import { useToast } from "@/hooks/use-toast"
 import { db, auth } from "@/services/firestore"
@@ -478,6 +479,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         <AppContext.Provider value={value}>
             {children}
             <AddPatientDialog open={isPatientDialogOpen} onOpenChange={setPatientDialogOpen} initialName={patientDialogOptions?.initialName} />
+            <NewAppointmentDialog open={isAppointmentDialogOpen} onOpenChange={setAppointmentDialogOpen} initialPatientId={appointmentDialogOptions?.initialPatientId} />
         </AppContext.Provider>
     );
 }
