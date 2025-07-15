@@ -1,24 +1,17 @@
 
 "use client"
 import React, { useState, useMemo, useEffect } from "react"
-import { StatsCards } from "@/components/dashboard/stats-cards"
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { addDays, startOfDay, isToday } from 'date-fns';
 import { Wifi, Users, RefreshCw, Calendar } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useAppContext } from "@/context/app-context"
-import type { AppointmentStatus } from "@/lib/types"
 import { Skeleton } from "@/components/ui/skeleton"
 
-type TimeRange = 'all' | '30d' | '7d' | 'today';
-
 export default function DashboardPage() {
-  const { enrichedAppointments, users, loading } = useAppContext();
-  const [timeRange, setTimeRange] = useState<TimeRange>('today');
+  const { users, loading } = useAppContext();
   const [isOnline, setIsOnline] = useState(true);
   
   useEffect(() => {
@@ -38,45 +31,6 @@ export default function DashboardPage() {
       }
     };
   }, []);
-
-
-  const getStatusTranslation = (status: AppointmentStatus) => {
-    switch (status) {
-      case 'Completed': return 'مكتمل';
-      case 'Canceled': return 'ملغى';
-      case 'Scheduled': return 'مجدول';
-      case 'Waiting': return 'منتظر';
-      default: return status;
-    }
-  }
-
-  const filteredData = useMemo(() => {
-    const now = new Date();
-    let startDate: Date | null = null;
-    
-    if (timeRange === 'today') {
-      startDate = startOfDay(now);
-    } else if (timeRange === '7d') {
-      startDate = addDays(now, -7);
-    } else if (timeRange === '30d') {
-      startDate = addDays(now, -30);
-    }
-
-    const appointments = enrichedAppointments.filter(appointment => {
-      const appointmentDate = new Date(appointment.date);
-      if (timeRange === 'today') {
-        return isToday(appointmentDate);
-      }
-      if (!startDate) return true; // 'all' time range
-      return startOfDay(appointmentDate) >= startOfDay(startDate) && startOfDay(appointmentDate) <= startOfDay(now);
-    });
-
-    const todayAppointments = enrichedAppointments
-      .filter(a => isToday(new Date(a.date)))
-      .sort((a,b) => a.startTime.localeCompare(b.startTime));
-
-    return { appointments, todayAppointments };
-  }, [timeRange, enrichedAppointments]);
   
   if (loading) {
       return (
@@ -101,77 +55,17 @@ export default function DashboardPage() {
 
   return (
     <div className="flex flex-col gap-6">
-       <div className="flex justify-end">
-          <Select value={timeRange} onValueChange={(value) => setTimeRange(value as TimeRange)}>
-              <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="اختر نطاقًا زمنيًا" />
-              </SelectTrigger>
-              <SelectContent>
-                  <SelectItem value="all">كل الأوقات</SelectItem>
-                  <SelectItem value="30d">آخر 30 يومًا</SelectItem>
-                  <SelectItem value="7d">آخر 7 أيام</SelectItem>
-                  <SelectItem value="today">اليوم</SelectItem>
-              </SelectContent>
-          </Select>
-       </div>
-
-      <StatsCards appointments={filteredData.appointments} />
+       <Card>
+           <CardHeader>
+               <CardTitle>مرحباً بك في ClinicFlow</CardTitle>
+           </CardHeader>
+            <CardContent>
+                <p>نظامك المتكامل لإدارة العيادة. يمكنك إدارة المرضى والأطباء والتقارير من خلال القائمة الجانبية.</p>
+            </CardContent>
+       </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
-          <Card>
-            <CardHeader>
-              <CardTitle>مواعيد اليوم</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>المريض</TableHead>
-                    <TableHead>الطبيب</TableHead>
-                    <TableHead>الوقت</TableHead>
-                    <TableHead>الحالة</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredData.todayAppointments.length > 0 ? filteredData.todayAppointments.map((appointment) => (
-                    <TableRow key={appointment.id}>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Avatar className="h-8 w-8">
-                            <AvatarImage src={appointment.patient.avatar} data-ai-hint="person face" />
-                            <AvatarFallback>{appointment.patient.name.charAt(0)}</AvatarFallback>
-                          </Avatar>
-                          <span className="font-medium">{appointment.patient.name}</span>
-                        </div>
-                      </TableCell>
-                       <TableCell>
-                        <span className="font-medium">{appointment.doctor.name}</span>
-                      </TableCell>
-                      <TableCell>{appointment.startTime}</TableCell>
-                      <TableCell>
-                         <Badge variant={appointment.status === 'Completed' ? 'default' : appointment.status === 'Canceled' ? 'destructive' : 'secondary'}
-                            className={cn({
-                                "bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300 border-blue-300 hover:bg-blue-200": appointment.status === 'Waiting',
-                            })}
-                            >
-                            {getStatusTranslation(appointment.status)}
-                        </Badge>
-                      </TableCell>
-                    </TableRow>
-                  )) : (
-                     <TableRow>
-                        <TableCell colSpan={4} className="h-24 text-center">
-                            لا توجد مواعيد لهذا اليوم.
-                        </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </div>
-        <div className="lg:col-span-1">
+        <div className="lg:col-span-3">
             <Card>
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
@@ -202,9 +96,10 @@ export default function DashboardPage() {
                                 </TableCell>
                                 <TableCell>{user.role === 'Admin' ? 'مدير' : user.role === 'Doctor' ? 'طبيب' : 'موظف استقبال'}</TableCell>
                                 <TableCell>
-                                    <Badge variant={user.status === 'online' ? 'default' : 'secondary'} className={cn(user.status === 'online' && 'bg-green-500/20 text-green-700 border-green-400')}>
+                                    <div className={cn("flex items-center gap-2", user.status === 'online' ? 'text-green-600' : 'text-muted-foreground')}>
+                                       <span className={cn("h-2 w-2 rounded-full", user.status === 'online' ? 'bg-green-500' : 'bg-gray-400')} />
                                         {user.status === 'online' ? 'متصل' : 'غير متصل'}
-                                    </Badge>
+                                    </div>
                                 </TableCell>
                             </TableRow>
                         ))}

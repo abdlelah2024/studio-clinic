@@ -1,10 +1,9 @@
 
 "use client"
-import React, { useState, useEffect, useRef, useCallback, useMemo } from "react"
+import React from "react"
 import { useRouter } from "next/navigation"
-import { Bell, Search, Calendar, UserPlus, CircleUser, CalendarCheck, CalendarX2, Stethoscope, User, ArrowRight, LogOut } from "lucide-react"
+import { Bell, CircleUser, LogOut } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,78 +14,19 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { SidebarTrigger } from "@/components/ui/sidebar"
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command"
 import { useAppContext } from "@/context/app-context"
-import { Badge } from "../ui/badge"
 
 export function AppHeader() {
-  const [searchQuery, setSearchQuery] = useState("")
-  const [isSearchFocused, setIsSearchFocused] = useState(false)
-  const searchRef = useRef<HTMLDivElement>(null)
-  const { patients, doctors, enrichedAppointments, openNewAppointmentDialog, openNewPatientDialog, notifications, currentUser, logout } = useAppContext()
+  const { notifications, currentUser, logout } = useAppContext()
   const router = useRouter()
-
-  const handleAction = (action: () => void) => {
-    action();
-    setSearchQuery("");
-    setIsSearchFocused(false);
-  }
-
-  const searchResults = useMemo(() => {
-    if (!searchQuery) return { patients: [], doctors: [], appointments: [] };
-
-    const lowerCaseQuery = searchQuery.toLowerCase();
-
-    const filteredPatients = patients.filter(
-      p => p.name.toLowerCase().includes(lowerCaseQuery) || p.phone.includes(lowerCaseQuery)
-    );
-
-    const filteredDoctors = doctors.filter(
-      d => d.name.toLowerCase().includes(lowerCaseQuery) || d.specialty.toLowerCase().includes(lowerCaseQuery)
-    );
-
-    const filteredAppointments = enrichedAppointments.filter(a => 
-        a.patient.name.toLowerCase().includes(lowerCaseQuery) ||
-        a.doctor.name.toLowerCase().includes(lowerCaseQuery) ||
-        a.reason.toLowerCase().includes(lowerCaseQuery)
-    );
-
-    return { 
-        patients: filteredPatients.slice(0, 3), 
-        doctors: filteredDoctors.slice(0, 3),
-        appointments: filteredAppointments.slice(0, 3)
-    };
-  }, [searchQuery, patients, doctors, enrichedAppointments]);
-
-  const hasResults = searchResults.patients.length > 0 || searchResults.doctors.length > 0 || searchResults.appointments.length > 0;
 
   const handleLogout = async () => {
     await logout();
     router.push('/login');
   }
 
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
-        setIsSearchFocused(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside)
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside)
-    }
-  }, [])
-
   const getNotificationIcon = (type: string) => {
     switch (type) {
-      case 'appointment_confirmed': return <CalendarCheck className="h-4 w-4 text-green-500" />;
-      case 'appointment_canceled': return <CalendarX2 className="h-4 w-4 text-red-500" />;
       case 'new_patient': return <CircleUser className="h-4 w-4 text-blue-500" />;
       default: return <Bell className="h-4 w-4" />;
     }
@@ -98,93 +38,7 @@ export function AppHeader() {
         <SidebarTrigger />
       </div>
       <div className="flex-1">
-        <div className="relative" ref={searchRef}>
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            type="search"
-            placeholder="بحث سريع (مرضى, أطباء, مواعيد)..."
-            className="w-full rounded-lg bg-background pl-8 md:w-[280px] lg:w-[400px]"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            onFocus={() => setIsSearchFocused(true)}
-          />
-          {isSearchFocused && (
-            <Command className="absolute top-full mt-2 w-full rounded-lg border bg-card shadow-lg md:w-[400px] lg:w-[550px]">
-              <CommandList>
-                {searchQuery && hasResults && (
-                    <>
-                    {searchResults.patients.length > 0 && (
-                        <CommandGroup heading="المرضى">
-                            {searchResults.patients.map((patient) => (
-                                <CommandItem key={`p-${patient.id}`} onSelect={() => handleAction(() => router.push(`/patients/${patient.id}`))} className="p-2 flex justify-between items-center cursor-pointer">
-                                    <div className="flex items-center gap-2">
-                                        <User className="h-4 w-4" />
-                                        <div>
-                                            <p className="font-medium">{patient.name}</p>
-                                            <p className="text-xs text-muted-foreground">{patient.phone}</p>
-                                        </div>
-                                    </div>
-                                    <Button variant="secondary" size="sm" onSelect={(e) => { e.preventDefault(); handleAction(() => openNewAppointmentDialog({ initialPatientId: patient.id })); }}>موعد سريع</Button>
-                                </CommandItem>
-                            ))}
-                        </CommandGroup>
-                    )}
-                    {searchResults.doctors.length > 0 && (
-                        <CommandGroup heading="الأطباء">
-                            {searchResults.doctors.map((doctor) => (
-                            <CommandItem key={`d-${doctor.id}`} onSelect={() => handleAction(() => router.push('/doctors'))} className="p-2 cursor-pointer">
-                                <Stethoscope className="mr-2 h-4 w-4" />
-                                <div>
-                                    <p className="font-medium">{doctor.name}</p>
-                                    <p className="text-xs text-muted-foreground">{doctor.specialty}</p>
-                                </div>
-                            </CommandItem>
-                            ))}
-                        </CommandGroup>
-                    )}
-                    {searchResults.appointments.length > 0 && (
-                        <CommandGroup heading="المواعيد">
-                            {searchResults.appointments.map((appointment) => (
-                            <CommandItem key={`a-${appointment.id}`} onSelect={() => handleAction(() => router.push('/appointments'))} className="p-2 cursor-pointer">
-                                <Calendar className="mr-2 h-4 w-4" />
-                                <div className="flex-1">
-                                    <p className="font-medium">{appointment.patient.name}</p>
-                                    <p className="text-xs text-muted-foreground">مع {appointment.doctor.name} - {appointment.reason}</p>
-                                </div>
-                                <Badge variant="outline">{appointment.date}</Badge>
-                            </CommandItem>
-                            ))}
-                        </CommandGroup>
-                    )}
-                    </>
-                )}
-                 {searchQuery && !hasResults && (
-                    <CommandItem onSelect={() => handleAction(() => openNewPatientDialog({ initialName: searchQuery }))} className="cursor-pointer">
-                        <div className="flex-col items-center justify-center py-4 text-center w-full">
-                             <p>لم يتم العثور على مريض. هل تريد إضافة واحد جديد؟</p>
-                             <div className="flex items-center justify-center text-primary mt-2">
-                                <UserPlus className="mr-2 h-4 w-4" /> إضافة مريض جديد باسم "{searchQuery}"
-                            </div>
-                        </div>
-                    </CommandItem>
-                 )}
-
-                {!searchQuery && (
-                    <CommandGroup heading="إجراءات سريعة">
-                        <CommandItem onSelect={() => handleAction(openNewAppointmentDialog)} className="cursor-pointer">
-                            <Calendar className="mr-2 h-4 w-4" />
-                            <span>حجز موعد جديد</span>
-                        </CommandItem>
-                        <CommandItem onSelect={() => handleAction(openNewPatientDialog)} className="cursor-pointer">
-                            <UserPlus className="mr-2 h-4 w-4" />
-                            <span>إضافة مريض جديد</span>
-                        </CommandItem>
-                    </CommandGroup>
-                )}
-              </CommandList>
-            </Command>
-          )}
-        </div>
+        {/* Search bar removed */}
       </div>
       <div className="flex items-center gap-4">
         <DropdownMenu>

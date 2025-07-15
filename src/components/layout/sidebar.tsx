@@ -14,7 +14,6 @@ import {
 import {
   BadgeHelp,
   BarChart3,
-  CalendarDays,
   HeartPulse,
   LayoutDashboard,
   Settings,
@@ -30,7 +29,6 @@ export function AppSidebar() {
 
   const menuItems = [
     { href: "/dashboard", label: "لوحة التحكم", icon: LayoutDashboard },
-    { href: "/appointments", label: "إدارة المواعيد", icon: CalendarDays },
     { href: "/patients", label: "إدارة المرضى", icon: Users },
     { href: "/doctors", label: "إدارة الأطباء", icon: Stethoscope },
     { href: "/reports", label: "التقارير والإحصائيات", icon: BarChart3 },

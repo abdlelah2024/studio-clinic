@@ -1,18 +1,14 @@
 
 "use client"
 import React, { createContext, useContext, useState, useCallback, ReactNode, useMemo, useEffect } from "react"
-import { NewAppointmentDialog } from "@/components/appointments/new-appointment-dialog"
 import { AddPatientDialog } from "@/components/patients/add-patient-dialog"
-import type { Appointment, Patient, Doctor, User, UserRole, Permissions, DataField, Message, AuditLog, Notification, AuditLogAction, AuditLogCategory } from "@/lib/types"
+import type { Patient, Doctor, User, UserRole, Permissions, DataField, Message, AuditLog, Notification, AuditLogAction, AuditLogCategory } from "@/lib/types"
 import { useToast } from "@/hooks/use-toast"
 import { db, auth } from "@/services/firestore"
 import { onSnapshot, collection, query, orderBy, addDoc, updateDoc, deleteDoc, doc, setDoc, getDoc } from "firebase/firestore"
 import { createUserWithEmailAndPassword, onAuthStateChanged, signInWithEmailAndPassword, signOut, User as FirebaseUser } from 'firebase/auth';
 
 // --- AppContext Types ---
-type AddAppointmentFunction = (appointment: Omit<Appointment, 'id'>) => void;
-type UpdateAppointmentFunction = (appointment: Appointment) => void;
-type DeleteAppointmentFunction = (appointmentId: string) => void;
 type AddPatientFunction = (patient: Omit<Patient, 'id' | 'avatar' | 'lastVisit'>) => void;
 type UpdatePatientFunction = (patient: Patient) => void;
 type DeletePatientFunction = (patientId: string) => void;
@@ -27,7 +23,6 @@ type AddDataFieldFunction = (field: { label: string, required: boolean }) => voi
 type UpdateDataFieldFunction = (field: DataField) => void;
 type DeleteDataFieldFunction = (fieldId: string) => void;
 type AddMessageFunction = (message: Omit<Message, 'id' | 'timestamp'>) => void;
-interface AppointmentDialogOptions { initialPatientId?: string; }
 interface PatientDialogOptions { initialName?: string; }
 
 interface AppContextType {
@@ -40,7 +35,6 @@ interface AppContextType {
   // Data
   patients: Patient[];
   doctors: Doctor[];
-  appointments: Appointment[];
   users: User[];
   permissions: Record<UserRole, Permissions>;
   dataFields: DataField[];
@@ -48,9 +42,6 @@ interface AppContextType {
   auditLogs: AuditLog[];
   notifications: Notification[];
   
-  // Enriched Data
-  enrichedAppointments: (Appointment & { patient: Patient; doctor: Doctor; })[];
-
   // Actions
   openNewPatientDialog: (options?: PatientDialogOptions) => void;
   addPatient: AddPatientFunction;
@@ -59,10 +50,6 @@ interface AppContextType {
   addDoctor: AddDoctorFunction;
   updateDoctor: UpdateDoctorFunction;
   deleteDoctor: DeleteDoctorFunction;
-  openNewAppointmentDialog: (options?: AppointmentDialogOptions) => void;
-  addAppointment: AddAppointmentFunction;
-  updateAppointment: UpdateAppointmentFunction;
-  deleteAppointment: DeleteAppointmentFunction;
   addUser: AddUserFunction;
   updateUser: UpdateUserFunction;
   deleteUser: DeleteUserFunction;
@@ -101,9 +88,6 @@ const deletePatientDoc = (id: string) => deleteDocument('patients', id);
 const addDoctorDoc = (doctor: Omit<Doctor, 'id'>) => addDocument('doctors', doctor);
 const updateDoctorDoc = (id: string, doctor: Partial<Doctor>) => updateDocument('doctors', id, doctor);
 const deleteDoctorDoc = (id: string) => deleteDocument('doctors', id);
-const addAppointmentDoc = (appointment: Omit<Appointment, 'id'>) => addDocument('appointments', appointment);
-const updateAppointmentDoc = (id: string, appointment: Partial<Appointment>) => updateDocument('appointments', id, appointment);
-const deleteAppointmentDoc = (id: string) => deleteDocument('appointments', id);
 const addUserDoc = (user: User) => setDocument('users', user.email, user);
 const updateUserDoc = (email: string, user: Partial<User>) => updateDocument('users', email, user);
 const deleteUserDoc = (email: string) => deleteDocument('users', email);
@@ -130,7 +114,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     // Main Data State
     const [patients, setPatients] = useState<Patient[]>([]);
     const [doctors, setDoctors] = useState<Doctor[]>([]);
-    const [appointments, setAppointments] = useState<Appointment[]>([]);
     const [users, setUsers] = useState<User[]>([]);
     const [permissions, setPermissions] = useState<Record<UserRole, Permissions>>({} as Record<UserRole, Permissions>);
     const [dataFields, setDataFields] = useState<DataField[]>([]);
@@ -139,8 +122,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const [notifications, setNotifications] = useState<Notification[]>([]);
 
     // Dialog States
-    const [isAppointmentDialogOpen, setAppointmentDialogOpen] = useState(false);
-    const [appointmentDialogOptions, setAppointmentDialogOptions] = useState<AppointmentDialogOptions | undefined>();
     const [isPatientDialogOpen, setPatientDialogOpen] = useState(false);
     const [patientDialogOptions, setPatientDialogOptions] = useState<PatientDialogOptions | undefined>();
 
@@ -249,7 +230,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
         const unsubscribers = [
             listenToCollection('patients', setPatients, { orderBy: 'lastVisit', direction: 'desc' }),
             listenToCollection('doctors', setDoctors, { orderBy: 'name' }),
-            listenToCollection('appointments', setAppointments, { orderBy: 'date', direction: 'desc' }),
             listenToCollection('users', (data: User[]) => {
                 setUsers(data.map(u => ({ id: u.email, ...u })));
             }, { idField: 'email' }),
@@ -263,17 +243,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
         return () => unsubscribers.forEach(unsubscribe => unsubscribe());
     }, [currentUser]);
-
-
-    // --- Memoized Enriched Data ---
-    const enrichedAppointments = useMemo(() => {
-        if (loading || !patients.length || !doctors.length) return [];
-        return appointments.map(appointment => {
-            const patient = patients.find(p => p.id === appointment.patientId);
-            const doctor = doctors.find(d => d.id === appointment.doctorId);
-            return patient && doctor ? { ...appointment, patient, doctor } : null;
-        }).filter(Boolean) as (Appointment & { patient: Patient; doctor: Doctor; })[];
-    }, [appointments, patients, doctors, loading]);
 
     // --- Actions (Patients, Doctors, etc.) ---
     const addPatient: AddPatientFunction = useCallback(async (patient) => {
@@ -337,40 +306,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
         }
         catch(e) { toast({ title: "خطأ", description: "فشل حذف الطبيب.", variant: "destructive" }); }
     }, [toast, addAuditLog, doctors]);
-
-    const addAppointment: AddAppointmentFunction = useCallback(async (app) => {
-        try { 
-            await addAppointmentDoc(app);
-            await updatePatientDoc(app.patientId, { lastVisit: app.date });
-            toast({ title: "تمت جدولة الموعد بنجاح" });
-            const patientName = patients.find(p => p.id === app.patientId)?.name || 'Unknown Patient';
-            await addAuditLog('Create', 'Appointment', `Created appointment for ${patientName} on ${app.date}`);
-        }
-        catch(e) { console.error(e); toast({ title: "خطأ", description: "فشل إضافة الموعد.", variant: "destructive" }); }
-    }, [toast, addAuditLog, patients]);
-
-    const updateAppointment: UpdateAppointmentFunction = useCallback(async (app) => {
-        const { id, ...appData } = app;
-        try { 
-            await updateAppointmentDoc(id, appData); 
-            toast({ title: "تم تحديث الموعد بنجاح" }); 
-            const patientName = patients.find(p => p.id === app.patientId)?.name || 'Unknown Patient';
-            await addAuditLog('Update', 'Appointment', `Updated appointment for ${patientName} on ${app.date} to status ${app.status}`);
-        }
-        catch(e) { toast({ title: "خطأ", description: "فشل تحديث الموعد.", variant: "destructive" }); }
-    }, [toast, addAuditLog, patients]);
-
-    const deleteAppointment: DeleteAppointmentFunction = useCallback(async (id) => {
-        const app = enrichedAppointments.find(a => a.id === id);
-        try { 
-            await deleteAppointmentDoc(id); 
-            toast({ title: "تم حذف الموعد", variant: "default" });
-            if (app) {
-                await addAuditLog('Delete', 'Appointment', `Deleted appointment for ${app.patient.name} on ${app.date}`);
-            }
-        }
-        catch(e) { toast({ title: "خطأ", description: "فشل حذف الموعد.", variant: "destructive" }); }
-    }, [toast, addAuditLog, enrichedAppointments]);
 
     const addUser: AddUserFunction = useCallback(async (user) => {
         try {
@@ -455,16 +390,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     // --- Dialog Triggers ---
     const openNewPatientDialog = useCallback((options?: PatientDialogOptions) => { setPatientDialogOptions(options); setPatientDialogOpen(true); }, []);
-    const openNewAppointmentDialog = useCallback((options?: AppointmentDialogOptions) => { setAppointmentDialogOptions(options); setAppointmentDialogOpen(true); }, []);
 
     // --- Context Value ---
     const value: AppContextType = {
         loading, currentUser, login, logout,
-        patients, doctors, appointments, users, permissions, dataFields, messages, auditLogs, notifications,
-        enrichedAppointments,
+        patients, doctors, users, permissions, dataFields, messages, auditLogs, notifications,
         openNewPatientDialog, addPatient, updatePatient, deletePatient,
         addDoctor, updateDoctor, deleteDoctor,
-        openNewAppointmentDialog, addAppointment, updateAppointment, deleteAppointment,
         addUser, updateUser, deleteUser, updatePermission,
         addDataField, updateDataField, deleteDataField, addMessage,
     };
@@ -472,7 +404,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return (
         <AppContext.Provider value={value}>
             {children}
-            <NewAppointmentDialog open={isAppointmentDialogOpen} onOpenChange={setAppointmentDialogOpen} initialPatientId={appointmentDialogOptions?.initialPatientId} />
             <AddPatientDialog open={isPatientDialogOpen} onOpenChange={setPatientDialogOpen} initialName={patientDialogOptions?.initialName} />
         </AppContext.Provider>
     );
@@ -485,5 +416,3 @@ export function useAppContext() {
     }
     return context;
 }
-
-    
