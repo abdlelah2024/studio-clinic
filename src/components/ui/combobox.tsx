@@ -1,9 +1,7 @@
 
 "use client"
-
 import * as React from "react"
-import { Check, ChevronsUpDown } from "lucide-react"
-
+import { Check, ChevronsUpDown, PlusCircle } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import {
@@ -28,6 +26,11 @@ interface ComboboxProps {
     searchPlaceholder: string;
     noResultsText: string;
     className?: string;
+    onSearchChange?: (search: string) => void;
+    addNew?: {
+        label: string;
+        action: () => void;
+    };
 }
 
 export function Combobox({ 
@@ -37,9 +40,21 @@ export function Combobox({
     placeholder,
     searchPlaceholder,
     noResultsText,
-    className
+    className,
+    onSearchChange,
+    addNew
 }: ComboboxProps) {
   const [open, setOpen] = React.useState(false)
+  const [search, setSearch] = React.useState('');
+
+  const handleSearchChange = (value: string) => {
+    setSearch(value);
+    if (onSearchChange) {
+        onSearchChange(value);
+    }
+  }
+  
+  const displayValue = options.find((option) => option.value === selectedValue)?.label || placeholder;
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -50,17 +65,31 @@ export function Combobox({
           aria-expanded={open}
           className={cn("w-full justify-between", className)}
         >
-          {selectedValue
-            ? options.find((option) => option.value === selectedValue)?.label
-            : placeholder}
+          <span className="truncate">{displayValue}</span>
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-full p-0">
+      <PopoverContent className="w-full p-0" style={{minWidth: "var(--radix-popover-trigger-width)"}}>
         <Command>
-          <CommandInput placeholder={searchPlaceholder} />
+          <CommandInput 
+            placeholder={searchPlaceholder} 
+            value={search} 
+            onValueChange={handleSearchChange}
+          />
           <CommandList>
-            <CommandEmpty>{noResultsText}</CommandEmpty>
+            <CommandEmpty>
+                {addNew && search ? (
+                     <Button variant="ghost" className="w-full justify-start" onClick={() => {
+                         addNew.action();
+                         setOpen(false);
+                     }}>
+                        <PlusCircle className="mr-2 h-4 w-4" />
+                        {addNew.label}
+                    </Button>
+                ) : (
+                    noResultsText
+                )}
+            </CommandEmpty>
             <CommandGroup>
               {options.map((option) => (
                 <CommandItem
@@ -72,6 +101,7 @@ export function Combobox({
                       onSelectedValueChange(selectedOption.value === selectedValue ? "" : selectedOption.value)
                     }
                     setOpen(false)
+                    setSearch('')
                   }}
                 >
                   <Check

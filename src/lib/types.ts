@@ -17,6 +17,25 @@ export type Doctor = {
   freeReturnPeriod?: number; // in days
 };
 
+export type AppointmentStatus = 'Scheduled' | 'Completed' | 'Canceled' | 'Waiting' | 'Return';
+
+export type Appointment = {
+  id: string;
+  patientId: string;
+  doctorId: string;
+  date: string; // YYYY-MM-DD
+  startTime: string; // HH:MM
+  endTime: string; // HH:MM
+  reason: string;
+  status: AppointmentStatus;
+  cost?: number;
+};
+
+export type AppointmentWithDetails = Appointment & {
+  patient: Patient;
+  doctor: Doctor;
+};
+
 export type UserRole = 'Admin' | 'Doctor' | 'Receptionist';
 
 export type User = {

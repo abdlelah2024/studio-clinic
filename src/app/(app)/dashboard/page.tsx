@@ -4,14 +4,15 @@ import React, { useState, useMemo, useEffect } from "react"
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Wifi, Users, RefreshCw, Calendar } from "lucide-react"
+import { Wifi, Users, RefreshCw } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useAppContext } from "@/context/app-context"
 import { Skeleton } from "@/components/ui/skeleton"
+import { StatsCards } from "@/components/dashboard/stats-cards"
+import { AppointmentCalendar } from "@/components/dashboard/appointment-calendar"
 
 export default function DashboardPage() {
-  const { users, loading } = useAppContext();
+  const { users, enrichedAppointments, loading } = useAppContext();
   const [isOnline, setIsOnline] = useState(true);
   
   useEffect(() => {
@@ -55,17 +56,13 @@ export default function DashboardPage() {
 
   return (
     <div className="flex flex-col gap-6">
-       <Card>
-           <CardHeader>
-               <CardTitle>مرحباً بك في ClinicFlow</CardTitle>
-           </CardHeader>
-            <CardContent>
-                <p>نظامك المتكامل لإدارة العيادة. يمكنك إدارة المرضى والأطباء والتقارير من خلال القائمة الجانبية.</p>
-            </CardContent>
-       </Card>
+      <StatsCards appointments={enrichedAppointments} />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-3">
+        <div className="lg:col-span-2">
+           <AppointmentCalendar />
+        </div>
+        <div className="lg:col-span-1">
             <Card>
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">

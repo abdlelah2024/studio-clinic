@@ -21,7 +21,8 @@ import {
   Stethoscope,
   Users,
   History,
-  MessageSquare
+  MessageSquare,
+  Calendar
 } from "lucide-react"
 
 export function AppSidebar() {
@@ -29,6 +30,7 @@ export function AppSidebar() {
 
   const menuItems = [
     { href: "/dashboard", label: "لوحة التحكم", icon: LayoutDashboard },
+    { href: "/appointments", label: "إدارة المواعيد", icon: Calendar },
     { href: "/patients", label: "إدارة المرضى", icon: Users },
     { href: "/doctors", label: "إدارة الأطباء", icon: Stethoscope },
     { href: "/reports", label: "التقارير والإحصائيات", icon: BarChart3 },

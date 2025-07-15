@@ -2,7 +2,7 @@
 "use client"
 import React, { createContext, useContext, useState, useCallback, ReactNode, useMemo, useEffect } from "react"
 import { AddPatientDialog } from "@/components/patients/add-patient-dialog"
-import type { Patient, Doctor, User, UserRole, Permissions, DataField, Message, AuditLog, Notification, AuditLogAction, AuditLogCategory } from "@/lib/types"
+import type { Appointment, Patient, Doctor, User, UserRole, Permissions, DataField, Message, AuditLog, Notification, AuditLogAction, AuditLogCategory, AppointmentWithDetails, AppointmentStatus } from "@/lib/types"
 import { useToast } from "@/hooks/use-toast"
 import { db, auth } from "@/services/firestore"
 import { onSnapshot, collection, query, orderBy, addDoc, updateDoc, deleteDoc, doc, setDoc, getDoc } from "firebase/firestore"
@@ -15,6 +15,9 @@ type DeletePatientFunction = (patientId: string) => void;
 type AddDoctorFunction = (doctor: Omit<Doctor, 'id' | 'avatar'>) => void;
 type UpdateDoctorFunction = (doctor: Doctor) => void;
 type DeleteDoctorFunction = (doctorId: string) => void;
+type AddAppointmentFunction = (appointment: Omit<Appointment, 'id'| 'status'>) => void;
+type UpdateAppointmentFunction = (appointment: Appointment) => void;
+type DeleteAppointmentFunction = (appointmentId: string) => void;
 type AddUserFunction = (user: Omit<User, 'avatar' | 'status'>) => Promise<void>;
 type UpdateUserFunction = (user: User) => void;
 type DeleteUserFunction = (email: string) => void;
@@ -24,6 +27,7 @@ type UpdateDataFieldFunction = (field: DataField) => void;
 type DeleteDataFieldFunction = (fieldId: string) => void;
 type AddMessageFunction = (message: Omit<Message, 'id' | 'timestamp'>) => void;
 interface PatientDialogOptions { initialName?: string; }
+interface AppointmentDialogOptions { initialPatientId?: string; }
 
 interface AppContextType {
   // Auth
@@ -41,15 +45,20 @@ interface AppContextType {
   messages: Message[];
   auditLogs: AuditLog[];
   notifications: Notification[];
+  enrichedAppointments: AppointmentWithDetails[];
   
   // Actions
   openNewPatientDialog: (options?: PatientDialogOptions) => void;
+  openNewAppointmentDialog: (options?: AppointmentDialogOptions) => void;
   addPatient: AddPatientFunction;
   updatePatient: UpdatePatientFunction;
   deletePatient: DeletePatientFunction;
   addDoctor: AddDoctorFunction;
   updateDoctor: UpdateDoctorFunction;
   deleteDoctor: DeleteDoctorFunction;
+  addAppointment: AddAppointmentFunction;
+  updateAppointment: UpdateAppointmentFunction;
+  deleteAppointment: DeleteAppointmentFunction;
   addUser: AddUserFunction;
   updateUser: UpdateUserFunction;
   deleteUser: DeleteUserFunction;
@@ -88,6 +97,9 @@ const deletePatientDoc = (id: string) => deleteDocument('patients', id);
 const addDoctorDoc = (doctor: Omit<Doctor, 'id'>) => addDocument('doctors', doctor);
 const updateDoctorDoc = (id: string, doctor: Partial<Doctor>) => updateDocument('doctors', id, doctor);
 const deleteDoctorDoc = (id: string) => deleteDocument('doctors', id);
+const addAppointmentDoc = (appointment: Omit<Appointment, 'id'>) => addDocument('appointments', appointment);
+const updateAppointmentDoc = (id: string, appointment: Partial<Appointment>) => updateDocument('appointments', id, appointment);
+const deleteAppointmentDoc = (id: string) => deleteDocument('appointments', id);
 const addUserDoc = (user: User) => setDocument('users', user.email, user);
 const updateUserDoc = (email: string, user: Partial<User>) => updateDocument('users', email, user);
 const deleteUserDoc = (email: string) => deleteDocument('users', email);
@@ -114,6 +126,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     // Main Data State
     const [patients, setPatients] = useState<Patient[]>([]);
     const [doctors, setDoctors] = useState<Doctor[]>([]);
+    const [appointments, setAppointments] = useState<Appointment[]>([]);
     const [users, setUsers] = useState<User[]>([]);
     const [permissions, setPermissions] = useState<Record<UserRole, Permissions>>({} as Record<UserRole, Permissions>);
     const [dataFields, setDataFields] = useState<DataField[]>([]);
@@ -124,6 +137,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     // Dialog States
     const [isPatientDialogOpen, setPatientDialogOpen] = useState(false);
     const [patientDialogOptions, setPatientDialogOptions] = useState<PatientDialogOptions | undefined>();
+    const [isAppointmentDialogOpen, setAppointmentDialogOpen] = useState(false);
+    const [appointmentDialogOptions, setAppointmentDialogOptions] = useState<AppointmentDialogOptions | undefined>();
 
     const { toast } = useToast();
 
@@ -230,6 +245,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         const unsubscribers = [
             listenToCollection('patients', setPatients, { orderBy: 'lastVisit', direction: 'desc' }),
             listenToCollection('doctors', setDoctors, { orderBy: 'name' }),
+            listenToCollection('appointments', setAppointments, { orderBy: 'date', direction: 'desc' }),
             listenToCollection('users', (data: User[]) => {
                 setUsers(data.map(u => ({ id: u.email, ...u })));
             }, { idField: 'email' }),
@@ -243,6 +259,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
         return () => unsubscribers.forEach(unsubscribe => unsubscribe());
     }, [currentUser]);
+
+    const enrichedAppointments = useMemo(() => {
+        if (loading || !patients.length || !doctors.length) return [];
+        const patientMap = new Map(patients.map(p => [p.id, p]));
+        const doctorMap = new Map(doctors.map(d => [d.id, d]));
+
+        return appointments.map(app => ({
+            ...app,
+            patient: patientMap.get(app.patientId) || { id: app.patientId, name: 'Unknown Patient', avatar: '', lastVisit: '', phone: '', age: 0 },
+            doctor: doctorMap.get(app.doctorId) || { id: app.doctorId, name: 'Unknown Doctor', avatar: '', specialty: '' },
+        }));
+    }, [appointments, patients, doctors, loading]);
 
     // --- Actions (Patients, Doctors, etc.) ---
     const addPatient: AddPatientFunction = useCallback(async (patient) => {
@@ -306,6 +334,48 @@ export function AppProvider({ children }: { children: ReactNode }) {
         }
         catch(e) { toast({ title: "خطأ", description: "فشل حذف الطبيب.", variant: "destructive" }); }
     }, [toast, addAuditLog, doctors]);
+
+    const addAppointment: AddAppointmentFunction = useCallback(async (appointment) => {
+        try {
+            await addAppointmentDoc({ ...appointment, status: 'Scheduled' });
+            await updatePatientDoc(appointment.patientId, { lastVisit: appointment.date });
+            toast({ title: "تم حجز الموعد بنجاح" });
+            await addAuditLog('Create', 'Appointment', `Created appointment for patient ID ${appointment.patientId} with doctor ID ${appointment.doctorId}`);
+        } catch (e) {
+            toast({ title: "خطأ", description: "فشل حجز الموعد.", variant: "destructive" });
+        }
+    }, [toast, addAuditLog]);
+
+    const updateAppointment: UpdateAppointmentFunction = useCallback(async (appointment) => {
+        const { id, ...appointmentData } = appointment;
+        let finalData = { ...appointmentData };
+
+        if (finalData.status === 'Completed' && !finalData.cost) {
+            const doctor = doctors.find(d => d.id === finalData.doctorId);
+            if (doctor && doctor.servicePrice) {
+                finalData.cost = doctor.servicePrice;
+            }
+        }
+        
+        try {
+            await updateAppointmentDoc(id, finalData);
+            toast({ title: "تم تحديث الموعد بنجاح" });
+            await addAuditLog('Update', 'Appointment', `Updated appointment ID ${id}`);
+        } catch (e) {
+            toast({ title: "خطأ", description: "فشل تحديث الموعد.", variant: "destructive" });
+        }
+    }, [toast, addAuditLog, doctors]);
+
+    const deleteAppointment: DeleteAppointmentFunction = useCallback(async (id) => {
+        try {
+            await deleteAppointmentDoc(id);
+            toast({ title: "تم حذف الموعد بنجاح" });
+            await addAuditLog('Delete', 'Appointment', `Deleted appointment ID ${id}`);
+        } catch (e) {
+            toast({ title: "خطأ", description: "فشل حذف الموعد.", variant: "destructive" });
+        }
+    }, [toast, addAuditLog]);
+
 
     const addUser: AddUserFunction = useCallback(async (user) => {
         try {
@@ -390,13 +460,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     // --- Dialog Triggers ---
     const openNewPatientDialog = useCallback((options?: PatientDialogOptions) => { setPatientDialogOptions(options); setPatientDialogOpen(true); }, []);
+    const openNewAppointmentDialog = useCallback((options?: AppointmentDialogOptions) => { setAppointmentDialogOptions(options); setAppointmentDialogOpen(true); }, []);
 
     // --- Context Value ---
     const value: AppContextType = {
         loading, currentUser, login, logout,
-        patients, doctors, users, permissions, dataFields, messages, auditLogs, notifications,
-        openNewPatientDialog, addPatient, updatePatient, deletePatient,
+        patients, doctors, users, permissions, dataFields, messages, auditLogs, notifications, enrichedAppointments,
+        openNewPatientDialog, openNewAppointmentDialog,
+        addPatient, updatePatient, deletePatient,
         addDoctor, updateDoctor, deleteDoctor,
+        addAppointment, updateAppointment, deleteAppointment,
         addUser, updateUser, deleteUser, updatePermission,
         addDataField, updateDataField, deleteDataField, addMessage,
     };
