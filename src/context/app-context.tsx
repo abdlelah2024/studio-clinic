@@ -120,7 +120,6 @@ const checkUserExists = async (email: string): Promise<boolean> => (await getDoc
 
 export function AppProvider({ children }: { children: ReactNode }) {
     // Auth State
-    const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
     const [currentUser, setCurrentUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
 
@@ -163,22 +162,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (user) => {
             setLoading(true);
-            if (user) {
-                setFirebaseUser(user);
+            if (user && user.email) {
                 try {
-                    const userDoc = await getDocument('users', user.email!);
+                    const userDoc = await getDocument('users', user.email);
                     if (userDoc.exists()) {
-                        setCurrentUser({ email: user.email!, ...userDoc.data() } as User);
+                        setCurrentUser({ ...userDoc.data(), email: user.email } as User);
                     } else {
+                        console.warn(`User with email ${user.email} found in Auth, but not in Firestore. Logging out.`);
+                        await signOut(auth);
                         setCurrentUser(null);
-                        await signOut(auth); // Log out if user doc doesn't exist
                     }
                 } catch (error) {
                     console.error("Error fetching user document:", error);
                     setCurrentUser(null);
                 }
             } else {
-                setFirebaseUser(null);
                 setCurrentUser(null);
             }
             setLoading(false);
@@ -188,7 +186,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     const login = async (email: string, pass: string) => {
       await signInWithEmailAndPassword(auth, email, pass);
-      await addAuditLog('Login', 'User', `User ${email} logged in.`);
+      // Audit log will be triggered by onAuthStateChanged logic to ensure currentUser is set
     };
   
     const logout = async () => {
@@ -199,40 +197,43 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const seedInitialData = useCallback(async () => {
         const adminEmail = "Asd19082@gmail.com";
         const adminPassword = "159632Asd";
+        
         try {
-            const userInDb = await checkUserExists(adminEmail);
-            if (!userInDb) {
+            const userExists = await checkUserExists(adminEmail);
+            if (!userExists) {
                 console.log("Admin user does not exist, creating...");
                 await addUser({ name: "Admin", email: adminEmail, role: 'Admin', password: adminPassword });
                 console.log("Admin user created successfully.");
             }
         } catch (error) { console.error("Error seeding admin user:", error); }
 
-        const permsDoc = await getDocument("system", "permissions");
-        if (!permsDoc.exists()) {
-            console.log("Permissions not set, seeding default permissions...");
-            const defaultPermissions: Record<UserRole, Permissions> = {
-                Admin: {
-                    patients: { add: true, edit: true, delete: true },
-                    doctors: { add: true, edit: true, delete: true },
-                    appointments: { add: true, edit: true, delete: true, cancel: true },
-                    users: { add: true, edit: true, delete: true },
-                },
-                Doctor: {
-                    patients: { add: true, edit: true, delete: false },
-                    doctors: { add: false, edit: false, delete: false },
-                    appointments: { add: true, edit: true, delete: false, cancel: true },
-                    users: { add: false, edit: false, delete: false },
-                },
-                Receptionist: {
-                    patients: { add: true, edit: true, delete: false },
-                    doctors: { add: false, edit: false, delete: false },
-                    appointments: { add: true, edit: true, delete: true, cancel: true },
-                    users: { add: false, edit: false, delete: false },
-                },
-            };
-            await setDocument("system", "permissions", defaultPermissions);
-        }
+        try {
+            const permsDoc = await getDocument("system", "permissions");
+            if (!permsDoc.exists()) {
+                console.log("Permissions not set, seeding default permissions...");
+                const defaultPermissions: Record<UserRole, Permissions> = {
+                    Admin: {
+                        patients: { add: true, edit: true, delete: true },
+                        doctors: { add: true, edit: true, delete: true },
+                        appointments: { add: true, edit: true, delete: true, cancel: true },
+                        users: { add: true, edit: true, delete: true },
+                    },
+                    Doctor: {
+                        patients: { add: true, edit: true, delete: false },
+                        doctors: { add: false, edit: false, delete: false },
+                        appointments: { add: true, edit: true, delete: false, cancel: true },
+                        users: { add: false, edit: false, delete: false },
+                    },
+                    Receptionist: {
+                        patients: { add: true, edit: true, delete: false },
+                        doctors: { add: false, edit: false, delete: false },
+                        appointments: { add: true, edit: true, delete: true, cancel: true },
+                        users: { add: false, edit: false, delete: false },
+                    },
+                };
+                await setDocument("system", "permissions", defaultPermissions);
+            }
+        } catch (error) { console.error("Error seeding permissions:", error); }
     }, []);
 
     useEffect(() => {
@@ -243,6 +244,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     // --- Real-time Data Fetching ---
     useEffect(() => {
         if (!currentUser) return;
+
+        addAuditLog('Login', 'User', `User ${currentUser.email} logged in.`);
+        
         const unsubscribers = [
             listenToCollection('patients', setPatients, { orderBy: 'lastVisit', direction: 'desc' }),
             listenToCollection('doctors', setDoctors, { orderBy: 'name' }),
@@ -349,7 +353,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     const updateAppointment: UpdateAppointmentFunction = useCallback(async (appointment) => {
         const { id, ...appointmentData } = appointment;
-        let finalData = { ...appointmentData };
+        let finalData: Partial<Appointment> = { ...appointmentData };
 
         if (finalData.status === 'Completed' && !finalData.cost) {
             const doctor = doctors.find(d => d.id === finalData.doctorId);
@@ -361,7 +365,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         try {
             await updateAppointmentDoc(id, finalData);
             toast({ title: "تم تحديث الموعد بنجاح" });
-            await addAuditLog('Update', 'Appointment', `Updated appointment ID ${id}`);
+            await addAuditLog('Update', 'Appointment', `Updated appointment ID ${id} to status ${finalData.status}`);
         } catch (e) {
             toast({ title: "خطأ", description: "فشل تحديث الموعد.", variant: "destructive" });
         }
@@ -390,7 +394,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
                  toast({ title: "خطأ", description: "هذا البريد الإلكتروني مستخدم بالفعل.", variant: "destructive" }); 
             } else {
                  toast({ title: "خطأ", description: "فشل إضافة المستخدم.", variant: "destructive" }); 
-                 throw e;
+                 console.error(e);
             }
         }
     }, [toast, addAuditLog]);
@@ -408,9 +412,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const deleteUser: DeleteUserFunction = useCallback(async (email) => {
         const userName = users.find(u => u.email === email)?.name || email;
         try { 
+            // This is a simplified deletion. In a real app, you'd call a backend function
+            // to delete the Firebase Auth user, as it's a privileged operation.
             await deleteUserDoc(email); 
-            toast({ title: "تم الحذف بنجاح", variant: "default" });
-            await addAuditLog('Delete', 'User', `Deleted user: ${userName}`);
+            toast({ title: "تم الحذف بنجاح", description: "تم حذف المستخدم من قاعدة البيانات." });
+            await addAuditLog('Delete', 'User', `Deleted user from Firestore: ${userName}`);
         }
         catch (e) { toast({ title: "خطأ", description: "فشل حذف المستخدم. (قد يتطلب حذف المصادقة يدوياً)", variant: "destructive" }); }
     }, [toast, addAuditLog, users]);

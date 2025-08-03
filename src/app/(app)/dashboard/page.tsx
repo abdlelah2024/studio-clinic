@@ -20,9 +20,9 @@ export default function DashboardPage() {
     const handleOffline = () => setIsOnline(false);
     
     if (typeof window !== 'undefined') {
+        setIsOnline(navigator.onLine);
         window.addEventListener('online', handleOnline);
         window.addEventListener('offline', handleOffline);
-        setIsOnline(navigator.onLine);
     }
     
     return () => {

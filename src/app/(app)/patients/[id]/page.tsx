@@ -6,10 +6,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useAppContext } from "@/context/app-context";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { Patient } from "@/lib/types";
+import type { Patient, AppointmentWithDetails } from "@/lib/types";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { format } from "date-fns";
 
 export default function PatientDetailPage() {
-  const { patients, loading } = useAppContext();
+  const { patients, enrichedAppointments, loading } = useAppContext();
   const params = useParams();
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
 
@@ -18,6 +21,13 @@ export default function PatientDetailPage() {
       return patients.find(p => p.id === id);
   }, [id, patients, loading]);
   
+  const patientHistory = useMemo(() => {
+    if (!id) return [];
+    return enrichedAppointments
+      .filter(app => app.patientId === id)
+      .sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  }, [id, enrichedAppointments]);
+
 
   if (loading || !patient) {
     return (
@@ -69,7 +79,32 @@ export default function PatientDetailPage() {
                 <CardDescription>عرض جميع المعلومات المتعلقة بالمريض.</CardDescription>
             </CardHeader>
             <CardContent>
-               <p>لا يوجد تاريخ طبي لعرضه حالياً.</p>
+                {patientHistory.length > 0 ? (
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>التاريخ</TableHead>
+                                <TableHead>الطبيب</TableHead>
+                                <TableHead>السبب</TableHead>
+                                <TableHead>الحالة</TableHead>
+                                <TableHead>التكلفة</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {patientHistory.map(app => (
+                                <TableRow key={app.id}>
+                                    <TableCell>{format(new Date(app.date), 'yyyy-MM-dd')}</TableCell>
+                                    <TableCell>{app.doctor.name}</TableCell>
+                                    <TableCell>{app.reason}</TableCell>
+                                    <TableCell><Badge variant="outline">{app.status}</Badge></TableCell>
+                                    <TableCell>{app.cost ? `${app.cost} ر.ي` : '-'}</TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                ) : (
+                    <p>لا يوجد تاريخ طبي لعرضه حالياً.</p>
+                )}
             </CardContent>
         </Card>
     </div>

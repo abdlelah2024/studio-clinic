@@ -13,35 +13,16 @@ const firebaseConfig = {
   appId: "1:917305168918:web:4190e91e303581e8a9d137"
 };
 
-
-let app: FirebaseApp;
-let auth: Auth;
-let db: Firestore;
-
-if (typeof window !== 'undefined' && !getApps().length) {
-  try {
-    app = initializeApp(firebaseConfig);
-    auth = getAuth(app);
-    db = getFirestore(app);
-  } catch (error) {
-    console.error("Firebase initialization error", error);
+// Singleton pattern to initialize Firebase app
+const getFirebaseApp = (): FirebaseApp => {
+  if (getApps().length === 0) {
+    return initializeApp(firebaseConfig);
   }
-} else if (typeof window !== 'undefined') {
-  app = getApp();
-  auth = getAuth(app);
-  db = getFirestore(app);
-}
+  return getApp();
+};
 
-// Ensure instances are exported for server-side rendering or other environments
-// This part is tricky without a full SSR setup, but it's a safeguard.
-if (!getApps().length) {
-    app = initializeApp(firebaseConfig);
-} else {
-    app = getApp();
-}
-
-auth = getAuth(app);
-db = getFirestore(app);
-
+const app: FirebaseApp = getFirebaseApp();
+const auth: Auth = getAuth(app);
+const db: Firestore = getFirestore(app);
 
 export { app, auth, db };
