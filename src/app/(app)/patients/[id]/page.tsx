@@ -1,18 +1,20 @@
 
 "use client"
 import { useMemo } from "react";
+import { useParams } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useAppContext } from "@/context/app-context";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { Patient } from "@/lib/types";
 
-export default function PatientDetailPage({ params }: { params: { id: string } }) {
+export default function PatientDetailPage() {
   const { patients, loading } = useAppContext();
-  const { id } = params;
+  const params = useParams();
+  const id = Array.isArray(params.id) ? params.id[0] : params.id;
 
   const patient = useMemo(() => {
-      if (loading) return undefined;
+      if (loading || !id) return undefined;
       return patients.find(p => p.id === id);
   }, [id, patients, loading]);
   
