@@ -1,7 +1,7 @@
 
 "use client"
 import React, { useState, useMemo, useEffect } from "react"
-import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card"
+import { Card, CardHeader, CardTitle, CardContent, CardFooter, CardDescription } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Wifi, Users, RefreshCw } from "lucide-react"
@@ -9,7 +9,8 @@ import { cn } from "@/lib/utils"
 import { useAppContext } from "@/context/app-context"
 import { Skeleton } from "@/components/ui/skeleton"
 import { StatsCards } from "@/components/dashboard/stats-cards"
-import { AppointmentCalendar } from "@/components/dashboard/appointment-calendar"
+import { format } from "date-fns"
+import { Badge } from "@/components/ui/badge"
 
 export default function DashboardPage() {
   const { users, enrichedAppointments, loading } = useAppContext();
@@ -32,6 +33,14 @@ export default function DashboardPage() {
       }
     };
   }, []);
+
+  const todaysAppointments = useMemo(() => {
+    if (loading) return [];
+    const todayStr = format(new Date(), 'yyyy-MM-dd');
+    return enrichedAppointments
+      .filter(app => app.date === todayStr)
+      .sort((a, b) => a.startTime.localeCompare(b.startTime));
+  }, [enrichedAppointments, loading]);
   
   if (loading) {
       return (
@@ -60,7 +69,54 @@ export default function DashboardPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
-           <AppointmentCalendar />
+           <Card className="h-full">
+              <CardHeader>
+                <CardTitle>مواعيد اليوم</CardTitle>
+                <CardDescription>
+                  قائمة بالمواعيد المجدولة لليوم: {format(new Date(), 'PPP')}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {todaysAppointments.length > 0 ? (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>المريض</TableHead>
+                        <TableHead>الطبيب</TableHead>
+                        <TableHead>الوقت</TableHead>
+                        <TableHead>الحالة</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {todaysAppointments.map((appointment) => (
+                        <TableRow key={appointment.id}>
+                          <TableCell>
+                            <div className="flex items-center gap-3">
+                              <Avatar className="h-9 w-9">
+                                <AvatarImage src={appointment.patient.avatar} alt={appointment.patient.name} data-ai-hint="person face" />
+                                <AvatarFallback>{appointment.patient.name.charAt(0)}</AvatarFallback>
+                              </Avatar>
+                              <div className="font-medium">{appointment.patient.name}</div>
+                            </div>
+                          </TableCell>
+                          <TableCell>{appointment.doctor.name}</TableCell>
+                          <TableCell>{appointment.startTime}</TableCell>
+                          <TableCell>
+                            <Badge variant={appointment.status === 'Completed' ? 'default' : 'secondary'}>
+                              {appointment.status}
+                            </Badge>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                ) : (
+                  <div className="flex items-center justify-center h-48">
+                    <p className="text-muted-foreground">لا توجد مواعيد لليوم.</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
         </div>
         <div className="lg:col-span-1">
             <Card>
