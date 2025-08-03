@@ -1,7 +1,7 @@
 
 import { initializeApp, getApps, getApp, FirebaseApp } from "firebase/app";
 import { getFirestore, Firestore } from "firebase/firestore";
-import { getAuth, Auth } from "firebase/auth";
+import { getAuth, Auth, browserLocalPersistence, initializeAuth } from "firebase/auth";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBBT5rf5jIvIsSH2tw0I_S7HMjiJD7xkPE",
@@ -22,7 +22,18 @@ const getFirebaseApp = (): FirebaseApp => {
 };
 
 const app: FirebaseApp = getFirebaseApp();
-const auth: Auth = getAuth(app);
+
+// Initialize Auth separately to handle persistence
+// This prevents "auth/invalid-user-token" on SSR or page refresh
+let auth: Auth;
+if (typeof window !== 'undefined') {
+    auth = initializeAuth(app, {
+        persistence: browserLocalPersistence
+    });
+} else {
+    auth = getAuth(app);
+}
+
 const db: Firestore = getFirestore(app);
 
 export { app, auth, db };
