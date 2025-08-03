@@ -1,6 +1,7 @@
 
 "use client"
 import React, { useState, useMemo, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { Card, CardHeader, CardTitle, CardContent, CardFooter, CardDescription } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -15,6 +16,7 @@ import { Badge } from "@/components/ui/badge"
 export default function DashboardPage() {
   const { users, enrichedAppointments, loading } = useAppContext();
   const [isOnline, setIsOnline] = useState(true);
+  const router = useRouter();
   
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
@@ -89,7 +91,7 @@ export default function DashboardPage() {
                     </TableHeader>
                     <TableBody>
                       {todaysAppointments.map((appointment) => (
-                        <TableRow key={appointment.id}>
+                        <TableRow key={appointment.id} className="cursor-pointer" onClick={() => router.push(`/patients/${appointment.patientId}`)}>
                           <TableCell>
                             <div className="flex items-center gap-3">
                               <Avatar className="h-9 w-9">

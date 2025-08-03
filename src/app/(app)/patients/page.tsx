@@ -2,6 +2,7 @@
 "use client"
 import Link from "next/link"
 import React, { useState, useMemo } from "react"
+import { useRouter } from 'next/navigation'
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -20,6 +21,7 @@ export default function PatientsPage() {
   const { patients, openNewPatientDialog, updatePatient, deletePatient } = useAppContext();
   const [searchQuery, setSearchQuery] = useState("");
   const [sortKey, setSortKey] = useState<SortKey>('visit-desc');
+  const router = useRouter();
   
   const filteredAndSortedPatients = useMemo(() => {
     const filtered = patients.filter(patient =>
@@ -121,15 +123,15 @@ export default function PatientsPage() {
           </TableHeader>
           <TableBody>
             {filteredAndSortedPatients.map((patient) => (
-              <TableRow key={patient.id}>
+              <TableRow key={patient.id} onClick={() => router.push(`/patients/${patient.id}`)} className="cursor-pointer">
                 <TableCell>
-                  <Link href={`/patients/${patient.id}`} className="flex items-center gap-3 hover:underline">
+                  <div className="flex items-center gap-3">
                     <Avatar>
                       <AvatarImage src={patient.avatar} alt={patient.name} data-ai-hint="person face" />
                       <AvatarFallback>{patient.name.charAt(0)}</AvatarFallback>
                     </Avatar>
                     <span className="font-medium">{patient.name}</span>
-                  </Link>
+                  </div>
                 </TableCell>
                 <TableCell>{patient.phone}</TableCell>
                 <TableCell>{patient.age}</TableCell>
@@ -137,12 +139,12 @@ export default function PatientsPage() {
                 <TableCell className="text-right">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button aria-haspopup="true" size="icon" variant="ghost">
+                        <Button aria-haspopup="true" size="icon" variant="ghost" onClick={(e) => e.stopPropagation()}>
                           <MoreHorizontal className="h-4 w-4" />
                           <span className="sr-only">Toggle menu</span>
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
+                      <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
                         <DropdownMenuLabel>الإجراءات</DropdownMenuLabel>
                         <DropdownMenuItem asChild>
                           <Link href={`/patients/${patient.id}`}>

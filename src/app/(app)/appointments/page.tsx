@@ -172,7 +172,7 @@ export default function AppointmentsPage() {
           </TableHeader>
           <TableBody>
             {filteredAndSortedAppointments.map((appointment) => (
-              <TableRow key={appointment.id}>
+              <TableRow key={appointment.id} className="cursor-pointer">
                 <TableCell>
                   <div className="flex items-center gap-3">
                     <Avatar>

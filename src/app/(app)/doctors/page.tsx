@@ -1,6 +1,6 @@
 
 "use client"
-import React, { useState, useMemo } from "react"
+import React, { useState, useMemo, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -131,50 +131,50 @@ export default function DoctorsPage() {
           </TableHeader>
           <TableBody>
             {filteredAndSortedDoctors.map((doctor) => (
-              <TableRow key={doctor.id}>
-                <TableCell>
-                  <div className="flex items-center gap-3">
-                    <Avatar>
-                      <AvatarImage src={doctor.avatar} alt={doctor.name} data-ai-hint="doctor person" />
-                      <AvatarFallback>{doctor.name.charAt(0)}</AvatarFallback>
-                    </Avatar>
-                    <div className="font-medium">{doctor.name}</div>
-                  </div>
-                </TableCell>
-                <TableCell>{doctor.specialty}</TableCell>
-                <TableCell>{doctor.servicePrice ? `${doctor.servicePrice} ر.ي` : 'N/A'}</TableCell>
-                <TableCell>{doctor.freeReturnPeriod ? `${doctor.freeReturnPeriod} يوم` : 'لا يوجد'}</TableCell>
-                <TableCell className="text-right">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button aria-haspopup="true" size="icon" variant="ghost">
-                        <MoreHorizontal className="h-4 w-4" />
-                        <span className="sr-only">Toggle menu</span>
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuLabel>الإجراءات</DropdownMenuLabel>
-                      <DropdownMenuItem>
-                        <Calendar className="mr-2 h-4 w-4" />
-                        عرض الجدول
+               <DropdownMenu key={doctor.id}>
+                  <DropdownMenuTrigger asChild>
+                      <TableRow className="cursor-pointer">
+                        <TableCell>
+                          <div className="flex items-center gap-3">
+                            <Avatar>
+                              <AvatarImage src={doctor.avatar} alt={doctor.name} data-ai-hint="doctor person" />
+                              <AvatarFallback>{doctor.name.charAt(0)}</AvatarFallback>
+                            </Avatar>
+                            <div className="font-medium">{doctor.name}</div>
+                          </div>
+                        </TableCell>
+                        <TableCell>{doctor.specialty}</TableCell>
+                        <TableCell>{doctor.servicePrice ? `${doctor.servicePrice} ر.ي` : 'N/A'}</TableCell>
+                        <TableCell>{doctor.freeReturnPeriod ? `${doctor.freeReturnPeriod} يوم` : 'لا يوجد'}</TableCell>
+                        <TableCell className="text-right">
+                          <Button aria-haspopup="true" size="icon" variant="ghost">
+                            <MoreHorizontal className="h-4 w-4" />
+                            <span className="sr-only">Toggle menu</span>
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuLabel>الإجراءات</DropdownMenuLabel>
+                    <DropdownMenuItem>
+                      <Calendar className="mr-2 h-4 w-4" />
+                      عرض الجدول
+                    </DropdownMenuItem>
+                    <EditDoctorDialog doctor={doctor} onDoctorUpdated={updateDoctor}>
+                      <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                          <Edit className="mr-2 h-4 w-4" />
+                          تعديل الملف الشخصي
                       </DropdownMenuItem>
-                      <EditDoctorDialog doctor={doctor} onDoctorUpdated={updateDoctor}>
-                        <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                            <Edit className="mr-2 h-4 w-4" />
-                            تعديل الملف الشخصي
-                        </DropdownMenuItem>
-                      </EditDoctorDialog>
-                      <DropdownMenuSeparator />
-                      <DeleteDoctorDialog doctor={doctor} onDelete={() => deleteDoctor(doctor.id)}>
-                        <DropdownMenuItem className="text-destructive" onSelect={(e) => e.preventDefault()}>
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            إزالة
-                        </DropdownMenuItem>
-                      </DeleteDoctorDialog>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </TableCell>
-              </TableRow>
+                    </EditDoctorDialog>
+                    <DropdownMenuSeparator />
+                    <DeleteDoctorDialog doctor={doctor} onDelete={() => deleteDoctor(doctor.id)}>
+                      <DropdownMenuItem className="text-destructive" onSelect={(e) => e.preventDefault()}>
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          إزالة
+                      </DropdownMenuItem>
+                    </DeleteDoctorDialog>
+                  </DropdownMenuContent>
+              </DropdownMenu>
             ))}
           </TableBody>
         </Table>
