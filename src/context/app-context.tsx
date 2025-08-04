@@ -8,11 +8,12 @@ import { useToast } from "@/hooks/use-toast"
 import { db, auth } from "@/services/firestore"
 import { onSnapshot, collection, query, orderBy, addDoc, updateDoc, deleteDoc, doc, setDoc, getDoc } from "firebase/firestore"
 import { createUserWithEmailAndPassword, onAuthStateChanged, signInWithEmailAndPassword, signOut, User as FirebaseUser } from 'firebase/auth';
+import { deleteUser as deleteUserFlow } from "@/ai/flows/delete-user-flow"
 
 // --- AppContext Types ---
 type AddPatientFunction = (patient: Omit<Patient, 'id' | 'avatar' | 'lastVisit'>) => void;
 type UpdatePatientFunction = (patient: Patient) => void;
-type DeletePatientFunction = (patientId: string) => void;
+type DeletePatientFunction = (email: string) => void;
 type AddDoctorFunction = (doctor: Omit<Doctor, 'id' | 'avatar'>) => void;
 type UpdateDoctorFunction = (doctor: Doctor) => void;
 type DeleteDoctorFunction = (doctorId: string) => void;
@@ -411,14 +412,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     const deleteUser: DeleteUserFunction = useCallback(async (email) => {
         const userName = users.find(u => u.email === email)?.name || email;
-        try { 
-            // This is a simplified deletion. In a real app, you'd call a backend function
-            // to delete the Firebase Auth user, as it's a privileged operation.
+        try {
+            await deleteUserFlow({ email });
             await deleteUserDoc(email); 
-            toast({ title: "تم الحذف بنجاح", description: "تم حذف المستخدم من قاعدة البيانات." });
-            await addAuditLog('Delete', 'User', `Deleted user from Firestore: ${userName}`);
+            toast({ title: "تم الحذف بنجاح", description: `تم حذف المستخدم ${userName} بالكامل.` });
+            await addAuditLog('Delete', 'User', `Deleted user: ${userName}`);
         }
-        catch (e) { toast({ title: "خطأ", description: "فشل حذف المستخدم. (قد يتطلب حذف المصادقة يدوياً)", variant: "destructive" }); }
+        catch (e) { 
+            console.error("Failed to delete user:", e);
+            toast({ title: "خطأ", description: "فشل حذف المستخدم.", variant: "destructive" }); 
+        }
     }, [toast, addAuditLog, users]);
 
     const updatePermission: UpdatePermissionFunction = useCallback(async (role, section, action, value) => {
@@ -497,3 +500,4 @@ export function useAppContext() {
     }
     return context;
 }
+
