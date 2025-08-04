@@ -2,6 +2,7 @@
 import { initializeApp, getApps, getApp, FirebaseApp } from "firebase/app";
 import { getFirestore, Firestore } from "firebase/firestore";
 import { getAuth, Auth, browserLocalPersistence, initializeAuth } from "firebase/auth";
+import { initializeAppCheck, ReCaptchaV3Provider } from "firebase/app-check";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBBT5rf5jIvIsSH2tw0I_S7HMjiJD7xkPE",
@@ -22,6 +23,19 @@ const getFirebaseApp = (): FirebaseApp => {
 };
 
 const app: FirebaseApp = getFirebaseApp();
+
+// Initialize App Check for development
+if (typeof window !== 'undefined') {
+    // This is the recommended way to use App Check in a development environment.
+    // In a production environment, you would use the ReCaptchaV3Provider
+    // with your site key to protect your app from abuse.
+    (self as any).FIREBASE_APPCHECK_DEBUG_TOKEN = true;
+    initializeAppCheck(app, {
+      provider: new ReCaptchaV3Provider('6Lce_vspAAAAAGyq-1gYpczw2Wf2qC8I4k8A_g-Z'), 
+      isTokenAutoRefreshEnabled: true
+    });
+}
+
 
 // Initialize Auth separately to handle persistence
 // This prevents "auth/invalid-user-token" on SSR or page refresh
