@@ -26,17 +26,22 @@ const app: FirebaseApp = getFirebaseApp();
 
 // Initialize App Check
 if (typeof window !== 'undefined') {
-  // Use debug token for local development
   if (process.env.NODE_ENV === 'development') {
+    // Use debug token for local development
     (self as any).FIREBASE_APPCHECK_DEBUG_TOKEN = true;
+     initializeAppCheck(app, {
+        provider: new ReCaptchaV3Provider('6Lce_vspAAAAAGyq-1gYpczw2Wf2qC8I4k8A_g-Z'), 
+        isTokenAutoRefreshEnabled: true
+    });
+  } else {
+    // Use reCAPTCHA for production
+    initializeAppCheck(app, {
+      provider: new ReCaptchaV3Provider('6Lce_vspAAAAAGyq-1gYpczw2Wf2qC8I4k8A_g-Z'), 
+      isTokenAutoRefreshEnabled: true
+    });
   }
-  
-  // Initialize App Check with the appropriate provider
-  initializeAppCheck(app, {
-    provider: new ReCaptchaV3Provider('6Lce_vspAAAAAGyq-1gYpczw2Wf2qC8I4k8A_g-Z'), 
-    isTokenAutoRefreshEnabled: true
-  });
 }
+
 
 // Initialize Auth separately to handle persistence
 // This prevents "auth/invalid-user-token" on SSR or page refresh
