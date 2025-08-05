@@ -27,16 +27,16 @@ const app: FirebaseApp = getFirebaseApp();
 // Initialize App Check
 if (typeof window !== 'undefined') {
   if (process.env.NODE_ENV === 'development') {
-    // Use debug token for local development
+    // Use debug token for local development ONLY.
     (self as any).FIREBASE_APPCHECK_DEBUG_TOKEN = true;
-     initializeAppCheck(app, {
-        provider: new ReCaptchaV3Provider('6Lce_vspAAAAAGyq-1gYpczw2Wf2qC8I4k8A_g-Z'), 
-        isTokenAutoRefreshEnabled: true
+    initializeAppCheck(app, {
+      provider: new ReCaptchaV3Provider('6Lce_vspAAAAAGyq-1gYpczw2Wf2qC8I4k8A_g-Z'),
+      isTokenAutoRefreshEnabled: true,
     });
   } else {
     // Use reCAPTCHA for production
     initializeAppCheck(app, {
-      provider: new ReCaptchaV3Provider('6Lce_vspAAAAAGyq-1gYpczw2Wf2qC8I4k8A_g-Z'), 
+      provider: new ReCaptchaV3Provider('6Lce_vspAAAAAGyq-1gYpczw2Wf2qC8I4k8A_g-Z'),
       isTokenAutoRefreshEnabled: true
     });
   }
