@@ -1,4 +1,6 @@
 {
     "IDX.aI.enableInlineCompletion": true,
-    "IDX.aI.enableCodebaseIndexing": true
+    "IDX.aI.enableCodebaseIndexing": true,
+    "IDX.corgiMode": true,
+    "IDX.agenticWorkspace": true
 }

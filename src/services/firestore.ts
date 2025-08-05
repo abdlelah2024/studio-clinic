@@ -9,7 +9,7 @@ const firebaseConfig = {
   authDomain: "clinicflow-mqtu7.firebaseapp.com",
   databaseURL: "https://clinicflow-mqtu7-default-rtdb.asia-southeast1.firebasedatabase.app",
   projectId: "clinicflow-mqtu7",
-  storageBucket: "clinicflow-mqtu7.firebasestorage.app",
+  storageBucket: "clinicflow-mqtu7.appspot.com",
   messagingSenderId: "917305168918",
   appId: "1:917305168918:web:4190e91e303581e8a9d137"
 };
@@ -26,20 +26,20 @@ const app: FirebaseApp = getFirebaseApp();
 
 // Initialize App Check
 if (typeof window !== 'undefined') {
+  // Check if we're in a development environment
   if (process.env.NODE_ENV === 'development') {
-    // Use debug token for local development ONLY.
+    // Set the debug token for local development ONLY.
+    // This allows App Check to work without a real reCAPTCHA verification.
     (self as any).FIREBASE_APPCHECK_DEBUG_TOKEN = true;
-    initializeAppCheck(app, {
-      provider: new ReCaptchaV3Provider('6Lce_vspAAAAAGyq-1gYpczw2Wf2qC8I4k8A_g-Z'),
-      isTokenAutoRefreshEnabled: true,
-    });
-  } else {
-    // Use reCAPTCHA for production
-    initializeAppCheck(app, {
-      provider: new ReCaptchaV3Provider('6Lce_vspAAAAAGyq-1gYpczw2Wf2qC8I4k8A_g-Z'),
-      isTokenAutoRefreshEnabled: true
-    });
+    console.log("Firebase App Check debug token enabled for local development.");
   }
+
+  // Initialize App Check with the appropriate provider
+  initializeAppCheck(app, {
+    // Use reCAPTCHA for production, but not for development
+    provider: new ReCaptchaV3Provider('6Lce_vspAAAAAGyq-1gYpczw2Wf2qC8I4k8A_g-Z'),
+    isTokenAutoRefreshEnabled: true
+  });
 }
 
 
