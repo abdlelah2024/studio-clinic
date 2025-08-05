@@ -9,7 +9,7 @@ const firebaseConfig = {
   authDomain: "clinicflow-mqtu7.firebaseapp.com",
   databaseURL: "https://clinicflow-mqtu7-default-rtdb.asia-southeast1.firebasedatabase.app",
   projectId: "clinicflow-mqtu7",
-  storageBucket: "clinicflow-mqtu7.appspot.com",
+  storageBucket: "clinicflow-mqtu7.firebasestorage.app",
   messagingSenderId: "917305168918",
   appId: "1:917305168918:web:4190e91e303581e8a9d137"
 };
