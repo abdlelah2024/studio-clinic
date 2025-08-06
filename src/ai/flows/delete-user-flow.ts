@@ -12,6 +12,7 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 import * as admin from 'firebase-admin';
+import 'dotenv/config';
 
 // Initialize Firebase Admin SDK if not already initialized
 if (!admin.apps.length) {

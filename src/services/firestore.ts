@@ -1,5 +1,5 @@
 import { FirebaseApp, getApp, getApps, initializeApp } from "firebase/app";
-import { initializeAppCheck, ReCaptchaV3Provider } from "firebase/app-check";
+import { initializeAppCheck, ReCaptchaV3Provider, AppCheck } from "firebase/app-check";
 import { Auth, getAuth, initializeAuth, browserLocalPersistence } from "firebase/auth";
 import { Firestore, getFirestore } from "firebase/firestore";
 
@@ -24,13 +24,23 @@ const getFirebaseApp = (): FirebaseApp => {
 const app: FirebaseApp = getFirebaseApp();
 
 // Initialize App Check for local development
+let appCheck: AppCheck | undefined;
 if (typeof window !== 'undefined') {
-  // Set the debug token to true to allow local development
-  (self as any).FIREBASE_APPCHECK_DEBUG_TOKEN = true;
-  initializeAppCheck(app, {
-    provider: new ReCaptchaV3Provider('6Ld-pA8qAAAAAK1Y-a43r7y7d5e-E2a4e3a4b5c6'),
-    isTokenAutoRefreshEnabled: true
-  });
+  // Check if running in a local development environment
+  if (process.env.NODE_ENV === 'development') {
+    // Set the debug token to true to allow local development
+    (self as any).FIREBASE_APPCHECK_DEBUG_TOKEN = true;
+    appCheck = initializeAppCheck(app, {
+      provider: new ReCaptchaV3Provider('6Ld-pA8qAAAAAK1Y-a43r7y7d5e-E2a4e3a4b5c6'),
+      isTokenAutoRefreshEnabled: true
+    });
+  } else {
+    // In production, initialize App Check without the debug token
+    appCheck = initializeAppCheck(app, {
+      provider: new ReCaptchaV3Provider('6Ld-pA8qAAAAAK1Y-a43r7y7d5e-E2a4e3a4b5c6'),
+      isTokenAutoRefreshEnabled: true
+    });
+  }
 }
 
 // Initialize Auth separately to handle persistence
