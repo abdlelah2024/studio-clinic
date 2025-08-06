@@ -27,6 +27,7 @@ const app: FirebaseApp = getFirebaseApp();
 // Initialize App Check
 if (typeof window !== 'undefined') {
   if (process.env.NODE_ENV === 'development') {
+    // Only use debug token in development
     (self as any).FIREBASE_APPCHECK_DEBUG_TOKEN = true;
     console.log("Firebase App Check debug token enabled for local development.");
     initializeAppCheck(app, {
@@ -34,6 +35,7 @@ if (typeof window !== 'undefined') {
       isTokenAutoRefreshEnabled: true
     });
   } else {
+     // Only use reCAPTCHA in production
      initializeAppCheck(app, {
       provider: new ReCaptchaV3Provider('6Lce_vspAAAAAGyq-1gYpczw2Wf2qC8I4k8A_g-Z'),
       isTokenAutoRefreshEnabled: true
