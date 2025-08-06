@@ -9,7 +9,7 @@ const firebaseConfig = {
   authDomain: "clinicflow-mqtu7.firebaseapp.com",
   databaseURL: "https://clinicflow-mqtu7-default-rtdb.asia-southeast1.firebasedatabase.app",
   projectId: "clinicflow-mqtu7",
-  storageBucket: "clinicflow-mqtu7.firebasestorage.app",
+  storageBucket: "clinicflow-mqtu7.appspot.com",
   messagingSenderId: "917305168918",
   appId: "1:917305168918:web:4190e91e303581e8a9d137"
 };
@@ -23,26 +23,6 @@ const getFirebaseApp = (): FirebaseApp => {
 };
 
 const app: FirebaseApp = getFirebaseApp();
-
-// Initialize App Check
-if (typeof window !== 'undefined') {
-  if (process.env.NODE_ENV === 'development') {
-    // Only use debug token in development
-    (self as any).FIREBASE_APPCHECK_DEBUG_TOKEN = true;
-    console.log("Firebase App Check debug token enabled for local development.");
-    initializeAppCheck(app, {
-      provider: new ReCaptchaV3Provider('6Lce_vspAAAAAGyq-1gYpczw2Wf2qC8I4k8A_g-Z'),
-      isTokenAutoRefreshEnabled: true
-    });
-  } else {
-     // Only use reCAPTCHA in production
-     initializeAppCheck(app, {
-      provider: new ReCaptchaV3Provider('6Lce_vspAAAAAGyq-1gYpczw2Wf2qC8I4k8A_g-Z'),
-      isTokenAutoRefreshEnabled: true
-    });
-  }
-}
-
 
 // Initialize Auth separately to handle persistence
 // This prevents "auth/invalid-user-token" on SSR or page refresh
